@@ -1,0 +1,1384 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<entrySet xmlns="http://psi.hupo.org/mi/mif300" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/mi/mif300 https://raw.githubusercontent.com/HUPO-PSI/miXML/master/3.0/src/MIF300.xsd" level="3" version="0" minorVersion="0">
+  <entry>
+    <source releaseDate="2024-11-25">
+      <names>
+        <shortLabel>Unknown source</shortLabel>
+      </names>
+    </source>
+    <interactionList>
+      <interaction id="1">
+        <experimentList>
+          <experimentDescription id="2">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="3">
+            <interactor id="4">
+              <names>
+                <shortLabel>Zm00001d037606</shortLabel>
+                <fullName>Zm00001d037606</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="5">
+            <interactor id="6">
+              <names>
+                <shortLabel>Zm00001d031660</shortLabel>
+                <fullName>Zm00001d031660</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="7">
+        <experimentList>
+          <experimentDescription id="8">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="9">
+            <interactor id="10">
+              <names>
+                <shortLabel>Zm00001d028171</shortLabel>
+                <fullName>Zm00001d028171</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="11">
+            <interactor id="12">
+              <names>
+                <shortLabel>GRMZM5G836994</shortLabel>
+                <fullName>GRMZM5G836994</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="13">
+        <experimentList>
+          <experimentDescription id="14">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="15">
+            <interactor id="16">
+              <names>
+                <shortLabel>Zm00001d044162</shortLabel>
+                <fullName>Zm00001d044162</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="17">
+            <interactor id="18">
+              <names>
+                <shortLabel>Zm00001d016491</shortLabel>
+                <fullName>Zm00001d016491</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="19">
+        <experimentList>
+          <experimentDescription id="20">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="21">
+            <interactor id="22">
+              <names>
+                <shortLabel>Zm00001d028596</shortLabel>
+                <fullName>Zm00001d028596</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="23">
+            <interactor id="24">
+              <names>
+                <shortLabel>Zm00001d050056</shortLabel>
+                <fullName>Zm00001d050056</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="25">
+        <experimentList>
+          <experimentDescription id="26">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="27">
+            <interactor id="28">
+              <names>
+                <shortLabel>Zm00001d043773</shortLabel>
+                <fullName>Zm00001d043773</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="29">
+            <interactor id="30">
+              <names>
+                <shortLabel>Zm00001d050916</shortLabel>
+                <fullName>Zm00001d050916</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="31">
+        <experimentList>
+          <experimentDescription id="32">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="33">
+            <interactor id="34">
+              <names>
+                <shortLabel>Zm00001d010227</shortLabel>
+                <fullName>Zm00001d010227</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="35">
+            <interactor id="36">
+              <names>
+                <shortLabel>Zm00001d019283</shortLabel>
+                <fullName>Zm00001d019283</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="37">
+        <experimentList>
+          <experimentDescription id="38">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="39">
+            <interactor id="40">
+              <names>
+                <shortLabel>Zm00001d036214</shortLabel>
+                <fullName>Zm00001d036214</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="41">
+            <interactor id="42">
+              <names>
+                <shortLabel>Zm00001d008502</shortLabel>
+                <fullName>Zm00001d008502</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="43">
+        <experimentList>
+          <experimentDescription id="44">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="45">
+            <interactor id="46">
+              <names>
+                <shortLabel>Zm00001d025182</shortLabel>
+                <fullName>Zm00001d025182</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="47">
+            <interactor id="48">
+              <names>
+                <shortLabel>GRMZM5G887911</shortLabel>
+                <fullName>GRMZM5G887911</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="49">
+        <experimentList>
+          <experimentDescription id="50">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="51">
+            <interactor id="52">
+              <names>
+                <shortLabel>Zm00001d047757</shortLabel>
+                <fullName>Zm00001d047757</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="53">
+            <interactor id="54">
+              <names>
+                <shortLabel>Zm00001d001883</shortLabel>
+                <fullName>Zm00001d001883</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="55">
+        <experimentList>
+          <experimentDescription id="56">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="57">
+            <interactor id="58">
+              <names>
+                <shortLabel>Zm00001d021208</shortLabel>
+                <fullName>Zm00001d021208</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="59">
+            <interactor id="60">
+              <names>
+                <shortLabel>Zm00001d010230</shortLabel>
+                <fullName>Zm00001d010230</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="61">
+        <experimentList>
+          <experimentDescription id="62">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="63">
+            <interactor id="64">
+              <names>
+                <shortLabel>Zm00001d028425</shortLabel>
+                <fullName>Zm00001d028425</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="65">
+            <interactor id="66">
+              <names>
+                <shortLabel>Zm00001d017298</shortLabel>
+                <fullName>Zm00001d017298</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+      <interaction id="67">
+        <experimentList>
+          <experimentDescription id="68">
+            <names>
+              <fullName>Mock publication for interactions that do not have experimental details.</fullName>
+            </names>
+            <bibref>
+              <attributeList>
+                <attribute name="publication title" nameAc="MI:1091">Mock publication for interactions that do not have experimental details.</attribute>
+              </attributeList>
+            </bibref>
+            <interactionDetectionMethod>
+              <names>
+                <shortLabel>unspecified method</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0686" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </interactionDetectionMethod>
+          </experimentDescription>
+        </experimentList>
+        <participantList>
+          <participant id="69">
+            <interactor id="70">
+              <names>
+                <shortLabel>Zm00001d017298</shortLabel>
+                <fullName>Zm00001d017298</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="71">
+            <interactor id="72">
+              <names>
+                <shortLabel>Zm00001d017298</shortLabel>
+                <fullName>Zm00001d017298</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="73">
+            <interactor id="74">
+              <names>
+                <shortLabel>Before last</shortLabel>
+                <fullName>Before last</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+          <participant id="75">
+            <interactor id="76">
+              <names>
+                <shortLabel>Last</shortLabel>
+                <fullName>Last</fullName>
+              </names>
+              <xref>
+                <primaryRef db="uniprotkb" dbAc="MI:0356" id="P12345" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+              <interactorType>
+                <names>
+                  <shortLabel>protein</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </interactorType>
+              <organism ncbiTaxId="9606"/>
+            </interactor>
+            <biologicalRole>
+              <names>
+                <shortLabel>unspecified role</shortLabel>
+              </names>
+              <xref>
+                <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+              </xref>
+            </biologicalRole>
+            <experimentalRoleList>
+              <experimentalRole>
+                <names>
+                  <shortLabel>unspecified role</shortLabel>
+                </names>
+                <xref>
+                  <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0499" refType="identity" refTypeAc="MI:0356"/>
+                </xref>
+              </experimentalRole>
+            </experimentalRoleList>
+          </participant>
+        </participantList>
+        <interactionType>
+          <names>
+            <shortLabel>interactionType</shortLabel>
+          </names>
+          <xref>
+            <primaryRef db="psi-mi" dbAc="MI:0488" id="MI:0356" refType="identity" refTypeAc="MI:0356"/>
+          </xref>
+        </interactionType>
+      </interaction>
+    </interactionList>
+  </entry>
+</entrySet>

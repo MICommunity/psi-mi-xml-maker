@@ -1,0 +1,101 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>uk.ac.ebi.intact.psi.mi.xmlmaker</groupId>
+  <artifactId>PSI-MI-XML-maker</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>PSI-MI-XML-maker</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <psi.jami.version>3.6.0-SNAPSHOT</psi.jami.version>
+    <spring.version>4.3.30.RELEASE</spring.version>
+<!--    <intact.jami.version>3.1.0-SNAPSHOT</intact.jami.version>-->
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>psidev.psi.mi.jami</groupId>
+      <artifactId>jami-core</artifactId>
+      <version>${psi.jami.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>psidev.psi.mi.jami</groupId>
+      <artifactId>jami-batch</artifactId>
+      <version>${psi.jami.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>psidev.psi.mi.jami.bridges</groupId>
+      <artifactId>jami-uniprot</artifactId>
+      <version>${psi.jami.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>jcl-over-slf4j</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+<!--    <dependency>-->
+<!--      <groupId>uk.ac.ebi.intact.jami</groupId>-->
+<!--      <artifactId>intact-jami</artifactId>-->
+<!--      <version>${intact.jami.version}</version>-->
+<!--    </dependency>-->
+
+    <dependency>
+      <groupId>org.springframework.retry</groupId>
+      <artifactId>spring-retry</artifactId>
+      <version>1.3.4</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-aspects</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.30</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi</artifactId>
+      <version>5.0.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>5.0.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.10</version>
+    </dependency>
+
+    <dependency>
+      <groupId>psidev.psi.mi.jami</groupId>
+      <artifactId>jami-commons</artifactId>
+      <version>${psi.jami.version}</version>
+    </dependency>
+
+  </dependencies>
+</project>
