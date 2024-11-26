@@ -1,24 +1,35 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
+import lombok.Setter;
 import psidev.psi.mi.jami.commons.MIWriterOptionFactory;
 import psidev.psi.mi.jami.commons.PsiJami;
 import psidev.psi.mi.jami.datasource.InteractionWriter;
 import psidev.psi.mi.jami.factory.InteractionWriterFactory;
-import psidev.psi.mi.jami.model.InteractionEvidence;
+import psidev.psi.mi.jami.model.Annotation;
+import psidev.psi.mi.jami.model.ComplexType;
+import psidev.psi.mi.jami.model.InteractionCategory;
+import psidev.psi.mi.jami.model.Publication;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
 import psidev.psi.mi.jami.xml.model.extension.factory.options.PsiXmlWriterOptions;
-import psidev.psi.mi.jami.xml.model.extension.xml300.XmlInteractionEvidence;
-import psidev.psi.mi.jami.xml.model.extension.xml300.XmlModelledInteraction;
+import psidev.psi.mi.jami.xml.model.extension.xml300.*;
+import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
+import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
 
 import javax.swing.*;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreator.olsClient;
 
 public class PsiMiXmlMaker {
     InteractionsCreator interactionsCreator;
     ArrayList<XmlInteractionEvidence> xmlModelledInteractions;
+    private static OLSClient olsClient = new OLSClient(new OLSWsConfig());
+    @Setter
+    String publicationId;
 
     public PsiMiXmlMaker(InteractionsCreator interactionsCreator) {
         this.interactionsCreator = interactionsCreator;
@@ -26,28 +37,49 @@ public class PsiMiXmlMaker {
     }
 
     public void interactionsWriter() {
+        String xmlFileName = "test.xml";
+
+        Publication intactPubmedRef = new BibRef(publicationId);
+        XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "http://www.ebi.ac.uk",
+                "European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge, CB10 1SD, United Kingdom.", intactPubmedRef);
+        source.setUrl("http://www.ebi.ac.uk");
+        source.setFullName("European Bioinformatics Institute");
+
+        String dbMiId = olsClient.getExactTermByName("pubmed", "mi").getOboId().
+                getIdentifier();
+        XmlCvTerm dataBase = new XmlCvTerm("pubmed", dbMiId);
+        XmlXref primaryXref = new XmlXref(dataBase, publicationId);
+
+        CvTermXrefContainer xrefContainer = new CvTermXrefContainer();
+        xrefContainer.setJAXBPrimaryRef(primaryXref);
+        source.setJAXBXref(xrefContainer);
+
+        GregorianCalendar calendar = new GregorianCalendar();
+        calendar.set(2024, Calendar.DECEMBER, 1);
+        XMLGregorianCalendar defaultReleaseDate;
+        try {
+            defaultReleaseDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
+        } catch (DatatypeConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+        Collection<Annotation> defaultEntryAnnotations = new ArrayList<>();
+        XmlAnnotation defaultEntryAnnotation = new XmlAnnotation();
+        defaultEntryAnnotations.add(defaultEntryAnnotation);
+
         PsiJami.initialiseAllFactories();
         MIWriterOptionFactory optionwriterFactory = MIWriterOptionFactory.getInstance();
 
-        String xmlFileName = "test.xml";
-        Map<String, Object> xmlWritingOptions = optionwriterFactory.getDefaultXmlOptions(new File(xmlFileName));
+        Map<String, Object> expandedXmlWritingOptions = optionwriterFactory.getExpandedXmlOptions(new File(xmlFileName),
+                InteractionCategory.evidence, ComplexType.n_ary, source, defaultReleaseDate, defaultEntryAnnotations,
+                PsiXmlVersion.v3_0_0);
 
-        xmlWritingOptions.put(PsiXmlWriterOptions.XML_VERSION_OPTION, PsiXmlVersion.v3_0_0);
 
         InteractionWriterFactory writerFactory = InteractionWriterFactory.getInstance();
         InteractionWriter xmlInteractionWriter = null;
 
         try {
-            xmlInteractionWriter = writerFactory.getInteractionWriterWith(xmlWritingOptions);
+            xmlInteractionWriter = writerFactory.getInteractionWriterWith(expandedXmlWritingOptions);
             xmlInteractionWriter.start();
-
-//            Iterator<XmlModelledInteraction> interactionsIterator = xmlModelledInteractions.iterator();
-//            while (interactionsIterator.hasNext()) {
-//                xmlInteractionWriter.write(interactionsIterator.next());
-//                if (interactionsIterator.hasNext() instanceof XmlInteractionEvidence) {
-//                    InteractionEvidence interactionEvidence = (InteractionEvidence) interactionsIterator.next();
-//                }
-//            }
             xmlInteractionWriter.write(xmlModelledInteractions);
             xmlInteractionWriter.end();
             SwingUtilities.invokeLater(() ->
@@ -78,4 +110,5 @@ public class PsiMiXmlMaker {
             }
         }
     }
+
 }

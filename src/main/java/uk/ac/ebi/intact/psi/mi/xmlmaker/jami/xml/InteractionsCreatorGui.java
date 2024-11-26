@@ -6,6 +6,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.SuggestedOrganisms;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -23,9 +24,10 @@ public class InteractionsCreatorGui extends JPanel {
     public JPanel participantCreatorPanel;
     public Map<String, Integer> dataTypeAndColumn = new HashMap<>();
     private JTable table = new JTable();
-    private InteractionsCreator interactionsCreator;
+    public final InteractionsCreator interactionsCreator;
     private PsiMiXmlMaker xmlMaker;
     SuggestedOrganisms suggestedOrganisms; //TODO: Add this column instead of the "participant taxID"
+    UniprotMapperGui uniprotMapperGui;
 
     String[] dataNeededForInteractor = {
             "Interaction number",
@@ -34,15 +36,17 @@ public class InteractionsCreatorGui extends JPanel {
             "Participant taxID",
             "Participant ID",
             "Participant ID database",
-            "Experimental role"
+            "Experimental role",
+            "Participant detection method",
     };
 
 
-    public InteractionsCreatorGui(ExcelFileReader excelFileReader) {
+    public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui) {
         this.excelFileReader = excelFileReader;
+        this.uniprotMapperGui = uniprotMapperGui;
         setUpSheets();
         this.participantCreatorPanel = new JPanel(new BorderLayout());
-        this.interactionsCreator = new InteractionsCreator(excelFileReader);
+        this.interactionsCreator = new InteractionsCreator(excelFileReader, uniprotMapperGui);
     }
 
     public JPanel participantCreatorPanel() {
@@ -105,6 +109,7 @@ public class InteractionsCreatorGui extends JPanel {
     private JButton createProcessFileButton() {
         JButton processFileButton = new JButton("Create participants");
         processFileButton.addActionListener(e -> {
+
             String sheetSelected = (String) sheets.getSelectedItem();
             String columnSelected = (String) columns.getSelectedItem();
 
@@ -116,8 +121,12 @@ public class InteractionsCreatorGui extends JPanel {
                 }
                 try {
                     interactionsCreator.createParticipantsWithFileFormat(getDataTypeAndColumn(), sheets.getSelectedIndex());
+                    JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "An error occurred during file processing sheets: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null,
+                            "An error occurred during file processing sheets: " +
+                                    ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 if (columnSelected == null || columnSelected.equals("Select column to process")) {
@@ -126,7 +135,9 @@ public class InteractionsCreatorGui extends JPanel {
                 }
                 try {
                     interactionsCreator.createParticipantsWithFileFormat(getDataTypeAndColumn(), 0);
+                    JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
+                    ex.printStackTrace();
                     JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -138,8 +149,8 @@ public class InteractionsCreatorGui extends JPanel {
         JTable table = new JTable();
         TableModel tableModel = new DefaultTableModel(
                 new Object[][]{{"Select from file", "Select from file", "Select from file", "Select from file",
-                        "Select from file", "Select from file", "Select from file"},},
-                new String[]{"Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6", "Title 7"}
+                        "Select from file", "Select from file", "Select from file", "Select from file"},},
+                new String[]{"Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6", "Title 7", "Title 8"}
         );
 
         table.setModel(tableModel);

@@ -8,7 +8,6 @@ import java.io.File;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.PsiMiXmlMakerGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
@@ -28,8 +27,8 @@ public class XmlMakerGui {
     public XmlMakerGui() {
         this.excelFileReader = new ExcelFileReader();
         this.uniprotMapperGui = new UniprotMapperGui(excelFileReader);
-        this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader);
-        this.psiMiXmlMakerGui = new PsiMiXmlMakerGui();
+        this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui);
+        this.psiMiXmlMakerGui = new PsiMiXmlMakerGui(interactionsCreatorGui.interactionsCreator);
     }
 
     public void initialize() {

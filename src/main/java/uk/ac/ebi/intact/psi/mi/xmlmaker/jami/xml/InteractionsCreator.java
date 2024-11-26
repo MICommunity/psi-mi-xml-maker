@@ -2,22 +2,27 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
 import org.apache.poi.ss.usermodel.*;
 import psidev.psi.mi.jami.model.*;
-import psidev.psi.mi.jami.xml.model.Entry;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-
+import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.SuggestedOrganisms;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import java.util.*;
+import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
+import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
 
 public class InteractionsCreator {
     ExcelFileReader excelFileReader;
+    PsiMiXmlMaker xmlMaker;
+    UniprotMapperGui uniprotMapperGui;
     ArrayList<InteractionWithIndexes> interactionWithIndexes = new ArrayList<>();
     ArrayList<XmlParticipantEvidence> xmlParticipants = new ArrayList<>();
     ArrayList<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
-    PsiMiXmlMaker xmlMaker;
+    SuggestedOrganisms suggestedOrganisms = new SuggestedOrganisms();
+    static OLSClient olsClient = new OLSClient(new OLSWsConfig());
 
-    public InteractionsCreator(ExcelFileReader reader) {
+    public InteractionsCreator(ExcelFileReader reader, UniprotMapperGui uniprotMapperGui) {
         this.excelFileReader = reader;
-        this.xmlMaker = new PsiMiXmlMaker(this);
+        this.uniprotMapperGui = uniprotMapperGui;
     }
 
     public void createParticipantsWithFileFormat(Map<String, Integer> columnAndIndex, int sheetSelected){
@@ -31,7 +36,7 @@ public class InteractionsCreator {
             createGroupsWithWorkbook("Interaction number", sheetSelected); //TODO: UI for that
             createParticipantsWithWorkbook(columnAndIndex, sheetSelected - 1);
         }
-        createOneInteraction();
+        createInteractions();
     }
 
     public void createGroups(String columnSelected) {
@@ -95,8 +100,9 @@ public class InteractionsCreator {
             }
         }
         if (startIndex != null) {
-            interactionWithIndexes.add(new InteractionWithIndexes(currentInteractionNumber, startIndex, sheet.getLastRowNum()));
+            interactionWithIndexes.add(new InteractionWithIndexes(currentInteractionNumber, startIndex, sheet.getLastRowNum()-1));
         }
+        System.out.println("groups created");
     }
 
     private int getColumnIndexFromSheet(Sheet sheet, String columnName) {
@@ -142,47 +148,51 @@ public class InteractionsCreator {
 
     public void createParticipantsWithWorkbook(Map<String, Integer> columnAndIndex, int sheetSelected) {
         Workbook workbook = excelFileReader.workbook;
-        for (int i = 0; i <= workbook.getSheetAt(sheetSelected).getLastRowNum(); i++) {
-
+        for (int i = 1; i <= workbook.getSheetAt(sheetSelected).getLastRowNum(); i++) {
             Row row = workbook.getSheetAt(sheetSelected).getRow(i);
 
             String name = row.getCell(columnAndIndex.get("Participant name")).getStringCellValue();
 
             String participantType = row.getCell(columnAndIndex.get("Participant type")).getStringCellValue();
-            XmlCvTerm type = new XmlCvTerm(participantType, "MI:0356"); // TODO: check for the MI
+            String participantTypeMiId = olsClient.getExactTermByName(participantType, "mi").getOboId().getIdentifier();
+            XmlCvTerm type = new XmlCvTerm(participantType, participantTypeMiId);
 
-            XmlOrganism organism = new XmlOrganism(9606); // TODO: take the organism from uniprot panel
+            int participantOrganism = Integer.parseInt(suggestedOrganisms.getOrganismId((String) uniprotMapperGui.
+                    suggestedOrganismsIds.getSelectedItem())); //TODO: set up a check for if selected or put the organism selection outside of uniprotmapping
+            XmlOrganism organism = new XmlOrganism(participantOrganism);
 
             String participantId = row.getCell(columnAndIndex.get("Participant ID")).getStringCellValue();
             String participantIdDb = row.getCell(columnAndIndex.get("Participant ID database")).getStringCellValue();
-            XmlXref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, "MI:0356"), participantId); //TODO: set to protein and check if it is other component
+            String participantIdDbMiId = olsClient.getExactTermByName(participantIdDb, "mi").getOboId().
+                    getIdentifier();
+            XmlXref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, participantIdDbMiId), participantId);
 
             XmlProtein protein = new XmlProtein(name, type, organism, uniqueId);
-
             XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(protein);
 
             String experimentalRole = row.getCell(columnAndIndex.get("Experimental role")).getStringCellValue();
-            CvTerm bioRole = new XmlCvTerm(experimentalRole, "MI:0356"); //TODO: define that
+            String experimentalRoleMiId = olsClient.getExactTermByName(experimentalRole, "mi").getOboId().
+                    getIdentifier();
+            CvTerm bioRole = new XmlCvTerm(experimentalRole, experimentalRoleMiId);
             participantEvidence.setExperimentalRole(bioRole);
+
+//            String identificationMethod = row.getCell(columnAndIndex.get("Participant detection method")).
+//                    getStringCellValue();
+//            String identificationMethodMiId = olsClient.getExactTermByName(identificationMethod, "mi").getOboId().
+//                    getIdentifier();
+//            participantEvidence.setJAXBParticipantIdentificationMethodWrapper(
+//                    new XmlParticipantEvidence.JAXBParticipantIdentificationWrapper()); //TODO: check to add that
 
             xmlParticipants.add(participantEvidence);
         }
     }
 
-    public void createOneInteraction() {
-
-        Publication intactPubmedRef = new BibRef("14681455");
-        XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "http://www.ebi.ac.uk", "address", intactPubmedRef);
-        source.setUrl("http://www.ebi.ac.uk");
-
+    public void createInteractions() {
         for (InteractionWithIndexes interactionWithIndexes : this.interactionWithIndexes) {
-
             XmlInteractionEvidence interaction = new XmlInteractionEvidence();
-
             for (int j = interactionWithIndexes.startIndex; j <= interactionWithIndexes.endIndex; j++) {
                 interaction.addParticipant(xmlParticipants.get(j));
             }
-
             CvTerm interactionType = new XmlCvTerm("association", "MI:0356"); //TODO: check that
             interaction.setInteractionType(interactionType);
 
@@ -196,6 +206,6 @@ public class InteractionsCreator {
 
             xmlModelledInteractions.add(interaction);
         }
-        xmlMaker.interactionsWriter();
+//        xmlMaker.interactionsWriter();
     }
 }

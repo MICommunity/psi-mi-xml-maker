@@ -10,8 +10,9 @@ public class UniprotMapperGui extends JPanel {
     private final SuggestedOrganisms suggestedOrganisms = new SuggestedOrganisms();
     private final JComboBox<String> sheets = new JComboBox<>();
     private final JComboBox<String> columns = new JComboBox<>();
-    private final JComboBox<String> suggestedOrganismsIds = new JComboBox<>();
+    public final JComboBox<String> suggestedOrganismsIds = new JComboBox<>();
     private final ExcelFileReader excelFileReader;
+
 
     public UniprotMapperGui(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;

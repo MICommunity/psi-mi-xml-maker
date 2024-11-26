@@ -14,6 +14,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <psi.jami.version>3.6.0-SNAPSHOT</psi.jami.version>
     <spring.version>4.3.30.RELEASE</spring.version>
+    <ols.client.version>2.14-SNAPSHOT</ols.client.version>
 <!--    <intact.jami.version>3.1.0-SNAPSHOT</intact.jami.version>-->
   </properties>
 
@@ -97,5 +98,42 @@
       <version>${psi.jami.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>psidev.psi.mi.jami.bridges</groupId>
+      <artifactId>jami-ols</artifactId>
+      <version>${psi.jami.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>jcl-over-slf4j</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+<!--    <dependency>-->
+<!--      <groupId>psidev.psi.mi.jami.bridges</groupId>-->
+<!--      <artifactId>jami-ontology-manager</artifactId>-->
+<!--      <version>${psi.jami.version}</version>-->
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>org.slf4j</groupId>-->
+<!--          <artifactId>jcl-over-slf4j</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
+<!--    </dependency>-->
+
+      <dependency>
+        <groupId>uk.ac.ebi.pride.utilities</groupId>
+        <artifactId>ols-client</artifactId>
+        <version>${ols.client.version}</version>
+      </dependency>
   </dependencies>
+
+  <repositories>
+    <!-- EBI repo -->
+    <repository>
+      <id>nexus-ebi-release-repo</id>
+      <url>http://www.ebi.ac.uk/Tools/maven/repos/content/groups/ebi-repo/</url>
+    </repository>
+  </repositories>
 </project>
