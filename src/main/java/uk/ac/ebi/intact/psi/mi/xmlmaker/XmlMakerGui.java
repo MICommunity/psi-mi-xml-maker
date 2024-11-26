@@ -78,7 +78,7 @@ public class XmlMakerGui {
 
     private JPanel createPsiMiXmlMakerPanel() {
         JPanel psiXmlMakerPanel = psiMiXmlMakerGui.PsiMiXmlMakerPanel();
-        psiXmlMakerPanel.setBorder(new TitledBorder("4. Create the psi xml file"));
+        psiXmlMakerPanel.setBorder(new TitledBorder("4. Create the PSI-MI.xml file"));
         return psiXmlMakerPanel;
     }
 

@@ -115,7 +115,7 @@ public class ExcelFileReader {
                     maxSize = tokens.length; //TODO: check other ways to do that because if they are commas in the values it causes issues
                     firstLine = false;
                 }
-                String[] tokens = line.split(separator, maxSize); // -1 keeps trailing empty strings
+                String[] tokens = line.split(separator, maxSize);
                 ArrayList<String> lineCells = new ArrayList<>(Arrays.asList(tokens));
                 if (tokens.length < maxSize) {
                     for (int i = tokens.length; i < maxSize; i++) {

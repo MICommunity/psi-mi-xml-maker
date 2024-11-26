@@ -2,6 +2,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
 import org.apache.poi.ss.usermodel.*;
 import psidev.psi.mi.jami.model.*;
+import psidev.psi.mi.jami.xml.model.Entry;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 
@@ -44,7 +45,7 @@ public class InteractionsCreator {
         Integer startIndex = null;
         int endIndex;
 
-        for (int i = 1; i <= data.size(); i++) { // start at 1 to skip header
+        for (int i = 1; i < data.size(); i++) { // start at 1 to skip header
             String interactionNumber = data.get(i).get(interactionNumberIndex);
             if (!Objects.equals(interactionNumber, currentInteractionNumber)) {
                 if (startIndex != null) {
@@ -124,6 +125,8 @@ public class InteractionsCreator {
     }
 
     public void createParticipantsWithFileSeparator(Map<String, Integer> columnAndIndex) {
+        //TODO: ADAPT THE SAME WAY AS THE WORKBOOK ONE
+
         ArrayList<ArrayList<String>> data = excelFileReader.readFileWithSeparator();
         for (ArrayList<String> datum : data) {
             String name = datum.get(columnAndIndex.get("Participant name"));
@@ -132,7 +135,6 @@ public class InteractionsCreator {
             XmlOrganism organism = new XmlOrganism(9606);
             XmlXref uniqueId = new XmlXref(new XmlCvTerm("testDb", "MI:5678"), "id");
             XmlProtein protein = new XmlProtein(name, fullName, type, organism, uniqueId);
-//            XmlModelledParticipant participant = new XmlModelledParticipant(protein);
             XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(protein);
             xmlParticipants.add(participantEvidence);
         }
@@ -141,55 +143,57 @@ public class InteractionsCreator {
     public void createParticipantsWithWorkbook(Map<String, Integer> columnAndIndex, int sheetSelected) {
         Workbook workbook = excelFileReader.workbook;
         for (int i = 0; i <= workbook.getSheetAt(sheetSelected).getLastRowNum(); i++) {
+
             Row row = workbook.getSheetAt(sheetSelected).getRow(i);
+
             String name = row.getCell(columnAndIndex.get("Participant name")).getStringCellValue();
-            String fullName = row.getCell(columnAndIndex.get("Participant full name")).getStringCellValue();
-            XmlCvTerm type = new XmlCvTerm("protein", "MI:0356");
+
+            String participantType = row.getCell(columnAndIndex.get("Participant type")).getStringCellValue();
+            XmlCvTerm type = new XmlCvTerm(participantType, "MI:0356"); // TODO: check for the MI
+
             XmlOrganism organism = new XmlOrganism(9606); // TODO: take the organism from uniprot panel
-            XmlXref uniqueId = new XmlXref(new XmlCvTerm("uniprotkb", "MI:0356"), "P12345"); //TODO: set to protein and check if it is other component
-            XmlProtein protein = new XmlProtein(name, fullName, type, organism, uniqueId);
-            CvTerm bioRole = new XmlCvTerm("bioRole", "MI:0356");
 
+            String participantId = row.getCell(columnAndIndex.get("Participant ID")).getStringCellValue();
+            String participantIdDb = row.getCell(columnAndIndex.get("Participant ID database")).getStringCellValue();
+            XmlXref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, "MI:0356"), participantId); //TODO: set to protein and check if it is other component
 
-//            XmlModelledParticipant participant = new XmlModelledParticipant(protein);
-//            ModelledFeature experimentalFeature = new XmlModelledFeature("Bait", "MI:0356");
+            XmlProtein protein = new XmlProtein(name, type, organism, uniqueId);
 
             XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(protein);
 
-//            participant.addFeature(experimentalFeature);
+            String experimentalRole = row.getCell(columnAndIndex.get("Experimental role")).getStringCellValue();
+            CvTerm bioRole = new XmlCvTerm(experimentalRole, "MI:0356"); //TODO: define that
+            participantEvidence.setExperimentalRole(bioRole);
+
             xmlParticipants.add(participantEvidence);
         }
     }
 
     public void createOneInteraction() {
 
-        Publication publication = new BibRef("14681455");
-        XmlXref onthologyId = new XmlXref(new XmlCvTerm("psi-mi", "MI:0488"), "MI:0469");
-        Source source = new XmlSource("IntAct", "European Bioinformatics Institute", onthologyId, "http://www.ebi.ac.uk", "address", publication);
+        Publication intactPubmedRef = new BibRef("14681455");
+        XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "http://www.ebi.ac.uk", "address", intactPubmedRef);
         source.setUrl("http://www.ebi.ac.uk");
 
-        XmlOrganism organism = new XmlOrganism(9606);
-
-        XmlCvTerm detectionMethod = new XmlCvTerm("detectionMethod", "MI:0356");
-        XmlExperiment experiment = new XmlExperiment(publication, detectionMethod, organism);
-
-        XmlInteractionEvidence evidence = new XmlInteractionEvidence();
-        evidence.setExperimentAndAddInteractionEvidence(experiment);
-
-        XrefContainer xrefContainer = new XrefContainer();
-
-        xrefContainer.setJAXBPrimaryRef(onthologyId);
-
         for (InteractionWithIndexes interactionWithIndexes : this.interactionWithIndexes) {
+
             XmlInteractionEvidence interaction = new XmlInteractionEvidence();
+
             for (int j = interactionWithIndexes.startIndex; j <= interactionWithIndexes.endIndex; j++) {
-                interaction.addParticipant((ParticipantEvidence) xmlParticipants.get(j));
+                interaction.addParticipant(xmlParticipants.get(j));
             }
 
-            CvTerm interactionType = new XmlCvTerm("interactionType", "MI:0356");
+            CvTerm interactionType = new XmlCvTerm("association", "MI:0356"); //TODO: check that
             interaction.setInteractionType(interactionType);
-//            interaction.setSource(source);
-//            interaction.setJAXBOrganism(organism);
+
+            //TODO: add attributeList
+
+            XmlOrganism organism = new XmlOrganism(9606); //TODO: UI FOR THAT
+            XmlCvTerm detectionMethod = new XmlCvTerm("detectionMethod", "MI:0356"); //TODO: UI
+            Publication publication = new BibRef("TestID"); //TODO: UI
+            XmlExperiment experiment = new XmlExperiment(publication, detectionMethod, organism);
+            interaction.setExperiment(experiment);
+
             xmlModelledInteractions.add(interaction);
         }
         xmlMaker.interactionsWriter();

@@ -5,6 +5,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.SuggestedOrganisms;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -24,13 +25,16 @@ public class InteractionsCreatorGui extends JPanel {
     private JTable table = new JTable();
     private InteractionsCreator interactionsCreator;
     private PsiMiXmlMaker xmlMaker;
+    SuggestedOrganisms suggestedOrganisms; //TODO: Add this column instead of the "participant taxID"
 
     String[] dataNeededForInteractor = {
+            "Interaction number",
             "Participant name",
-            "Participant full name",
             "Participant type",
             "Participant taxID",
-            "Participant unique ID",
+            "Participant ID",
+            "Participant ID database",
+            "Experimental role"
     };
 
 
@@ -39,7 +43,6 @@ public class InteractionsCreatorGui extends JPanel {
         setUpSheets();
         this.participantCreatorPanel = new JPanel(new BorderLayout());
         this.interactionsCreator = new InteractionsCreator(excelFileReader);
-
     }
 
     public JPanel participantCreatorPanel() {
@@ -54,8 +57,8 @@ public class InteractionsCreatorGui extends JPanel {
         JScrollPane scrollPane = new JScrollPane(table);
         sheetSelectorPanel.add(scrollPane);
 
-        JButton processFileButton = createProcessFileButton();
 
+        JButton processFileButton = createProcessFileButton();
         participantCreatorPanel.add(sheetSelectorPanel, BorderLayout.NORTH);
         participantCreatorPanel.add(processFileButton, BorderLayout.SOUTH);
 
@@ -135,8 +138,8 @@ public class InteractionsCreatorGui extends JPanel {
         JTable table = new JTable();
         TableModel tableModel = new DefaultTableModel(
                 new Object[][]{{"Select from file", "Select from file", "Select from file", "Select from file",
-                        "Select from file"}},
-                new String[]{"Title 1", "Title 2", "Title 3", "Title 4", "Title 5"}
+                        "Select from file", "Select from file", "Select from file"},},
+                new String[]{"Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6", "Title 7"}
         );
 
         table.setModel(tableModel);
@@ -169,4 +172,6 @@ public class InteractionsCreatorGui extends JPanel {
         }
         return dataTypeAndColumn;
     }
+
+
 }

@@ -121,6 +121,7 @@ public class UniprotMapperGui extends JPanel {
                 }
             }
         });
+
         return processFile;
     }
 }
