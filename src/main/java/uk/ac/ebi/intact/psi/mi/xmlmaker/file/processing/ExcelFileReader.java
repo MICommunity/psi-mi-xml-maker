@@ -36,6 +36,7 @@ public class ExcelFileReader {
     public ArrayList<String> sheets = new ArrayList<>();
     public ArrayList<String> columns = new ArrayList<>();
     public Workbook workbook;
+    public ArrayList<ArrayList<String>> fileData;
 
     public ExcelFileReader() {
         this.fileName = null;
@@ -93,6 +94,7 @@ public class ExcelFileReader {
         try (POIFSFileSystem poifsFileSystem = new POIFSFileSystem(new File(filePath))) {
             workbook = new HSSFWorkbook(poifsFileSystem);
             getSheets();
+            fileData.clear();
         }
     }
 
@@ -100,6 +102,7 @@ public class ExcelFileReader {
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
             workbook = new XSSFWorkbook(fileInputStream);
             getSheets();
+            fileData.clear();
         }
     }
 
@@ -128,6 +131,7 @@ public class ExcelFileReader {
             LOGGER.log(Level.SEVERE, "Unable to read file with separator: " + e.getMessage(), e);
         }
         workbook = null;
+        fileData = data;
         return data;
     }
 
@@ -195,54 +199,61 @@ public class ExcelFileReader {
 
 //    TODO: cleanup and extract those function in the ExcelFileWriter.java
 
-    public void checkAndInsertUniprotResultsExcel(String sheetSelected, String organismId, String selectedColumn) {
+    public void checkAndInsertUniprotResultsExcel(String sheetSelected, String selectedColumn,
+                                                  int organismColumnIndex, int idDbColumnIndex) {
         Sheet sheet = workbook.getSheet(sheetSelected);
         if (sheet == null) {
             xmlMakerutils.showErrorDialog("Sheet not found");
             return;
         }
-        int selectedColumnIndex = findColumnIndex(sheet, selectedColumn);
-        if (selectedColumnIndex != -1) {
-            insertColumnWithUniprotResults(sheet, selectedColumnIndex, organismId);
+        int idColumnIndex = findColumnIndex(sheet, selectedColumn);
+        if (idColumnIndex != -1) {
+            insertColumnWithUniprotResults(sheet, idColumnIndex, organismColumnIndex, idDbColumnIndex);
         } else {
             xmlMakerutils.showErrorDialog("Column not found");
         }
-        writeWorkbookToFile(currentFilePath);
+        writeWorkbookToFile();
     }
 
-    public ArrayList<ArrayList<String>> checkAndInsertUniprotResultsFileSeparatedFormat(String organismId, String selectedColumn) {
+    public void checkAndInsertUniprotResultsFileSeparatedFormat(
+            String idColumnIndex, int organismColumnIndex, int idDbColumnIndex) {
         int idInputColumnIndex = 0;
         ArrayList<ArrayList<String>> data = readFileWithSeparator();
         ArrayList<String> header = data.get(0);
 
         for (int cell = 0; cell < header.size(); cell++) {
-            if (header.get(cell).equals(selectedColumn)) {
+            if (header.get(cell).equals(idColumnIndex)) {
                 idInputColumnIndex = cell;
                 break;
             }
         }
 
-        if (header.size() <= idInputColumnIndex + 1 || !header.get(header.size() - 1).equals("UniprotResult")) {
-            header.add("Uniprot Ids");
-        }
-
         for (int i = 1; i < data.size(); i++) {
             ArrayList<String> row = data.get(i);
-            String uniprotResult = uniprotMapper.fetchUniprotResults(row.get(idInputColumnIndex), organismId);
-            row.add(header.size()-1, uniprotResult.isEmpty() ? "null" : uniprotResult);
-        }
+            String currentValue = row.get(idInputColumnIndex);
+            String uniprotResult = uniprotMapper.fetchUniprotResults(
+                    currentValue,
+                    row.get(organismColumnIndex),
+                    row.get(idDbColumnIndex)
+            );
 
-        xmlMakerutils.showInfoDialog("File processed!");
+            if (uniprotResult != null && !uniprotResult.isEmpty()) {
+                row.set(idInputColumnIndex, uniprotResult);
+            }
+            else {
+                continue;
+            }
+        }
         writeFileWithSeparator(data);
-        return data;
     }
 
-    private void writeWorkbookToFile(String fileUrl) {
+    private void writeWorkbookToFile() {
         try {
-            File inputFile = Paths.get(fileUrl).toFile();
+            File inputFile = Paths.get(currentFilePath).toFile();
             try (FileOutputStream fileOut = new FileOutputStream(inputFile)) {
                 workbook.write(fileOut);
-                xmlMakerutils.showInfoDialog("New column inserted with UniProt accession numbers in " + inputFile.getName());
+                xmlMakerutils.showInfoDialog("File modified successfully.");
+                selectFileOpener(currentFilePath);
             }
         } catch (Exception e) {
             xmlMakerutils.showErrorDialog("Error writing Excel file");
@@ -250,67 +261,35 @@ public class ExcelFileReader {
         }
     }
 
-    public void insertColumnWithUniprotResults(Sheet sheet, int columnIndex, String organismId) {
+    public void insertColumnWithUniprotResults(Sheet sheet, int idColumnIndex,
+                                               int organismColumnIndex, int idDbColumnIndex) {
         for (int rowIndex = 0; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
             Row row = sheet.getRow(rowIndex);
             if (row == null) {
                 row = sheet.createRow(rowIndex);
             }
-            shiftCellsToTheRight(row, columnIndex);
-            Cell previousCell = row.getCell(columnIndex);
+            Cell previousCell = row.getCell(idColumnIndex);
+
+            String organism = organismTaxIdFormatter(row.getCell(organismColumnIndex).getStringCellValue()); //TODO: use taxID
+            String idDb = row.getCell(idDbColumnIndex).getStringCellValue();
+
             if (previousCell != null) {
                 String geneValue = formatter.formatCellValue(previousCell);
                 String uniprotResult;
                 if (rowIndex == 0) {
-                    uniprotResult = "UniprotAc " + geneValue; // geneValue == header cell
+                        uniprotResult = "Updated " + geneValue; // geneValue == header cell
                 } else {
-                    uniprotResult = uniprotMapper.fetchUniprotResults(geneValue, organismId);
+                    uniprotResult = uniprotMapper.fetchUniprotResults(geneValue, organism, idDb);
                 }
-                if (!uniprotResult.isEmpty()) {
-                    Cell newCell = row.createCell(columnIndex);
-                    newCell.setCellValue(uniprotResult);
+                if (uniprotResult != null && !uniprotResult.isEmpty()) {
+                    previousCell.setCellValue(uniprotResult);
                     if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
-                        highlightCells(newCell);
+                        highlightCells(previousCell);
                     }
                 } else {
-                    row.createCell(columnIndex);
+                    continue;
                 }
             }
-        }
-    }
-
-    private void shiftCellsToTheRight(Row row, int columnIndex) {
-        for (int colNum = row.getLastCellNum(); colNum > columnIndex; colNum--) {
-            Cell oldCell = row.getCell(colNum - 1);
-            Cell newCell = row.createCell(colNum);
-            if (oldCell != null) {
-                cloneCell(oldCell, newCell);
-            }
-        }
-    }
-
-    public static void cloneCell(Cell oldCell, Cell newCell) {
-        newCell.setCellStyle(oldCell.getCellStyle());
-        switch (oldCell.getCellType()) {
-            case STRING:
-                newCell.setCellValue(oldCell.getStringCellValue());
-                break;
-            case NUMERIC:
-                newCell.setCellValue(oldCell.getNumericCellValue());
-                break;
-            case BOOLEAN:
-                newCell.setCellValue(oldCell.getBooleanCellValue());
-                break;
-            case FORMULA:
-                newCell.setCellFormula(oldCell.getCellFormula());
-                break;
-            case ERROR:
-                newCell.setCellErrorValue(oldCell.getErrorCellValue());
-                break;
-            case BLANK:
-            default:
-                newCell.setBlank();
-                break;
         }
     }
 
@@ -340,9 +319,17 @@ public class ExcelFileReader {
                 writer.newLine();
             }
             xmlMakerutils.showInfoDialog("File modified successfully.");
+            selectFileOpener(currentFilePath);
         } catch (IOException e) {
             xmlMakerutils.showErrorDialog("Error modifying to file: " + e.getMessage());
         }
     }
 
+    public String organismTaxIdFormatter(String organism) {
+        String[] parts = organism.split("/");
+        if (parts.length > 1) {
+            return parts[1].trim();
+        }
+        return "null";
+    }
 }

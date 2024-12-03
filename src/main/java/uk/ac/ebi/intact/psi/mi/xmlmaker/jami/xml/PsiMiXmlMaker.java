@@ -10,7 +10,6 @@ import psidev.psi.mi.jami.model.ComplexType;
 import psidev.psi.mi.jami.model.InteractionCategory;
 import psidev.psi.mi.jami.model.Publication;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
-import psidev.psi.mi.jami.xml.model.extension.factory.options.PsiXmlWriterOptions;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
@@ -22,12 +21,10 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
 import java.util.*;
 
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreator.olsClient;
-
 public class PsiMiXmlMaker {
     InteractionsCreator interactionsCreator;
     ArrayList<XmlInteractionEvidence> xmlModelledInteractions;
-    private static OLSClient olsClient = new OLSClient(new OLSWsConfig());
+    private static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
     @Setter
     String publicationId;
 
@@ -40,18 +37,22 @@ public class PsiMiXmlMaker {
         String xmlFileName = "test.xml";
 
         Publication intactPubmedRef = new BibRef(publicationId);
+        String intactMiId = olsClient.getExactTermByName("intact", "mi").getOboId().
+                getIdentifier();
+
         XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "http://www.ebi.ac.uk",
                 "European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge, CB10 1SD, United Kingdom.", intactPubmedRef);
         source.setUrl("http://www.ebi.ac.uk");
         source.setFullName("European Bioinformatics Institute");
 
-        String dbMiId = olsClient.getExactTermByName("pubmed", "mi").getOboId().
-                getIdentifier();
-        XmlCvTerm dataBase = new XmlCvTerm("pubmed", dbMiId);
-        XmlXref primaryXref = new XmlXref(dataBase, publicationId);
+        XmlXref primaryXref = createXref("pubmed", "primary-reference", "pubmed", publicationId);
+        //TODO: check why it is not considered primary
+        XmlXref secondaryXref = createXref("psi-mi", "identity", "psi-mi", intactMiId);
+        secondaryXref.setSecondary("secondary-reference");
 
         CvTermXrefContainer xrefContainer = new CvTermXrefContainer();
         xrefContainer.setJAXBPrimaryRef(primaryXref);
+        xrefContainer.getJAXBSecondaryRefs().add(secondaryXref);
         source.setJAXBXref(xrefContainer);
 
         GregorianCalendar calendar = new GregorianCalendar();
@@ -109,6 +110,17 @@ public class PsiMiXmlMaker {
                 }
             }
         }
+    }
+
+    public XmlXref createXref(String name, String refType, String database, String id){
+        String dbMiId = olsClient.getExactTermByName(name, "mi").getOboId().
+                getIdentifier();
+        String refTypeMiId = olsClient.getExactTermByName(refType, "mi").getOboId().
+                getIdentifier();
+        XmlCvTerm refTypeCv = new XmlCvTerm(refType, refTypeMiId);
+        XmlCvTerm databaseCv = new XmlCvTerm(database, dbMiId);
+
+        return new XmlXref(databaseCv, id, refTypeCv);
     }
 
 }

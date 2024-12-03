@@ -10,24 +10,27 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.PsiMiXmlMakerGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.organisms.OrganismSelector;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFetcherGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 
 public class XmlMakerGui {
 
-    private static final int FRAME_WIDTH = 1000;
-    private static final int FRAME_HEIGHT = 1000;
+    private static final int FRAME_WIDTH = 2000;
+    private static final int FRAME_HEIGHT = 2000;
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGui.class.getName());
     private final ExcelFileReader excelFileReader;
     private final UniprotMapperGui uniprotMapperGui;
     private final InteractionsCreatorGui interactionsCreatorGui;
     private final PsiMiXmlMakerGui psiMiXmlMakerGui;
+    private final OrganismSelector organismSelector;
 
     public XmlMakerGui() {
         this.excelFileReader = new ExcelFileReader();
+        this.organismSelector = new OrganismSelector();
         this.uniprotMapperGui = new UniprotMapperGui(excelFileReader);
-        this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui);
+        this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui, organismSelector);
         this.psiMiXmlMakerGui = new PsiMiXmlMakerGui(interactionsCreatorGui.interactionsCreator);
     }
 
@@ -35,11 +38,11 @@ public class XmlMakerGui {
         JFrame frame = createMainFrame();
         frame.add(createExcelFileLabel());
         frame.add(createFileFetcherPanel());
+//        frame.add(createOrganismSelectorPanel());
         frame.add(createUniprotMapperPanel());
         frame.add(createFileProcessingPanel());
         frame.add(createPsiMiXmlMakerPanel());
         makeFrameDnD(frame);
-
         frame.setVisible(true);
     }
 
@@ -152,6 +155,12 @@ public class XmlMakerGui {
                 processFile(selectedFile);
             }
         }
+    }
+
+    private JPanel createOrganismSelectorPanel(){
+        JPanel organismSelectorPanel = organismSelector.organismSelectionPanel();
+        organismSelectorPanel.setBorder(new TitledBorder("2. Select the organism"));
+        return organismSelectorPanel;
     }
 
     public static void main(String[] args) {

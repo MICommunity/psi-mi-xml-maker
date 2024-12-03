@@ -1,8 +1,6 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionListener;
 
 
 public class PsiMiXmlMakerGui {
@@ -18,9 +16,7 @@ public class PsiMiXmlMakerGui {
         xmlPanel.setBounds(10, 70, 400, 400);
 
         JButton processButton = new JButton("Create XML file");
-        processButton.addActionListener(e -> {
-            xmlMaker.interactionsWriter();
-        });
+        processButton.addActionListener(e -> xmlMaker.interactionsWriter());
 
         JPanel panel = publicationInformationPanel();
         xmlPanel.add(panel);
@@ -36,13 +32,10 @@ public class PsiMiXmlMakerGui {
         JTextField publicationTitleField = new JTextField("Publication pubmed ID");
         publicationTitleField.setEditable(true);
         JButton textValidationButton = new JButton("Submit");
-        textValidationButton.addActionListener(e -> {
-            System.out.println(publicationTitleField.getText());
-            xmlMaker.setPublicationId(publicationTitleField.getText());
-        });
+        textValidationButton.addActionListener(e -> xmlMaker.setPublicationId(publicationTitleField.getText()));
 
         publicationInformationPanel.add(publicationTitleField);
-//        publicationInformationPanel.add(textValidationButton);
+        publicationInformationPanel.add(textValidationButton);
         return publicationInformationPanel;
     }
 
@@ -54,13 +47,7 @@ public class PsiMiXmlMakerGui {
         JSpinner dateSpinner = new JSpinner(dateModel);
         JSpinner.DateEditor editor = new JSpinner.DateEditor(dateSpinner, "dd/MM/yyyy");
         dateSpinner.setEditor(editor);
-//        JButton dateSelectionButton = new JButton("Select publication release date");
-//        dateSelectionButton.addActionListener(e -> {
-////            dateSelectionPanel();
-//        });
-
         dateSelectionPanel.add(dateSpinner);
-//        dateSelectionPanel.add(dateSelectionButton);
         return dateSelectionPanel;
     }
 }

@@ -18,8 +18,8 @@ public class UniprotMapper {
     private static final String ACCEPT_HEADER = "Accept";
     private static final String ACCEPT_JSON = "application/json";
 
-    public String fetchUniprotResults(String protein, String organismId) {
-        String urlString = uniprotQueryConstructor(protein, organismId);
+    public String fetchUniprotResults(String protein, String organismId, String database) {
+        String urlString = uniprotQueryConstructor(protein, organismId, database);
         if (alreadyParsed.containsKey(protein)) {
             return alreadyParsed.get(protein);
         }
@@ -27,9 +27,9 @@ public class UniprotMapper {
             HttpURLConnection connection = createConnection(urlString);
             return parseResponse(connection, protein);
         } catch (Exception e) {
-            System.out.println("Error while fetching Uniprot results: " + e.getMessage());
+            e.printStackTrace();
         }
-        return " ";
+        return null;
     }
 
     private HttpURLConnection createConnection(String urlString) throws Exception {
@@ -52,7 +52,7 @@ public class UniprotMapper {
         } finally {
             connection.disconnect();
         }
-            return " ";
+            return null;
     }
 
     private String extractUniprotAccession(String jsonString, String protein) {
@@ -66,7 +66,7 @@ public class UniprotMapper {
         } else {
             alreadyParsed.put(protein, " ");
         }
-        return " ";
+        return null;
     }
 
     public String getUniprotAC(JsonObject results) {
@@ -117,28 +117,51 @@ public class UniprotMapper {
                 : 0;
     }
 
-    private String uniprotQueryConstructor(String query, String organismId) {
+    private String uniprotQueryConstructor(String query, String organismId, String database) {
         String uniprotApiUrl = "https://rest.uniprot.org/uniprotkb/search?query=(xref:";
-        String db = chooseDb(query);
+        organismId = organismTaxIdFormatter(organismId, "none");
+        database = chooseDbFromCol(query, database);
         String uniprotApiUrlPart2 = "%20AND%20organism_id:";
         String uniprotApiUrlPart3 = ")&format=json&fields=accession,organism_id";
-        if (db != null) {
-            return uniprotApiUrl + db  + uniprotApiUrlPart2 + organismId + uniprotApiUrlPart3;
+        if (database != null) {
+            return uniprotApiUrl + database  + uniprotApiUrlPart2 + organismId + uniprotApiUrlPart3;
         }
         else {
             return "https://rest.uniprot.org/uniprotkb/search?query=accession:" + query;
         }
     }
 
-    public String chooseDb(String query) {
-        if (query.matches("^(NM|NP|NR|NC)_[0-9]{1,8}$")) {
+//    public String chooseDb(String query) {
+//        if (query.matches("^(NM|NP|NR|NC)_[0-9]{1,8}$")) {
+//            return "RefSeq-" + query;
+//        }
+//        if (!query.matches(".*[^0-9].*")) {
+//            return "GeneID-" + query;
+//        }
+//        if (query.matches("^ENSG\\d{11}$")){
+//            return "ensembl-" + query;
+//        }
+//        return null;
+//    }
+
+    public String chooseDbFromCol(String query, String db) {
+        if (db.toLowerCase().contains("refseq")) {
             return "RefSeq-" + query;
         }
-        if (!query.matches(".*[^0-9].*")) {
+        if (db.toLowerCase().contains("geneid")) {
             return "GeneID-" + query;
         }
-        if (query.matches("^ENSG\\d{11}$")){
+        if (db.toLowerCase().contains("ensembl")) {
             return "ensembl-" + query;
+        }
+        return null;
+    }
+
+    public String organismTaxIdFormatter(String organism, String formattingType) {
+        //TODO: add the formatting type
+        String[] parts = organism.split("/");
+        if (parts.length > 1) {
+            return parts[1].trim();
         }
         return null;
     }

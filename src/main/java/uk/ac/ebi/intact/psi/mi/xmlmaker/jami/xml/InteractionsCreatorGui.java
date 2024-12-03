@@ -5,7 +5,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.SuggestedOrganisms;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.organisms.OrganismSelector;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 
 import javax.swing.*;
@@ -13,40 +13,41 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Arrays;
 
 import static org.apache.poi.ss.usermodel.CellType.STRING;
 
 public class InteractionsCreatorGui extends JPanel {
     private final JComboBox<String> sheets = new JComboBox<>();
     private final JComboBox<String> columns = new JComboBox<>();
+    private JTable table = new JTable();
+
     private final ExcelFileReader excelFileReader;
+    public final InteractionsCreator interactionsCreator;
+
     @Getter
     public JPanel participantCreatorPanel;
-    public Map<String, Integer> dataTypeAndColumn = new HashMap<>();
-    private JTable table = new JTable();
-    public final InteractionsCreator interactionsCreator;
-    private PsiMiXmlMaker xmlMaker;
-    SuggestedOrganisms suggestedOrganisms; //TODO: Add this column instead of the "participant taxID"
-    UniprotMapperGui uniprotMapperGui;
+    public Map<String, Integer> dataAndIndexes = new HashMap<>();
 
-    String[] dataNeededForInteractor = {
-            "Interaction number",
-            "Participant name",
-            "Participant type",
-            "Participant taxID",
-            "Participant ID",
-            "Participant ID database",
-            "Experimental role",
-            "Participant detection method",
+    private final String[] dataNeededForInteractor = {
+            dataTypeAndColumn.INTERACTION_NUMBER.value,
+            dataTypeAndColumn.INTERACTION_DETECTION_METHOD.value,
+            dataTypeAndColumn.HOST_ORGANISM.value,
+            dataTypeAndColumn.PARTICIPANT_NAME.value,
+            dataTypeAndColumn.PARTICIPANT_ORGANISM.value,
+            dataTypeAndColumn.PARTICIPANT_TYPE.value,
+            dataTypeAndColumn.PARTICIPANT_ID.value,
+            dataTypeAndColumn.PARTICIPANT_ID_DB.value,
+            dataTypeAndColumn.EXPERIMENTAL_ROLE.value,
+            dataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.value,
     };
 
-
-    public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui) {
+    public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui, OrganismSelector organismSelector) {
         this.excelFileReader = excelFileReader;
-        this.uniprotMapperGui = uniprotMapperGui;
         setUpSheets();
         this.participantCreatorPanel = new JPanel(new BorderLayout());
-        this.interactionsCreator = new InteractionsCreator(excelFileReader, uniprotMapperGui);
+        this.interactionsCreator = new InteractionsCreator(excelFileReader, uniprotMapperGui, organismSelector,
+                dataAndIndexes, sheets.getSelectedIndex());
     }
 
     public JPanel participantCreatorPanel() {
@@ -120,7 +121,7 @@ public class InteractionsCreatorGui extends JPanel {
                     return;
                 }
                 try {
-                    interactionsCreator.createParticipantsWithFileFormat(getDataTypeAndColumn(), sheets.getSelectedIndex());
+                    interactionsCreator.createParticipantsWithFileFormat(getDataAndIndexes(), sheets.getSelectedIndex());
                     JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -134,7 +135,7 @@ public class InteractionsCreatorGui extends JPanel {
                     return;
                 }
                 try {
-                    interactionsCreator.createParticipantsWithFileFormat(getDataTypeAndColumn(), 0);
+                    interactionsCreator.createParticipantsWithFileFormat(getDataAndIndexes(), 0);
                     JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -147,11 +148,22 @@ public class InteractionsCreatorGui extends JPanel {
 
     private JTable createInteractionDataTable() {
         JTable table = new JTable();
-        TableModel tableModel = new DefaultTableModel(
-                new Object[][]{{"Select from file", "Select from file", "Select from file", "Select from file",
-                        "Select from file", "Select from file", "Select from file", "Select from file"},},
-                new String[]{"Title 1", "Title 2", "Title 3", "Title 4", "Title 5", "Title 6", "Title 7", "Title 8"}
-        );
+        int rows = 1; // Number of rows
+        int cols = dataNeededForInteractor.length; // Number of columns
+        String defaultCellValue = "Select from file";
+        String defaultColumnTitle = "Title";
+
+        Object[][] data = new Object[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                data[i][j] = defaultCellValue;
+            }
+        }
+
+        String[] columnTitles = new String[cols];
+        Arrays.fill(columnTitles, defaultColumnTitle);
+
+        TableModel tableModel = new DefaultTableModel(data, columnTitles);
 
         table.setModel(tableModel);
 
@@ -163,11 +175,11 @@ public class InteractionsCreatorGui extends JPanel {
         return table;
     }
 
-    public Map<String, Integer> getDataTypeAndColumn() {
+    public Map<String, Integer> getDataAndIndexes() {
         if (excelFileReader.workbook == null) {
             for (int i = 0; i < table.getColumnCount(); i++) {
                 int index = excelFileReader.readFileWithSeparator().get(0).indexOf(table.getValueAt(0, i).toString());
-                dataTypeAndColumn.put(dataNeededForInteractor[i], index);
+                dataAndIndexes.put(dataNeededForInteractor[i], index);
             }
         } else {
             Sheet sheet = excelFileReader.workbook.getSheetAt(sheets.getSelectedIndex()-1);
@@ -176,13 +188,12 @@ public class InteractionsCreatorGui extends JPanel {
                 for (Cell cell : row) {
                     if (cell.getCellType() == STRING && cell.getStringCellValue()
                             .equals(table.getValueAt(0, i).toString())){
-                        dataTypeAndColumn.put(dataNeededForInteractor[i], cell.getColumnIndex());
+                        dataAndIndexes.put(dataNeededForInteractor[i], cell.getColumnIndex());
                     }
                 }
             }
         }
-        return dataTypeAndColumn;
+        return dataAndIndexes;
     }
-
-
 }
+

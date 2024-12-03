@@ -6,18 +6,16 @@ import javax.swing.*;
 import java.awt.*;
 
 public class UniprotMapperGui extends JPanel {
-
-    private final SuggestedOrganisms suggestedOrganisms = new SuggestedOrganisms();
     private final JComboBox<String> sheets = new JComboBox<>();
-    private final JComboBox<String> columns = new JComboBox<>();
-    public final JComboBox<String> suggestedOrganismsIds = new JComboBox<>();
-    private final ExcelFileReader excelFileReader;
+    private final JComboBox<String> idColumn = new JComboBox<>();
+    private final JComboBox<String> organismColumn = new JComboBox<>();
+    private final JComboBox<String> idDbColumn = new JComboBox<>();
 
+    private final ExcelFileReader excelFileReader;
 
     public UniprotMapperGui(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
         setUpSheets();
-        setUpSuggestedOrganismsIds();
     }
 
     public JPanel uniprotPanel() {
@@ -27,16 +25,20 @@ public class UniprotMapperGui extends JPanel {
         JPanel fileProcessingPanel = new JPanel();
         fileProcessingPanel.setLayout(new BoxLayout(fileProcessingPanel, BoxLayout.Y_AXIS));
 
-        suggestedOrganismsIds.setModel(new DefaultComboBoxModel<>(suggestedOrganisms.getOrganismDisplayNames()));
-        suggestedOrganismsIds.setEditable(true);
-
         fileProcessingPanel.add(sheets);
         sheets.addItem("Select sheet");
 
-        fileProcessingPanel.add(columns).setPreferredSize(new Dimension(400, 50));
-        columns.addItem("Select column");
+        fileProcessingPanel.add(idColumn).setPreferredSize(new Dimension(400, 50));
+        idColumn.addItem("Select ID column");
         sheets.addActionListener(e -> setUpColumns());
-        fileProcessingPanel.add(suggestedOrganismsIds).setPreferredSize(new Dimension(400, 20));
+
+        fileProcessingPanel.add(idDbColumn).setPreferredSize(new Dimension(400, 50));
+        idDbColumn.addItem("Select ID database column");
+        sheets.addActionListener(e -> setUpColumns());
+
+        fileProcessingPanel.add(organismColumn).setPreferredSize(new Dimension(400, 50));
+        organismColumn.addItem("Select organism column");
+        sheets.addActionListener(e -> setUpColumns());
 
         JButton processFile = processFileButton();
         uniprotPanel.add(fileProcessingPanel);
@@ -60,65 +62,63 @@ public class UniprotMapperGui extends JPanel {
     }
 
     public void setUpColumns() {
-        columns.removeAllItems();
-        columns.addItem("Select column to process");
+        idColumn.removeAllItems();
+        idColumn.addItem("Select participant id column to process");
+
+        organismColumn.removeAllItems();
+        organismColumn.addItem("Select organism column");
+
+        idDbColumn.removeAllItems();
+        idDbColumn.addItem("Select id database column");
 
         if (sheets.isEnabled()) {
             String selectedSheet = (String) sheets.getSelectedItem();
             if (selectedSheet != null && !selectedSheet.equals("Select sheet")) {
                 for (String columnName : excelFileReader.getColumns(selectedSheet)) {
-                    columns.addItem(columnName);
+                    idColumn.addItem(columnName);
+                    organismColumn.addItem(columnName);
+                    idDbColumn.addItem(columnName);
                 }
             }
         } else {
             for (String columnName : excelFileReader.getColumns("")) {
-                columns.addItem(columnName);
+                idColumn.addItem(columnName);
+                organismColumn.addItem(columnName);
+                idDbColumn.addItem(columnName);
             }
         }
     }
 
-    private void setUpSuggestedOrganismsIds() {
-        suggestedOrganismsIds.setModel(new DefaultComboBoxModel<>(suggestedOrganisms.getOrganismDisplayNames()));
-    }
-
     public JButton processFileButton() {
-        JButton processFile = new JButton("Process file");
+        JButton processFile = new JButton("Update the Uniprot ids");
         processFile.addActionListener(e -> {
 
-            String selectedDisplayName = (String) suggestedOrganismsIds.getSelectedItem();
-            String organismId = suggestedOrganisms.getOrganismId(selectedDisplayName);
-
-            if (organismId == null || organismId.isEmpty() || organismId.equals("null")) {
-                organismId = selectedDisplayName != null ? selectedDisplayName.trim() : "";
-            }
-
-            if (organismId.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please enter a valid organism ID!", "ERROR", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
             String sheetSelected = (String) sheets.getSelectedItem();
-            String columnSelected = (String) columns.getSelectedItem();
+            String idColumnIndex = (String) idColumn.getSelectedItem();
+            int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
+            int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
             if (sheets.isEnabled()) {
                 if (sheetSelected == null || sheetSelected.equals("Select sheet") ||
-                        columnSelected == null || columnSelected.equals("Select column to process")) {
+                        idColumnIndex == null || idColumnIndex.equals("Select column to process")) {
                     JOptionPane.showMessageDialog(null, "Please select a valid sheet and column!", "ERROR", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 try {
-                    excelFileReader.checkAndInsertUniprotResultsExcel(sheetSelected, organismId, columnSelected);
+                    excelFileReader.checkAndInsertUniprotResultsExcel(sheetSelected, idColumnIndex, organismColumnIndex, idDbColumnIndex);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
                 }
             } else {
-                if (columnSelected == null || columnSelected.equals("Select column to process")) {
+                if (idColumnIndex == null || idColumnIndex.equals("Select column to process")) {
                     JOptionPane.showMessageDialog(null, "Please select a valid column for processing!", "ERROR", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 try {
-                    excelFileReader.checkAndInsertUniprotResultsFileSeparatedFormat(organismId, columnSelected);
+                    excelFileReader.checkAndInsertUniprotResultsFileSeparatedFormat(idColumnIndex, organismColumnIndex, idDbColumnIndex);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
-                    System.out.println(ex.getMessage());
+                    ex.printStackTrace();
                 }
             }
         });

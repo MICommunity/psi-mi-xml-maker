@@ -4,25 +4,33 @@ import org.apache.poi.ss.usermodel.*;
 import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.SuggestedOrganisms;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.organisms.OrganismSelector;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import java.util.*;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
+import uk.ac.ebi.pride.utilities.ols.web.service.model.Term;
 
 public class InteractionsCreator {
     ExcelFileReader excelFileReader;
-    PsiMiXmlMaker xmlMaker;
     UniprotMapperGui uniprotMapperGui;
+    OrganismSelector organismSelector;
+
+
     ArrayList<InteractionWithIndexes> interactionWithIndexes = new ArrayList<>();
     ArrayList<XmlParticipantEvidence> xmlParticipants = new ArrayList<>();
     ArrayList<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
-    SuggestedOrganisms suggestedOrganisms = new SuggestedOrganisms();
     static OLSClient olsClient = new OLSClient(new OLSWsConfig());
+    Map<String, Integer> columnAndIndex;
+    int sheetSelected;
 
-    public InteractionsCreator(ExcelFileReader reader, UniprotMapperGui uniprotMapperGui) {
+    public InteractionsCreator(ExcelFileReader reader, UniprotMapperGui uniprotMapperGui,
+                               OrganismSelector organismSelector, Map<String, Integer> columnAndIndex, int sheetSelected) {
         this.excelFileReader = reader;
         this.uniprotMapperGui = uniprotMapperGui;
+        this.organismSelector = organismSelector;
+        this.columnAndIndex = columnAndIndex;
+        this.sheetSelected = sheetSelected;
     }
 
     public void createParticipantsWithFileFormat(Map<String, Integer> columnAndIndex, int sheetSelected){
@@ -30,10 +38,10 @@ public class InteractionsCreator {
         xmlModelledInteractions.clear();
         excelFileReader.selectFileOpener(excelFileReader.currentFilePath);
         if (excelFileReader.workbook == null){
-            createGroups("Interaction number"); //TODO: UI for that
+            createGroups(dataTypeAndColumn.INTERACTION_NUMBER.value);
             createParticipantsWithFileSeparator(columnAndIndex);
         } else {
-            createGroupsWithWorkbook("Interaction number", sheetSelected); //TODO: UI for that
+            createGroupsWithWorkbook(dataTypeAndColumn.INTERACTION_NUMBER.value, sheetSelected);
             createParticipantsWithWorkbook(columnAndIndex, sheetSelected - 1);
         }
         createInteractions();
@@ -61,8 +69,8 @@ public class InteractionsCreator {
                 startIndex = i;
             }
         }
-        if (startIndex != null && currentInteractionNumber != null) {
-            interactionWithIndexes.add(new InteractionWithIndexes(currentInteractionNumber, startIndex, data.size()));
+        if (startIndex != null) {
+            interactionWithIndexes.add(new InteractionWithIndexes(currentInteractionNumber, startIndex, data.size()-1));
         }
     }
 
@@ -102,7 +110,6 @@ public class InteractionsCreator {
         if (startIndex != null) {
             interactionWithIndexes.add(new InteractionWithIndexes(currentInteractionNumber, startIndex, sheet.getLastRowNum()-1));
         }
-        System.out.println("groups created");
     }
 
     private int getColumnIndexFromSheet(Sheet sheet, String columnName) {
@@ -131,17 +138,69 @@ public class InteractionsCreator {
     }
 
     public void createParticipantsWithFileSeparator(Map<String, Integer> columnAndIndex) {
-        //TODO: ADAPT THE SAME WAY AS THE WORKBOOK ONE
-
         ArrayList<ArrayList<String>> data = excelFileReader.readFileWithSeparator();
+
         for (ArrayList<String> datum : data) {
-            String name = datum.get(columnAndIndex.get("Participant name"));
-            String fullName = datum.get(columnAndIndex.get("Participant full name"));
-            XmlCvTerm type = new XmlCvTerm("Test", "MI:1234");
-            XmlOrganism organism = new XmlOrganism(9606);
-            XmlXref uniqueId = new XmlXref(new XmlCvTerm("testDb", "MI:5678"), "id");
-            XmlProtein protein = new XmlProtein(name, fullName, type, organism, uniqueId);
+            String name = datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_NAME.value));
+            String participantType = datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_TYPE.value));
+            String participantTypeMiId = null;
+            try {
+                participantTypeMiId = olsClient.getExactTermByName(participantType, "mi") != null
+                        ? olsClient.getExactTermByName(participantType, "mi").getOboId().getIdentifier()
+                        : null;
+            } catch (NullPointerException e) {
+                System.err.println("Failed to retrieve MI ID for participantType: " + participantType);
+            }
+            XmlCvTerm type = new XmlCvTerm(participantType, participantTypeMiId);
+
+            int participantOrganism = Integer.parseInt(organismSelector.getSelectedOrganism());
+            XmlOrganism organism = new XmlOrganism(participantOrganism);
+
+            String participantId = datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ID.value));
+            String participantIdDb = datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ID_DB.value));
+
+            String participantIdDbMiId = null;
+            if (participantIdDb != null && !participantIdDb.isEmpty()) {
+                try {
+                    Term term = olsClient.getExactTermByName(participantIdDb, "mi");
+                    if (term != null && term.getOboId() != null) {
+                        participantIdDbMiId = term.getOboId().getIdentifier();
+                    }
+                } catch (NullPointerException e) {
+                    System.err.println("Failed to retrieve MI ID for participantIdDb: " + participantIdDb);
+                }
+            }
+            XmlXref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, participantIdDbMiId), participantId);
+
+            XmlProtein protein = new XmlProtein(name, type, organism, uniqueId);
             XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(protein);
+
+            String experimentalRole = datum.get(columnAndIndex.get(dataTypeAndColumn.EXPERIMENTAL_ROLE.value));
+            String experimentalRoleMiId = null;
+            CvTerm bioRole = null;
+            if (experimentalRole != null) {
+                try {
+                    Term roleTerm = olsClient.getExactTermByName(experimentalRole, "mi");
+                    if (roleTerm != null && roleTerm.getOboId() != null) {
+                        experimentalRoleMiId = roleTerm.getOboId().getIdentifier();
+                    }
+                } catch (NullPointerException e) {
+                    System.err.println("Failed to retrieve MI ID for experimentalRole: " + experimentalRole);
+                }
+            }
+
+            if (experimentalRoleMiId != null) {
+                bioRole = new XmlCvTerm(experimentalRole, experimentalRoleMiId);
+            } else {
+                System.err.println("Experimental role MI ID is null; defaulting to null bioRole.");
+            }
+
+            if (bioRole != null) {
+                participantEvidence.setExperimentalRole(bioRole);
+            } else {
+                System.err.println("bioRole is null; skipping setting experimental role on participant evidence.");
+            }
+
             xmlParticipants.add(participantEvidence);
         }
     }
@@ -151,37 +210,37 @@ public class InteractionsCreator {
         for (int i = 1; i <= workbook.getSheetAt(sheetSelected).getLastRowNum(); i++) {
             Row row = workbook.getSheetAt(sheetSelected).getRow(i);
 
-            String name = row.getCell(columnAndIndex.get("Participant name")).getStringCellValue();
+            String name = row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_NAME.value)).getStringCellValue();
 
-            String participantType = row.getCell(columnAndIndex.get("Participant type")).getStringCellValue();
+            String participantType = row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_TYPE.value)).getStringCellValue();
             String participantTypeMiId = olsClient.getExactTermByName(participantType, "mi").getOboId().getIdentifier();
             XmlCvTerm type = new XmlCvTerm(participantType, participantTypeMiId);
 
-            int participantOrganism = Integer.parseInt(suggestedOrganisms.getOrganismId((String) uniprotMapperGui.
-                    suggestedOrganismsIds.getSelectedItem())); //TODO: set up a check for if selected or put the organism selection outside of uniprotmapping
+            int participantOrganism = Integer.parseInt(organismSelector.getSelectedOrganism()); //TODO: go back to the column
             XmlOrganism organism = new XmlOrganism(participantOrganism);
 
-            String participantId = row.getCell(columnAndIndex.get("Participant ID")).getStringCellValue();
-            String participantIdDb = row.getCell(columnAndIndex.get("Participant ID database")).getStringCellValue();
+            String participantId = row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ID.value)).getStringCellValue();
+            String participantIdDb = row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ID_DB.value)).getStringCellValue();
             String participantIdDbMiId = olsClient.getExactTermByName(participantIdDb, "mi").getOboId().
                     getIdentifier();
             XmlXref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, participantIdDbMiId), participantId);
 
-            XmlProtein protein = new XmlProtein(name, type, organism, uniqueId);
-            XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(protein);
+            XmlInteractor interactor = new XmlInteractor(name, type, organism, uniqueId);
+            interactor.setShortName(name);
 
-            String experimentalRole = row.getCell(columnAndIndex.get("Experimental role")).getStringCellValue();
+            XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(interactor);
+
+//            String featureCell = row.getCell(columnAndIndex.get("Feature")).getStringCellValue();
+//            XmlFeature feature = new XmlFeature();
+//            if (feature){
+//           participantEvidence.addFeature(); //TODO: add features
+//            }
+
+            String experimentalRole = row.getCell(columnAndIndex.get(dataTypeAndColumn.EXPERIMENTAL_ROLE.value)).getStringCellValue();
             String experimentalRoleMiId = olsClient.getExactTermByName(experimentalRole, "mi").getOboId().
                     getIdentifier();
-            CvTerm bioRole = new XmlCvTerm(experimentalRole, experimentalRoleMiId);
-            participantEvidence.setExperimentalRole(bioRole);
-
-//            String identificationMethod = row.getCell(columnAndIndex.get("Participant detection method")).
-//                    getStringCellValue();
-//            String identificationMethodMiId = olsClient.getExactTermByName(identificationMethod, "mi").getOboId().
-//                    getIdentifier();
-//            participantEvidence.setJAXBParticipantIdentificationMethodWrapper(
-//                    new XmlParticipantEvidence.JAXBParticipantIdentificationWrapper()); //TODO: check to add that
+            CvTerm experimentalRoleCvTerm = new XmlCvTerm(experimentalRole, experimentalRoleMiId);
+            participantEvidence.setExperimentalRole(experimentalRoleCvTerm);
 
             xmlParticipants.add(participantEvidence);
         }
@@ -190,22 +249,58 @@ public class InteractionsCreator {
     public void createInteractions() {
         for (InteractionWithIndexes interactionWithIndexes : this.interactionWithIndexes) {
             XmlInteractionEvidence interaction = new XmlInteractionEvidence();
+            String interactionDetectionMethod = "detectionMethod";
+            String identificationMethod = "identificationMethod";
+            String hostOrganism = "hostOrganism";
+
             for (int j = interactionWithIndexes.startIndex; j <= interactionWithIndexes.endIndex; j++) {
                 interaction.addParticipant(xmlParticipants.get(j));
+                if (excelFileReader.workbook != null) {
+                    interactionDetectionMethod = getColumnFromWorkbook(dataTypeAndColumn.INTERACTION_DETECTION_METHOD.value, j);
+                    identificationMethod = getColumnFromWorkbook(dataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.value, j);
+                    hostOrganism = getColumnFromWorkbook(dataTypeAndColumn.HOST_ORGANISM.value, j);
+                }
+                else if (excelFileReader.fileData != null) {
+                    interactionDetectionMethod = getColumnFromFileWithSeparator(dataTypeAndColumn.INTERACTION_DETECTION_METHOD.value, j);
+                    identificationMethod = getColumnFromFileWithSeparator(dataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.value, j);
+                    hostOrganism = getColumnFromFileWithSeparator(dataTypeAndColumn.HOST_ORGANISM.value, j);
+                }
             }
+
             CvTerm interactionType = new XmlCvTerm("association", "MI:0356"); //TODO: check that
             interaction.setInteractionType(interactionType);
 
             //TODO: add attributeList
 
-            XmlOrganism organism = new XmlOrganism(9606); //TODO: UI FOR THAT
-            XmlCvTerm detectionMethod = new XmlCvTerm("detectionMethod", "MI:0356"); //TODO: UI
-            Publication publication = new BibRef("TestID"); //TODO: UI
-            XmlExperiment experiment = new XmlExperiment(publication, detectionMethod, organism);
-            interaction.setExperiment(experiment);
+            int hostOrganismInt = Integer.parseInt(excelFileReader.organismTaxIdFormatter(hostOrganism));
+            XmlOrganism organism = new XmlOrganism(hostOrganismInt);
 
+            String interactionDetectionMiId = olsClient.getExactTermByName(interactionDetectionMethod, "mi").getOboId().
+                    getIdentifier();
+            XmlCvTerm detectionMethod = new XmlCvTerm(interactionDetectionMethod, interactionDetectionMiId);
+            Publication publication = new BibRef("TOSEE"); //TODO: UI
+            XmlExperiment experiment = new XmlExperiment(publication, detectionMethod, organism);
+
+            String identificationMethodMiId = olsClient.getExactTermByName(identificationMethod, "mi").getOboId().
+                    getIdentifier();
+            XmlCvTerm identificationMethodCv = new XmlCvTerm(identificationMethod, identificationMethodMiId);
+            experiment.setParticipantIdentificationMethod(identificationMethodCv);
+
+
+
+            interaction.setExperiment(experiment);
             xmlModelledInteractions.add(interaction);
         }
-//        xmlMaker.interactionsWriter();
     }
+
+    public String getColumnFromWorkbook(String toGet, int rowSelected) {
+        Workbook workbook = excelFileReader.workbook;
+        return workbook.getSheetAt(sheetSelected).getRow(rowSelected).getCell(columnAndIndex.get(toGet)).getStringCellValue();
+    }
+
+    public String getColumnFromFileWithSeparator(String toGet, int rowSelected) {
+        ArrayList<ArrayList<String>> fileData = excelFileReader.fileData;
+        return fileData.get(rowSelected).get(columnAndIndex.get(toGet));
+    }
+
 }

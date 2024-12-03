@@ -1,4 +1,4 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.organisms;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,7 +11,7 @@ public class SuggestedOrganisms {
     }
 
     private void initializeOrganismMap() {
-        organismMap.put("0", "Select or type organism ID");
+        organismMap.put("-1", "Select or type organism ID");
         organismMap.put("9606", "Homo sapiens (9606)");
         organismMap.put("10090", "Mus musculus (10090)");
         organismMap.put("10116", "Rattus norvegicus (10116)");
