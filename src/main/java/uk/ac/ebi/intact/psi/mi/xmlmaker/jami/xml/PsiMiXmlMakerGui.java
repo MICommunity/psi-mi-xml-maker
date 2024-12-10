@@ -1,15 +1,19 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+
 import javax.swing.*;
 
 
 public class PsiMiXmlMakerGui {
-    PsiMiXmlMaker xmlMaker;
-    InteractionsCreator interactionsCreator;
+    final PsiMiXmlMaker xmlMaker;
+    final InteractionsCreator interactionsCreator;
+    private ExcelFileReader excelFileReader;
 
-    public PsiMiXmlMakerGui(InteractionsCreator interactionsCreator) {
+    public PsiMiXmlMakerGui(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
         this.interactionsCreator = interactionsCreator;
-        xmlMaker = new PsiMiXmlMaker(interactionsCreator);
+        this.excelFileReader = excelFileReader;
+        xmlMaker = new PsiMiXmlMaker(interactionsCreator, excelFileReader);
     }
     public JPanel PsiMiXmlMakerPanel() {
         JPanel xmlPanel = new JPanel();
@@ -29,13 +33,13 @@ public class PsiMiXmlMakerGui {
         JPanel publicationInformationPanel = new JPanel();
         publicationInformationPanel.setLayout(new BoxLayout(publicationInformationPanel, BoxLayout.Y_AXIS));
 
-        JTextField publicationTitleField = new JTextField("Publication pubmed ID");
-        publicationTitleField.setEditable(true);
-        JButton textValidationButton = new JButton("Submit");
-        textValidationButton.addActionListener(e -> xmlMaker.setPublicationId(publicationTitleField.getText()));
+//        JTextField publicationTitleField = new JTextField("Publication pubmed ID");
+//        publicationTitleField.setEditable(true);
+//        JButton textValidationButton = new JButton("Submit");
+//        textValidationButton.addActionListener(e -> xmlMaker.setPublicationId(publicationTitleField.getText()));
 
-        publicationInformationPanel.add(publicationTitleField);
-        publicationInformationPanel.add(textValidationButton);
+//        publicationInformationPanel.add(publicationTitleField);
+//        publicationInformationPanel.add(textValidationButton);
         return publicationInformationPanel;
     }
 

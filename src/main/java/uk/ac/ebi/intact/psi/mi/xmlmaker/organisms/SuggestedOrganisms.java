@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SuggestedOrganisms {
-    private final Map<String, String> organismMap = new LinkedHashMap<>();
+    public final Map<String, String> organismMap = new LinkedHashMap<>();
 
     public SuggestedOrganisms() {
         initializeOrganismMap();
@@ -39,6 +39,7 @@ public class SuggestedOrganisms {
         organismMap.put("208964", "Pseudomonas aeruginosa (208964)");
         organismMap.put("7787", "Tetronarce californica (7787)");
         organismMap.put("243277", "Vibrio cholerae serotype O1 (243277)");
+        organismMap.put("381124", "Zea mays subsp. mays (381124)");
     }
 
     public String[] getOrganismDisplayNames() {

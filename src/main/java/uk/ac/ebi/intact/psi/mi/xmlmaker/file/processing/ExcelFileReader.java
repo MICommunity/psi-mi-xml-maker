@@ -1,5 +1,7 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
@@ -30,13 +32,16 @@ public class ExcelFileReader {
     public String fileName;
     public String fileType;
     public String separator = null;
+    public String publicationId;
 
-    public JLabel currentFileLabel;
+    public final JLabel currentFileLabel;
 
-    public ArrayList<String> sheets = new ArrayList<>();
-    public ArrayList<String> columns = new ArrayList<>();
+    public final ArrayList<String> sheets = new ArrayList<>();
+    public final ArrayList<String> columns = new ArrayList<>();
     public Workbook workbook;
     public ArrayList<ArrayList<String>> fileData;
+    private final String[] moleculeSetOption = {"Check in file", "Remove interaction"};
+
 
     public ExcelFileReader() {
         this.fileName = null;
@@ -102,7 +107,7 @@ public class ExcelFileReader {
         try (FileInputStream fileInputStream = new FileInputStream(filePath)) {
             workbook = new XSSFWorkbook(fileInputStream);
             getSheets();
-            fileData.clear();
+            fileData = null;
         }
     }
 
@@ -195,6 +200,14 @@ public class ExcelFileReader {
         return fileName != null ? "Current file: " + fileName : "No file selected";
     }
 
+    public void setPublicationId(String publicationId) {
+        this.publicationId = publicationId;
+    }
+
+    public String getPublicationId() {
+        return publicationId;
+    }
+
 //    MODIFY AND WRITE FILES
 
 //    TODO: cleanup and extract those function in the ExcelFileWriter.java
@@ -215,8 +228,8 @@ public class ExcelFileReader {
         writeWorkbookToFile();
     }
 
-    public void checkAndInsertUniprotResultsFileSeparatedFormat(
-            String idColumnIndex, int organismColumnIndex, int idDbColumnIndex) {
+    public void checkAndInsertUniprotResultsFileSeparatedFormat(String idColumnIndex, int organismColumnIndex,
+                                                                int idDbColumnIndex) {
         int idInputColumnIndex = 0;
         ArrayList<ArrayList<String>> data = readFileWithSeparator();
         ArrayList<String> header = data.get(0);
@@ -239,9 +252,9 @@ public class ExcelFileReader {
 
             if (uniprotResult != null && !uniprotResult.isEmpty()) {
                 row.set(idInputColumnIndex, uniprotResult);
-            }
-            else {
-                continue;
+                if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)){
+                    xmlMakerutils.showActionDialog(moleculeSetOption);
+                }
             }
         }
         writeFileWithSeparator(data);
@@ -270,7 +283,9 @@ public class ExcelFileReader {
             }
             Cell previousCell = row.getCell(idColumnIndex);
 
-            String organism = organismTaxIdFormatter(row.getCell(organismColumnIndex).getStringCellValue()); //TODO: use taxID
+            int organismId = xmlMakerutils.findMostSimilarOrganism(row.getCell(organismColumnIndex).getStringCellValue());
+//            int organismId = Integer.parseInt(xmlMakerutils.fetchTaxIdForOrganism(row.getCell(organismColumnIndex).getStringCellValue()));
+            String organism = String.valueOf(organismId);
             String idDb = row.getCell(idDbColumnIndex).getStringCellValue();
 
             if (previousCell != null) {
@@ -285,9 +300,8 @@ public class ExcelFileReader {
                     previousCell.setCellValue(uniprotResult);
                     if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
                         highlightCells(previousCell);
+                        xmlMakerutils.showActionDialog(moleculeSetOption);
                     }
-                } else {
-                    continue;
                 }
             }
         }
@@ -325,11 +339,5 @@ public class ExcelFileReader {
         }
     }
 
-    public String organismTaxIdFormatter(String organism) {
-        String[] parts = organism.split("/");
-        if (parts.length > 1) {
-            return parts[1].trim();
-        }
-        return "null";
-    }
+
 }

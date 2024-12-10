@@ -24,21 +24,19 @@ public class XmlMakerGui {
     private final UniprotMapperGui uniprotMapperGui;
     private final InteractionsCreatorGui interactionsCreatorGui;
     private final PsiMiXmlMakerGui psiMiXmlMakerGui;
-    private final OrganismSelector organismSelector;
 
     public XmlMakerGui() {
         this.excelFileReader = new ExcelFileReader();
-        this.organismSelector = new OrganismSelector();
+        OrganismSelector organismSelector = new OrganismSelector();
         this.uniprotMapperGui = new UniprotMapperGui(excelFileReader);
         this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui, organismSelector);
-        this.psiMiXmlMakerGui = new PsiMiXmlMakerGui(interactionsCreatorGui.interactionsCreator);
+        this.psiMiXmlMakerGui = new PsiMiXmlMakerGui(interactionsCreatorGui.interactionsCreator, excelFileReader);
     }
 
     public void initialize() {
         JFrame frame = createMainFrame();
         frame.add(createExcelFileLabel());
         frame.add(createFileFetcherPanel());
-//        frame.add(createOrganismSelectorPanel());
         frame.add(createUniprotMapperPanel());
         frame.add(createFileProcessingPanel());
         frame.add(createPsiMiXmlMakerPanel());
@@ -120,7 +118,7 @@ public class XmlMakerGui {
     private void processFile(File file) {
         String filePath = file.getAbsolutePath();
         if (isValidFileType(filePath)) {
-            XmlMakerUtils.processFile(filePath);
+            XmlMakerUtils.processFile(filePath, excelFileReader);
             excelFileReader.selectFileOpener(filePath);
             uniprotMapperGui.setUpSheets();
             interactionsCreatorGui.setUpSheets();
@@ -155,12 +153,6 @@ public class XmlMakerGui {
                 processFile(selectedFile);
             }
         }
-    }
-
-    private JPanel createOrganismSelectorPanel(){
-        JPanel organismSelectorPanel = organismSelector.organismSelectionPanel();
-        organismSelectorPanel.setBorder(new TitledBorder("2. Select the organism"));
-        return organismSelectorPanel;
     }
 
     public static void main(String[] args) {

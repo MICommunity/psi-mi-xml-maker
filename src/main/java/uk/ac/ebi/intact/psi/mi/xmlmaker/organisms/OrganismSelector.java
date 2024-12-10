@@ -44,8 +44,6 @@ public class OrganismSelector {
     }
 
     private void addComboBoxListener() {
-        suggestedOrganismsIds.addActionListener(e -> {
-            organismSelected = getSelectedOrganism();
-        });
+        suggestedOrganismsIds.addActionListener(e -> organismSelected = getSelectedOrganism());
     }
 }

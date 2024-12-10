@@ -11,7 +11,13 @@ public enum dataTypeAndColumn {
     PARTICIPANT_ORGANISM("Participant taxID"),
     EXPERIMENTAL_ROLE("Experimental role"),
     PARTICIPANT_IDENTIFICATION_METHOD("Participant identification method"),
-    HOST_ORGANISM("Host organism"),;
+    HOST_ORGANISM("Host organism"),
+    INTERACTION_TYPE("Interaction type"),
+    FEATURE_SHORT_LABEL("Feature short label"),
+    FEATURE_TYPE("Feature type"),
+    FEATURE_START_STATUS("Feature start status"),
+    FEATURE_END_STATUS("Feature end status"),
+    EXPERIMENTAL_PREPARATION("Experimental preparation"),;
     
     public final String value;
     dataTypeAndColumn(String value) {

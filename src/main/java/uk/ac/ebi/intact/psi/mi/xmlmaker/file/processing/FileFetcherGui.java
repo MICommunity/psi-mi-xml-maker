@@ -27,8 +27,17 @@ public class FileFetcherGui {
         JButton fetchingButton = new JButton("Fetch file");
         fetchingButton.addActionListener(e -> fetchFile());
 
+        JTextField publicationTitleField = new JTextField("Publication pubmed ID");
+        publicationTitleField.setEditable(true);
+        JButton textValidationButton = new JButton("Submit");
+        textValidationButton.addActionListener(e -> {
+            excelFileReader.setPublicationId(publicationTitleField.getText());
+        });
+
         fileFetcherPanel.add(fetchFileLabel);
         fileFetcherPanel.add(fetchingButton);
+        fileFetcherPanel.add(publicationTitleField);
+        fileFetcherPanel.add(textValidationButton);
         return fileFetcherPanel;
     }
 
@@ -38,7 +47,7 @@ public class FileFetcherGui {
         if (result == JFileChooser.APPROVE_OPTION && chooser.getSelectedFile() != null) {
             try {
                 File selectedFile = chooser.getSelectedFile();
-                XmlMakerUtils.processFile(selectedFile.getAbsolutePath());
+                XmlMakerUtils.processFile(selectedFile.getAbsolutePath(), excelFileReader);
                 excelFileReader.selectFileOpener(selectedFile.getAbsolutePath());
             } catch (Exception ex) {
                 LOGGER.log(Level.SEVERE, "Error processing file", ex);
@@ -46,4 +55,6 @@ public class FileFetcherGui {
             }
         }
     }
+
+
 }

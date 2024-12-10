@@ -1,6 +1,5 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
-import lombok.Setter;
 import psidev.psi.mi.jami.commons.MIWriterOptionFactory;
 import psidev.psi.mi.jami.commons.PsiJami;
 import psidev.psi.mi.jami.datasource.InteractionWriter;
@@ -11,9 +10,9 @@ import psidev.psi.mi.jami.model.InteractionCategory;
 import psidev.psi.mi.jami.model.Publication;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
-
 import javax.swing.*;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -22,27 +21,30 @@ import java.io.File;
 import java.util.*;
 
 public class PsiMiXmlMaker {
-    InteractionsCreator interactionsCreator;
-    ArrayList<XmlInteractionEvidence> xmlModelledInteractions;
+    final InteractionsCreator interactionsCreator;
+    final ArrayList<XmlInteractionEvidence> xmlModelledInteractions;
     private static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
-    @Setter
-    String publicationId;
+    private String publicationId;
+    private ExcelFileReader excelFileReader;
 
-    public PsiMiXmlMaker(InteractionsCreator interactionsCreator) {
+    public PsiMiXmlMaker(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
         this.interactionsCreator = interactionsCreator;
         xmlModelledInteractions = interactionsCreator.xmlModelledInteractions;
+        this.excelFileReader = excelFileReader;
+        publicationId = this.excelFileReader.getPublicationId();
     }
 
     public void interactionsWriter() {
-        String xmlFileName = "test.xml";
+        publicationId = excelFileReader.getPublicationId();
 
+        String xmlFileName = "test.xml";
         Publication intactPubmedRef = new BibRef(publicationId);
         String intactMiId = olsClient.getExactTermByName("intact", "mi").getOboId().
                 getIdentifier();
 
-        XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "http://www.ebi.ac.uk",
+        XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "https://www.ebi.ac.uk",
                 "European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge, CB10 1SD, United Kingdom.", intactPubmedRef);
-        source.setUrl("http://www.ebi.ac.uk");
+        source.setUrl("https://www.ebi.ac.uk");
         source.setFullName("European Bioinformatics Institute");
 
         XmlXref primaryXref = createXref("pubmed", "primary-reference", "pubmed", publicationId);

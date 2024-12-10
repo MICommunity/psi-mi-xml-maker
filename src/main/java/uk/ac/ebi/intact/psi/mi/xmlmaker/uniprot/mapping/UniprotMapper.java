@@ -12,11 +12,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
+
 
 public class UniprotMapper {
-    Map<String, String> alreadyParsed = new HashMap<>();
+    final Map<String, String> alreadyParsed = new HashMap<>();
     private static final String ACCEPT_HEADER = "Accept";
     private static final String ACCEPT_JSON = "application/json";
+    XmlMakerUtils utils = new XmlMakerUtils();
 
     public String fetchUniprotResults(String protein, String organismId, String database) {
         String urlString = uniprotQueryConstructor(protein, organismId, database);
@@ -119,7 +122,8 @@ public class UniprotMapper {
 
     private String uniprotQueryConstructor(String query, String organismId, String database) {
         String uniprotApiUrl = "https://rest.uniprot.org/uniprotkb/search?query=(xref:";
-        organismId = organismTaxIdFormatter(organismId, "none");
+//        organismId = utils.fetchTaxIdForOrganism(organismId);
+        organismId = String.valueOf(utils.findMostSimilarOrganism(organismId));
         database = chooseDbFromCol(query, database);
         String uniprotApiUrlPart2 = "%20AND%20organism_id:";
         String uniprotApiUrlPart3 = ")&format=json&fields=accession,organism_id";
@@ -156,14 +160,4 @@ public class UniprotMapper {
         }
         return null;
     }
-
-    public String organismTaxIdFormatter(String organism, String formattingType) {
-        //TODO: add the formatting type
-        String[] parts = organism.split("/");
-        if (parts.length > 1) {
-            return parts[1].trim();
-        }
-        return null;
-    }
-
 }
