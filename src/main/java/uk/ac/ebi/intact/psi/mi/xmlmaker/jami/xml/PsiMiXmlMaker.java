@@ -9,10 +9,12 @@ import psidev.psi.mi.jami.model.ComplexType;
 import psidev.psi.mi.jami.model.InteractionCategory;
 import psidev.psi.mi.jami.model.Publication;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
+import psidev.psi.mi.jami.xml.cache.InMemoryLightIdentityObjectCache;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
+
 import javax.swing.*;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -70,11 +72,20 @@ public class PsiMiXmlMaker {
         defaultEntryAnnotations.add(defaultEntryAnnotation);
 
         PsiJami.initialiseAllFactories();
-        MIWriterOptionFactory optionwriterFactory = MIWriterOptionFactory.getInstance();
 
-        Map<String, Object> expandedXmlWritingOptions = optionwriterFactory.getExpandedXmlOptions(new File(xmlFileName),
-                InteractionCategory.evidence, ComplexType.n_ary, source, defaultReleaseDate, defaultEntryAnnotations,
-                PsiXmlVersion.v3_0_0);
+        Map<String, Object> expandedXmlWritingOptions = MIWriterOptionFactory.getInstance().getExpandedXmlOptions(
+                new File(xmlFileName),
+                InteractionCategory.evidence,
+                ComplexType.n_ary,
+                new InMemoryLightIdentityObjectCache(),
+                Collections.newSetFromMap(new IdentityHashMap()),
+                source,
+                defaultReleaseDate,
+                defaultEntryAnnotations,
+                false,
+                true,
+                PsiXmlVersion.v3_0_0
+        );
 
 
         InteractionWriterFactory writerFactory = InteractionWriterFactory.getInstance();
@@ -114,7 +125,7 @@ public class PsiMiXmlMaker {
         }
     }
 
-    public XmlXref createXref(String name, String refType, String database, String id){
+    public XmlXref createXref(String name, String refType, String database, String id) {
         String dbMiId = olsClient.getExactTermByName(name, "mi").getOboId().
                 getIdentifier();
         String refTypeMiId = olsClient.getExactTermByName(refType, "mi").getOboId().
