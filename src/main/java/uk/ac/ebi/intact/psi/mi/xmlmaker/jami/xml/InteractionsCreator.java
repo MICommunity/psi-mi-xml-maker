@@ -229,17 +229,17 @@ public class InteractionsCreator {
             interaction.setInteractionType(interactionTypeCv);
 
             int hostOrganismInt = utils.findMostSimilarOrganism(hostOrganism);
-            XmlOrganism organism = new XmlOrganism(hostOrganismInt);
+            Organism organism = new XmlOrganism(hostOrganismInt);
 
             String interactionDetectionMiId = olsClient.getExactTermByName(interactionDetectionMethod, "mi").getOboId().
                     getIdentifier();
-            XmlCvTerm detectionMethod = new XmlCvTerm(interactionDetectionMethod, interactionDetectionMiId);
+            CvTerm detectionMethod = new XmlCvTerm(interactionDetectionMethod, interactionDetectionMiId);
             Publication publication = new BibRef(excelFileReader.getPublicationId());
             XmlExperiment experiment = new XmlExperiment(publication, detectionMethod, organism);
 
             String identificationMethodMiId = olsClient.getExactTermByName(participantIdentificationMethod, "mi").getOboId().
                     getIdentifier();
-            XmlCvTerm identificationMethodCv = new XmlCvTerm(participantIdentificationMethod, identificationMethodMiId);
+            CvTerm identificationMethodCv = new XmlCvTerm(participantIdentificationMethod, identificationMethodMiId);
 
             experiment.setParticipantIdentificationMethod(identificationMethodCv); //TODO: not working
             experiment.getParticipantIdentificationMethod().setMIIdentifier(identificationMethodMiId);
