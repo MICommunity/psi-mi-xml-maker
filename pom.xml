@@ -12,10 +12,11 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <psi.jami.version>3.6.0-SNAPSHOT</psi.jami.version>
+    <psi.jami.version>3.5.0</psi.jami.version>
     <spring.version>4.3.30.RELEASE</spring.version>
     <ols.client.version>2.14-SNAPSHOT</ols.client.version>
 <!--    <intact.jami.version>3.1.0-SNAPSHOT</intact.jami.version>-->
+    <java.version>11</java.version>
   </properties>
 
   <dependencies>
@@ -72,6 +73,7 @@
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <version>1.18.30</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -143,6 +145,28 @@
 
   </dependencies>
 
+
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <version>3.13.0</version>
+      <configuration>
+        <source>${java.version}</source>
+        <target>${java.version}</target>
+        <encoding>${project.build.sourceEncoding}</encoding>
+        <annotationProcessorPaths>
+          <path>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.36</version>
+          </path>
+        </annotationProcessorPaths>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
   <repositories>
     <!-- EBI repo -->
     <repository>

@@ -1,7 +1,5 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
@@ -11,12 +9,13 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.MoleculeSetChecker;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapper;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.Font;
+import java.awt.*;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,10 +35,10 @@ public class ExcelFileReader {
 
     public final JLabel currentFileLabel;
 
-    public final ArrayList<String> sheets = new ArrayList<>();
-    public final ArrayList<String> columns = new ArrayList<>();
+    public final List<String> sheets = new ArrayList<>();
+    public final List<String> columns = new ArrayList<>();
     public Workbook workbook;
-    public ArrayList<ArrayList<String>> fileData;
+    public List<List<String>> fileData;
     private final String[] moleculeSetOption = {"Check in file", "Remove interaction"};
 
 
@@ -111,8 +110,8 @@ public class ExcelFileReader {
         }
     }
 
-    public ArrayList<ArrayList<String>> readFileWithSeparator() {
-        ArrayList<ArrayList<String>> data = new ArrayList<>();
+    public List<List<String>> readFileWithSeparator() {
+        List<List<String>> data = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(currentFilePath))) {
             String line;
             boolean firstLine = true;
@@ -124,7 +123,7 @@ public class ExcelFileReader {
                     firstLine = false;
                 }
                 String[] tokens = line.split(separator, maxSize);
-                ArrayList<String> lineCells = new ArrayList<>(Arrays.asList(tokens));
+                List<String> lineCells = new ArrayList<>(Arrays.asList(tokens));
                 if (tokens.length < maxSize) {
                     for (int i = tokens.length; i < maxSize; i++) {
                         lineCells.add(" ");
@@ -142,7 +141,7 @@ public class ExcelFileReader {
 
 //    GETTERS FOR THE GUI
 
-    public ArrayList<String> getSheets() {
+    public List<String> getSheets() {
         sheets.clear();
         if (workbook != null) {
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
@@ -152,7 +151,7 @@ public class ExcelFileReader {
         return sheets;
     }
 
-    public ArrayList<String> getColumns(String sheetName) {
+    public List<String> getColumns(String sheetName) {
         columns.clear();
 
         if (fileType.equals("xlsx") || fileType.equals("xls")) {
@@ -231,8 +230,8 @@ public class ExcelFileReader {
     public void checkAndInsertUniprotResultsFileSeparatedFormat(String idColumnIndex, int organismColumnIndex,
                                                                 int idDbColumnIndex) {
         int idInputColumnIndex = 0;
-        ArrayList<ArrayList<String>> data = readFileWithSeparator();
-        ArrayList<String> header = data.get(0);
+        List<List<String>> data = readFileWithSeparator();
+        List<String> header = data.get(0);
 
         for (int cell = 0; cell < header.size(); cell++) {
             if (header.get(cell).equals(idColumnIndex)) {
@@ -242,7 +241,7 @@ public class ExcelFileReader {
         }
 
         for (int i = 1; i < data.size(); i++) {
-            ArrayList<String> row = data.get(i);
+            List<String> row = data.get(i);
             String currentValue = row.get(idInputColumnIndex);
             String uniprotResult = uniprotMapper.fetchUniprotResults(
                     currentValue,
@@ -326,9 +325,9 @@ public class ExcelFileReader {
         return -1;
     }
 
-    private void writeFileWithSeparator(ArrayList<ArrayList<String>> data){
+    private void writeFileWithSeparator(List<List<String>> data){
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(currentFilePath))) {
-            for (ArrayList<String> row : data) {
+            for (List<String> row : data) {
                 writer.write(String.join(separator, row));
                 writer.newLine();
             }

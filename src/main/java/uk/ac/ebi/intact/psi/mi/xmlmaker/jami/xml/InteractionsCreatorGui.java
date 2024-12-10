@@ -30,22 +30,22 @@ public class InteractionsCreatorGui extends JPanel {
     public final Map<String, Integer> dataAndIndexes = new HashMap<>();
 
     private final String[] dataNeededForInteractor = {
-            dataTypeAndColumn.INTERACTION_NUMBER.value,
-            dataTypeAndColumn.INTERACTION_DETECTION_METHOD.value,
-            dataTypeAndColumn.INTERACTION_TYPE.value,
-            dataTypeAndColumn.HOST_ORGANISM.value,
-            dataTypeAndColumn.PARTICIPANT_NAME.value,
-            dataTypeAndColumn.PARTICIPANT_ORGANISM.value,
-            dataTypeAndColumn.PARTICIPANT_TYPE.value,
-            dataTypeAndColumn.PARTICIPANT_ID.value,
-            dataTypeAndColumn.PARTICIPANT_ID_DB.value,
-            dataTypeAndColumn.EXPERIMENTAL_ROLE.value,
-            dataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.value,
-            dataTypeAndColumn.FEATURE_SHORT_LABEL.value,
-            dataTypeAndColumn.FEATURE_TYPE.value,
-            dataTypeAndColumn.FEATURE_START_STATUS.value,
-            dataTypeAndColumn.FEATURE_END_STATUS.value,
-            dataTypeAndColumn.EXPERIMENTAL_PREPARATION.value
+            DataTypeAndColumn.INTERACTION_NUMBER.name,
+            DataTypeAndColumn.INTERACTION_DETECTION_METHOD.name,
+            DataTypeAndColumn.INTERACTION_TYPE.name,
+            DataTypeAndColumn.HOST_ORGANISM.name,
+            DataTypeAndColumn.PARTICIPANT_NAME.name,
+            DataTypeAndColumn.PARTICIPANT_ORGANISM.name,
+            DataTypeAndColumn.PARTICIPANT_TYPE.name,
+            DataTypeAndColumn.PARTICIPANT_ID.name,
+            DataTypeAndColumn.PARTICIPANT_ID_DB.name,
+            DataTypeAndColumn.EXPERIMENTAL_ROLE.name,
+            DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name,
+            DataTypeAndColumn.FEATURE_SHORT_LABEL.name,
+            DataTypeAndColumn.FEATURE_TYPE.name,
+            DataTypeAndColumn.FEATURE_START_STATUS.name,
+            DataTypeAndColumn.FEATURE_END_STATUS.name,
+            DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name
     };
 
     public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui, OrganismSelector organismSelector) {

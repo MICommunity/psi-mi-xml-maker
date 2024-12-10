@@ -2,15 +2,12 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.organisms;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Vector;
 
 public class SuggestedOrganisms {
     public final Map<String, String> organismMap = new LinkedHashMap<>();
 
     public SuggestedOrganisms() {
-        initializeOrganismMap();
-    }
-
-    private void initializeOrganismMap() {
         organismMap.put("-1", "Select or type organism ID");
         organismMap.put("9606", "Homo sapiens (9606)");
         organismMap.put("10090", "Mus musculus (10090)");
@@ -42,8 +39,8 @@ public class SuggestedOrganisms {
         organismMap.put("381124", "Zea mays subsp. mays (381124)");
     }
 
-    public String[] getOrganismDisplayNames() {
-        return organismMap.values().toArray(new String[0]);
+    public Vector<String> getOrganismDisplayNames() {
+        return new Vector<>(organismMap.values());
     }
 
     public String getOrganismId(String displayName) {

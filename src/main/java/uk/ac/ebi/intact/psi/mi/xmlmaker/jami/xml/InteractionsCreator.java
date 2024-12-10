@@ -22,9 +22,9 @@ public class InteractionsCreator {
     final OrganismSelector organismSelector;
     final XmlMakerUtils utils = new XmlMakerUtils();
 
-    final ArrayList<InteractionWithIndexes> interactionWithIndexes = new ArrayList<>();
-    final ArrayList<XmlParticipantEvidence> xmlParticipants = new ArrayList<>();
-    final ArrayList<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
+    final List<InteractionWithIndexes> interactionWithIndexes = new ArrayList<>();
+    final List<XmlParticipantEvidence> xmlParticipants = new ArrayList<>();
+    final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
     static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
     final Map<String, Integer> columnAndIndex;
     final int sheetSelected;
@@ -60,9 +60,9 @@ public class InteractionsCreator {
     }
 
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
-        String name = data.get(dataTypeAndColumn.PARTICIPANT_NAME.value);
+        String name = data.get(DataTypeAndColumn.PARTICIPANT_NAME.name);
 
-        String participantType = data.get(dataTypeAndColumn.PARTICIPANT_TYPE.value);
+        String participantType = data.get(DataTypeAndColumn.PARTICIPANT_TYPE.name);
         String participantTypeMiId = null;
         try {
             Term term = olsClient.getExactTermByName(participantType, "mi");
@@ -72,11 +72,11 @@ public class InteractionsCreator {
         }
         XmlCvTerm type = new XmlCvTerm(participantType, participantTypeMiId);
 
-        String participantOrganism = data.get(dataTypeAndColumn.PARTICIPANT_ORGANISM.value);
+        String participantOrganism = data.get(DataTypeAndColumn.PARTICIPANT_ORGANISM.name);
         XmlOrganism organism = new XmlOrganism(utils.findMostSimilarOrganism(participantOrganism));
 
-        String participantId = data.get(dataTypeAndColumn.PARTICIPANT_ID.value);
-        String participantIdDb = data.get(dataTypeAndColumn.PARTICIPANT_ID_DB.value);
+        String participantId = data.get(DataTypeAndColumn.PARTICIPANT_ID.name);
+        String participantIdDb = data.get(DataTypeAndColumn.PARTICIPANT_ID_DB.name);
         String participantIdDbMiId = null;
         if (participantIdDb != null && !participantIdDb.isEmpty()) {
             try {
@@ -91,7 +91,7 @@ public class InteractionsCreator {
         XmlProtein protein = new XmlProtein(name, type, organism, uniqueId);
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(protein);
 
-        String experimentalRole = data.get(dataTypeAndColumn.EXPERIMENTAL_ROLE.value);
+        String experimentalRole = data.get(DataTypeAndColumn.EXPERIMENTAL_ROLE.name);
         String experimentalRoleMiId = null;
         CvTerm bioRole = null;
         if (experimentalRole != null) {
@@ -111,8 +111,8 @@ public class InteractionsCreator {
             System.err.println("bioRole is null; skipping setting experimental role on participant evidence.");
         }
 
-        String featureShortLabel = data.get(dataTypeAndColumn.FEATURE_SHORT_LABEL.value);
-        String featureType = data.get(dataTypeAndColumn.FEATURE_TYPE.value);
+        String featureShortLabel = data.get(DataTypeAndColumn.FEATURE_SHORT_LABEL.name);
+        String featureType = data.get(DataTypeAndColumn.FEATURE_TYPE.name);
         String featureTypeMiId = null;
         try {
             Term term = olsClient.getExactTermByName(featureType, "mi");
@@ -125,7 +125,7 @@ public class InteractionsCreator {
         featureEvidence.setShortName(featureShortLabel);
 
         XmlRange featureRange = new XmlRange();
-        String featureStartRange = data.get(dataTypeAndColumn.FEATURE_START_STATUS.value);
+        String featureStartRange = data.get(DataTypeAndColumn.FEATURE_START_STATUS.name);
         String featureStartRangeMiId = null;
         try {
             Term term = olsClient.getExactTermByName(featureStartRange, "mi");
@@ -136,7 +136,7 @@ public class InteractionsCreator {
         XmlCvTerm featureStartRangeCv = new XmlCvTerm(featureStartRange, featureStartRangeMiId);
         featureRange.setJAXBStartStatus(featureStartRangeCv);
 
-        String featureEndRange = data.get(dataTypeAndColumn.FEATURE_END_STATUS.value);
+        String featureEndRange = data.get(DataTypeAndColumn.FEATURE_END_STATUS.name);
         String featureEndRangeMiId = null;
         try {
             Term term = olsClient.getExactTermByName(featureEndRange, "mi");
@@ -151,7 +151,7 @@ public class InteractionsCreator {
         featureEvidence.getRanges().add(featureRange);
         participantEvidence.addFeature(featureEvidence);
 
-        String experimentalPreparation = data.get(dataTypeAndColumn.EXPERIMENTAL_PREPARATION.value);
+        String experimentalPreparation = data.get(DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name);
         String experimentalPreparationMiId = null;
         try {
             Term term = olsClient.getExactTermByName(experimentalPreparation, "mi");
@@ -166,26 +166,12 @@ public class InteractionsCreator {
     }
 
     public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex) {
-        ArrayList<ArrayList<String>> data = excelFileReader.readFileWithSeparator();
-        for (ArrayList<String> datum : data) {
+        List<List<String>> data = excelFileReader.readFileWithSeparator();
+        for (List<String> datum : data) {
             Map<String, String> dataMap = new HashMap<>();
-
-            dataMap.put(dataTypeAndColumn.INTERACTION_NUMBER.value, datum.get(columnAndIndex.get(dataTypeAndColumn.INTERACTION_NUMBER.value)));
-            dataMap.put(dataTypeAndColumn.INTERACTION_DETECTION_METHOD.value, datum.get(columnAndIndex.get(dataTypeAndColumn.INTERACTION_DETECTION_METHOD.value)));
-            dataMap.put(dataTypeAndColumn.INTERACTION_TYPE.value, datum.get(columnAndIndex.get(dataTypeAndColumn.INTERACTION_TYPE.value)));
-            dataMap.put(dataTypeAndColumn.HOST_ORGANISM.value, datum.get(columnAndIndex.get(dataTypeAndColumn.HOST_ORGANISM.value)));
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.value, datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.value)));
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_NAME.value, datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_NAME.value)));
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_TYPE.value, datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_TYPE.value)));
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_ORGANISM.value, datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ORGANISM.value)));
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_ID.value, datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ID.value)));
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_ID_DB.value, datum.get(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ID_DB.value)));
-            dataMap.put(dataTypeAndColumn.EXPERIMENTAL_ROLE.value, datum.get(columnAndIndex.get(dataTypeAndColumn.EXPERIMENTAL_ROLE.value)));
-            dataMap.put(dataTypeAndColumn.FEATURE_SHORT_LABEL.value, datum.get(columnAndIndex.get(dataTypeAndColumn.FEATURE_SHORT_LABEL.value)));
-            dataMap.put(dataTypeAndColumn.FEATURE_TYPE.value, datum.get(columnAndIndex.get(dataTypeAndColumn.FEATURE_TYPE.value)));
-            dataMap.put(dataTypeAndColumn.FEATURE_START_STATUS.value, datum.get(columnAndIndex.get(dataTypeAndColumn.FEATURE_START_STATUS.value)));
-            dataMap.put(dataTypeAndColumn.FEATURE_END_STATUS.value, datum.get(columnAndIndex.get(dataTypeAndColumn.FEATURE_END_STATUS.value)));
-            dataMap.put(dataTypeAndColumn.EXPERIMENTAL_PREPARATION.value, datum.get(columnAndIndex.get(dataTypeAndColumn.EXPERIMENTAL_PREPARATION.value)));
+            for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
+                dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
+            }
             dataList.add(dataMap);
         }
     }
@@ -203,46 +189,16 @@ public class InteractionsCreator {
             //TODO: handle if it is string or numeric values
 
             Map<String, String> dataMap = new HashMap<>();
-            dataMap.put(dataTypeAndColumn.INTERACTION_NUMBER.value,
-                    String.valueOf(row.getCell(columnAndIndex.get(dataTypeAndColumn.INTERACTION_NUMBER.value)).getNumericCellValue()));
-            dataMap.put(dataTypeAndColumn.INTERACTION_DETECTION_METHOD.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.INTERACTION_DETECTION_METHOD.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.INTERACTION_TYPE.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.INTERACTION_TYPE.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.HOST_ORGANISM.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.HOST_ORGANISM.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_NAME.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_NAME.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_TYPE.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_TYPE.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_ORGANISM.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ORGANISM.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_ID.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ID.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.PARTICIPANT_ID_DB.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.PARTICIPANT_ID_DB.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.EXPERIMENTAL_ROLE.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.EXPERIMENTAL_ROLE.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.FEATURE_SHORT_LABEL.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.FEATURE_SHORT_LABEL.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.FEATURE_TYPE.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.FEATURE_TYPE.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.FEATURE_START_STATUS.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.FEATURE_START_STATUS.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.FEATURE_END_STATUS.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.FEATURE_END_STATUS.value)).getStringCellValue());
-            dataMap.put(dataTypeAndColumn.EXPERIMENTAL_PREPARATION.value,
-                    row.getCell(columnAndIndex.get(dataTypeAndColumn.EXPERIMENTAL_PREPARATION.value)).getStringCellValue());
-
+            for (DataTypeAndColumn value : DataTypeAndColumn.values()) {
+                dataMap.put(value.name, value.extractString.apply(row.getCell(columnAndIndex.get(value.name))));
+            }
             dataList.add(dataMap);
         }
     }
 
     public Map<String, List<Map<String, String>>> createGroupsUpdated(){
         return dataList.stream().collect(Collectors.groupingBy(participant ->
-                participant.get(dataTypeAndColumn.INTERACTION_NUMBER.value)));
+                participant.get(DataTypeAndColumn.INTERACTION_NUMBER.name)));
     }
 
     public void createInteractionUpdate(){
@@ -260,10 +216,10 @@ public class InteractionsCreator {
                 XmlParticipantEvidence newParticipant = createParticipant(participant);
                 interaction.addParticipant(newParticipant);
 
-                interactionDetectionMethod = participant.get(dataTypeAndColumn.INTERACTION_DETECTION_METHOD.value);
-                participantIdentificationMethod = participant.get(dataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.value);
-                hostOrganism = participant.get(dataTypeAndColumn.HOST_ORGANISM.value);
-                interactionType = participant.get(dataTypeAndColumn.INTERACTION_TYPE.value);
+                interactionDetectionMethod = participant.get(DataTypeAndColumn.INTERACTION_DETECTION_METHOD.name);
+                participantIdentificationMethod = participant.get(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name);
+                hostOrganism = participant.get(DataTypeAndColumn.HOST_ORGANISM.name);
+                interactionType = participant.get(DataTypeAndColumn.INTERACTION_TYPE.name);
 
             }
 

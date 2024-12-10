@@ -11,6 +11,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 
@@ -73,8 +74,8 @@ public class UniprotMapper {
     }
 
     public String getUniprotAC(JsonObject results) {
-        ArrayList<JsonObject> swissProtUniprotACs = new ArrayList<>();
-        ArrayList<JsonObject> tremblUniprotACs = new ArrayList<>();
+        List<JsonObject> swissProtUniprotACs = new ArrayList<>();
+        List<JsonObject> tremblUniprotACs = new ArrayList<>();
 
         if (results != null && results.has("results")) {
             JsonArray resultsAsJson = results.get("results").getAsJsonArray();
@@ -99,7 +100,7 @@ public class UniprotMapper {
         return chooseUniprotAc(swissProtUniprotACs, tremblUniprotACs);
     }
 
-    public String chooseUniprotAc(ArrayList<JsonObject> swissProtUniprotACs, ArrayList<JsonObject> tremblUniprotACs) {
+    public String chooseUniprotAc(List<JsonObject> swissProtUniprotACs, List<JsonObject> tremblUniprotACs) {
         sortArrayBySequenceLength(swissProtUniprotACs);
         sortArrayBySequenceLength(tremblUniprotACs);
         if (!swissProtUniprotACs.isEmpty()) {
@@ -110,7 +111,7 @@ public class UniprotMapper {
         return null;
     }
 
-    public void sortArrayBySequenceLength(ArrayList<JsonObject> arrayList) {
+    public void sortArrayBySequenceLength(List<JsonObject> arrayList) {
         arrayList.sort((result1, result2) -> Integer.compare(getSequenceLength(result2), getSequenceLength(result1)));
     }
 

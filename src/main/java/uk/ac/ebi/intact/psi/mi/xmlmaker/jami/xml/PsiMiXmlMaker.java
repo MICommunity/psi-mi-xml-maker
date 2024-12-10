@@ -22,7 +22,7 @@ import java.util.*;
 
 public class PsiMiXmlMaker {
     final InteractionsCreator interactionsCreator;
-    final ArrayList<XmlInteractionEvidence> xmlModelledInteractions;
+    final List<XmlInteractionEvidence> xmlModelledInteractions;
     private static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
     private String publicationId;
     private ExcelFileReader excelFileReader;

@@ -1,7 +1,13 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
-public enum dataTypeAndColumn {
-    INTERACTION_NUMBER("Interaction number"),
+import org.apache.poi.ss.usermodel.Cell;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+public enum DataTypeAndColumn {
+    INTERACTION_NUMBER("Interaction number", cell -> String.valueOf(cell.getNumericCellValue())),
     INTERACTION_DETECTION_METHOD("Interaction detection method"),
     PARTICIPANT_NAME("Participant name"),
     PARTICIPANT_TYPE("Participant type"),
@@ -19,8 +25,17 @@ public enum dataTypeAndColumn {
     FEATURE_END_STATUS("Feature end status"),
     EXPERIMENTAL_PREPARATION("Experimental preparation"),;
     
-    public final String value;
-    dataTypeAndColumn(String value) {
-        this.value = value;
+    public final String name;
+    public final Function<Cell, String> extractString;
+    public static Map<String, DataTypeAndColumn> map = new HashMap<>();
+
+    DataTypeAndColumn(String name) {
+        this(name, Cell::getStringCellValue);
     }
+
+    DataTypeAndColumn(String name, Function<Cell, String> extractString) {
+        this.name = name;
+        this.extractString = extractString;
+    }
+
 }
