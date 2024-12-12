@@ -34,7 +34,7 @@ public class MoleculeSetChecker {
         }
     }
 
-    private void parseMoleculeSetFile() throws IOException {
+    private void parseMoleculeSetFile() {
         try (Workbook workbook = readFile()) {
             if (workbook == null) return;
 
@@ -56,9 +56,8 @@ public class MoleculeSetChecker {
                     }
                 }
             }
-        } catch (IOException e) {
+   } catch (IOException e) {
             e.printStackTrace();
-            throw e;
         }
     }
 

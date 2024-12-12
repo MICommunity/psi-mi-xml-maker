@@ -1,5 +1,7 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import psidev.psi.mi.jami.commons.MIWriterOptionFactory;
 import psidev.psi.mi.jami.commons.PsiJami;
 import psidev.psi.mi.jami.datasource.InteractionWriter;
@@ -18,11 +20,18 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
 import java.util.*;
 
+@Component
 public class PsiMiXmlMaker {
     final InteractionsCreator interactionsCreator;
     final List<XmlInteractionEvidence> xmlModelledInteractions;
     private String publicationId;
+    final XmlMakerUtils utils = new XmlMakerUtils();
     private ExcelFileReader excelFileReader;
+
+    @Autowired
+    public void setExcelFileReader(ExcelFileReader excelFileReader) {
+        this.excelFileReader = excelFileReader;
+    }
 
     public PsiMiXmlMaker(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
         this.interactionsCreator = interactionsCreator;
