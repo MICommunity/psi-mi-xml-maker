@@ -4,16 +4,12 @@ import psidev.psi.mi.jami.commons.MIWriterOptionFactory;
 import psidev.psi.mi.jami.commons.PsiJami;
 import psidev.psi.mi.jami.datasource.InteractionWriter;
 import psidev.psi.mi.jami.factory.InteractionWriterFactory;
-import psidev.psi.mi.jami.model.Annotation;
-import psidev.psi.mi.jami.model.ComplexType;
-import psidev.psi.mi.jami.model.InteractionCategory;
-import psidev.psi.mi.jami.model.Publication;
+import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
 import psidev.psi.mi.jami.xml.cache.InMemoryLightIdentityObjectCache;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
-import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
 
 import javax.swing.*;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -25,7 +21,6 @@ import java.util.*;
 public class PsiMiXmlMaker {
     final InteractionsCreator interactionsCreator;
     final List<XmlInteractionEvidence> xmlModelledInteractions;
-    private static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
     private String publicationId;
     private ExcelFileReader excelFileReader;
 
@@ -36,31 +31,32 @@ public class PsiMiXmlMaker {
         publicationId = this.excelFileReader.getPublicationId();
     }
 
-    public void interactionsWriter() {
+    public void interactionsWriter(String saveLocation) {
         publicationId = excelFileReader.getPublicationId();
 
-        String xmlFileName = "test.xml";
         Publication intactPubmedRef = new BibRef(publicationId);
-        String intactMiId = olsClient.getExactTermByName("intact", "mi").getOboId().
-                getIdentifier();
+        String intactMiId = utils.fetchMiId("intact");
 
         XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "https://www.ebi.ac.uk",
                 "European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge, CB10 1SD, United Kingdom.", intactPubmedRef);
         source.setUrl("https://www.ebi.ac.uk");
         source.setFullName("European Bioinformatics Institute");
 
+        if (publicationId == null) {
+            utils.showErrorDialog("Please enter the publication ID!");
+        }
         XmlXref primaryXref = createXref("pubmed", "primary-reference", "pubmed", publicationId);
         //TODO: check why it is not considered primary
         XmlXref secondaryXref = createXref("psi-mi", "identity", "psi-mi", intactMiId);
-        secondaryXref.setSecondary("secondary-reference");
+
 
         CvTermXrefContainer xrefContainer = new CvTermXrefContainer();
         xrefContainer.setJAXBPrimaryRef(primaryXref);
+        secondaryXref.setSecondary("secondary-reference");
         xrefContainer.getJAXBSecondaryRefs().add(secondaryXref);
         source.setJAXBXref(xrefContainer);
 
         GregorianCalendar calendar = new GregorianCalendar();
-        calendar.set(2024, Calendar.DECEMBER, 1);
         XMLGregorianCalendar defaultReleaseDate;
         try {
             defaultReleaseDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
@@ -74,7 +70,7 @@ public class PsiMiXmlMaker {
         PsiJami.initialiseAllFactories();
 
         Map<String, Object> expandedXmlWritingOptions = MIWriterOptionFactory.getInstance().getExpandedXmlOptions(
-                new File(xmlFileName),
+                new File(saveLocation),
                 InteractionCategory.evidence,
                 ComplexType.n_ary,
                 new InMemoryLightIdentityObjectCache(),
@@ -126,12 +122,10 @@ public class PsiMiXmlMaker {
     }
 
     public XmlXref createXref(String name, String refType, String database, String id) {
-        String dbMiId = olsClient.getExactTermByName(name, "mi").getOboId().
-                getIdentifier();
-        String refTypeMiId = olsClient.getExactTermByName(refType, "mi").getOboId().
-                getIdentifier();
-        XmlCvTerm refTypeCv = new XmlCvTerm(refType, refTypeMiId);
-        XmlCvTerm databaseCv = new XmlCvTerm(database, dbMiId);
+        String dbMiId = utils.fetchMiId(name);
+        String refTypeMiId = utils.fetchMiId(refType);
+        CvTerm refTypeCv = new XmlCvTerm(refType, refTypeMiId);
+        CvTerm databaseCv = new XmlCvTerm(database, dbMiId);
 
         return new XmlXref(databaseCv, id, refTypeCv);
     }

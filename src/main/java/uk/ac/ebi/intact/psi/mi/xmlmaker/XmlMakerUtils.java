@@ -2,9 +2,10 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.text.similarity.LevenshteinDistance;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.organisms.SuggestedOrganisms;
+import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
+import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
+import uk.ac.ebi.pride.utilities.ols.web.service.model.Term;
 
 import javax.swing.*;
 import java.io.BufferedReader;
@@ -13,11 +14,15 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
+
+//TODO: use log4j to have a report
 
 public class XmlMakerUtils {
 
-    SuggestedOrganisms suggestedOrganisms = new SuggestedOrganisms();
+    private final Map<String, String> miIds = new HashMap<>();
+    static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
 
     public static void processFile(String filePath, ExcelFileReader excelFileReader) {
         excelFileReader.selectFileOpener(filePath);
@@ -31,25 +36,8 @@ public class XmlMakerUtils {
         JOptionPane.showMessageDialog(new JFrame(), message, "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    public int findMostSimilarOrganism(String input) {
-        LevenshteinDistance levenshtein = new LevenshteinDistance();
-
-        String mostSimilarKey = null;
-        int minDistance = Integer.MAX_VALUE;
-
-        for (Map.Entry<String, String> entry : suggestedOrganisms.organismMap.entrySet()) {
-            int distance = levenshtein.apply(input, entry.getValue());
-            if (distance < minDistance) {
-                minDistance = distance;
-                mostSimilarKey = entry.getKey();
-            }
-        }
-        assert mostSimilarKey != null;
-        return Integer.parseInt(mostSimilarKey);
-    }
-
     public String fetchTaxIdWithApi(String organismName) {
-        String urlString = "https://www.ebi.ac.uk/ena/taxonomy/rest/scientific-name/" + organismName;
+        String urlString = "https://www.ebi.ac.uk/ols4/api/search?q=" + encodeForURL(organismName) + "&ontology=ncbitaxon";
         try {
             HttpURLConnection connection = createConnection(urlString);
             int responseCode = connection.getResponseCode();
@@ -73,31 +61,6 @@ public class XmlMakerUtils {
         return null;
     }
 
-    public String getTaxId(String json) {
-        if (json == null || json.isEmpty()) {
-            System.err.println("Invalid JSON input: " + json);
-            return null;
-        }
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(json);
-
-            if (rootNode.isArray() && rootNode.size() > 0) {
-                JsonNode firstElement = rootNode.get(0);
-                if (firstElement.has("taxId")) {
-                    return firstElement.get("taxId").asText();
-                } else {
-                    System.err.println("Key 'taxId' not found in JSON: " + firstElement);
-                }
-            } else {
-                System.err.println("Unexpected JSON structure: " + rootNode);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     public HttpURLConnection createConnection(String urlString) throws Exception {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -106,57 +69,67 @@ public class XmlMakerUtils {
     }
 
     public String fetchTaxIdForOrganism(String organismName) {
-        organismName = encodeForURL(organismName);
         String apiResponse = fetchTaxIdWithApi(organismName);
         if (apiResponse != null) {
-            return getTaxId(apiResponse);
+            return extractOboId(apiResponse);
         }
         return null;
     }
 
     public static String encodeForURL(String input) {
         try {
-            return URLEncoder.encode(input, StandardCharsets.UTF_8.toString());
+            return URLEncoder.encode(input, StandardCharsets.UTF_8);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public void showActionDialog(String[] options) {
-        JDialog dialog = new JDialog((JFrame) null, "Choose Action", true);
-        dialog.setLayout(new BoxLayout(dialog.getContentPane(), BoxLayout.Y_AXIS));
-
-        ButtonGroup group = new ButtonGroup();
-        JPanel radioPanel = new JPanel();
-        radioPanel.setLayout(new BoxLayout(radioPanel, BoxLayout.Y_AXIS));
-
-        for (String option : options) {
-            JRadioButton radioButton = new JRadioButton(option);
-            group.add(radioButton);
-            radioPanel.add(radioButton);
+    public String fetchMiId(String input) {
+        String miId = null;
+        if (miIds.get(input) != null) {
+            miId = miIds.get(input);
         }
-
-        JButton validateButton = new JButton("Validate");
-        validateButton.addActionListener(e -> {
-            ButtonModel selectedModel = group.getSelection();
-            if (selectedModel != null) {
-                //TODO: made actions for the molecularSets
-                String selectedOption = selectedModel.getActionCommand();
-                showInfoDialog("You selected: " + selectedOption);
-                dialog.dispose();
-            } else {
-                showErrorDialog("Please select an option.");
+        else {
+            try {
+                Term term = olsClient.getExactTermByName(input, "mi");
+                miId = (term != null && term.getOboId() != null) ? term.getOboId().getIdentifier() : null;
+                miIds.put(input, miId);
+            } catch (NullPointerException e) {
+                System.err.println("Failed to retrieve MI ID for " + input);
+                showErrorDialog("Failed to retrieve MI ID for " + input);
             }
-        });
-
-        dialog.add(radioPanel);
-        dialog.add(validateButton);
-        dialog.pack();
-
-        dialog.setSize(300, 100);
-        dialog.setLocationRelativeTo(null);
-        dialog.setVisible(true);
+        }
+        return miId;
     }
+
+    public static String extractOboId(String json) {
+        if (json == null || json.isEmpty()) {
+            System.err.println("Invalid input JSON");
+            return null;
+        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode root = objectMapper.readTree(json);
+            JsonNode docsNode = root.path("response").path("docs");
+
+            if (docsNode.isArray() && !docsNode.isEmpty()) {
+                JsonNode firstDoc = docsNode.get(0);
+                String oboId = firstDoc.path("obo_id").asText();
+
+                if (oboId.startsWith("NCBITaxon:")) {
+                    return oboId.substring("NCBITaxon:".length());
+                } else {
+                    System.err.println("obo_id does not start with 'NCBITaxon:'");
+                }
+            } else {
+                System.err.println("No documents found in response");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 
 }

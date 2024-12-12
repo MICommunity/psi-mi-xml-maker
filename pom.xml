@@ -12,7 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <psi.jami.version>3.5.0</psi.jami.version>
+    <psi.jami.version>3.6.0-SNAPSHOT</psi.jami.version>
     <spring.version>4.3.30.RELEASE</spring.version>
     <ols.client.version>2.14-SNAPSHOT</ols.client.version>
 <!--    <intact.jami.version>3.1.0-SNAPSHOT</intact.jami.version>-->
@@ -50,12 +50,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-
-<!--    <dependency>-->
-<!--      <groupId>uk.ac.ebi.intact.jami</groupId>-->
-<!--      <artifactId>intact-jami</artifactId>-->
-<!--      <version>${intact.jami.version}</version>-->
-<!--    </dependency>-->
 
     <dependency>
       <groupId>org.springframework.retry</groupId>
@@ -112,18 +106,6 @@
       </exclusions>
     </dependency>
 
-<!--    <dependency>-->
-<!--      <groupId>psidev.psi.mi.jami.bridges</groupId>-->
-<!--      <artifactId>jami-ontology-manager</artifactId>-->
-<!--      <version>${psi.jami.version}</version>-->
-<!--      <exclusions>-->
-<!--        <exclusion>-->
-<!--          <groupId>org.slf4j</groupId>-->
-<!--          <artifactId>jcl-over-slf4j</artifactId>-->
-<!--        </exclusion>-->
-<!--      </exclusions>-->
-<!--    </dependency>-->
-
       <dependency>
         <groupId>uk.ac.ebi.pride.utilities</groupId>
         <artifactId>ols-client</artifactId>
@@ -139,9 +121,14 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.15.0</version> <!-- Use the latest version -->
+      <version>2.15.0</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.opencsv</groupId>
+      <artifactId>opencsv</artifactId>
+      <version>5.7.1</version>
+    </dependency>
 
   </dependencies>
 

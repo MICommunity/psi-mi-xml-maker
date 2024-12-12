@@ -10,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.PsiMiXmlMakerGui;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.organisms.OrganismSelector;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFetcherGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
@@ -27,9 +26,8 @@ public class XmlMakerGui {
 
     public XmlMakerGui() {
         this.excelFileReader = new ExcelFileReader();
-        OrganismSelector organismSelector = new OrganismSelector();
         this.uniprotMapperGui = new UniprotMapperGui(excelFileReader);
-        this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui, organismSelector);
+        this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui);
         this.psiMiXmlMakerGui = new PsiMiXmlMakerGui(interactionsCreatorGui.interactionsCreator, excelFileReader);
     }
 
@@ -77,7 +75,7 @@ public class XmlMakerGui {
     }
 
     private JPanel createPsiMiXmlMakerPanel() {
-        JPanel psiXmlMakerPanel = psiMiXmlMakerGui.PsiMiXmlMakerPanel();
+        JPanel psiXmlMakerPanel = psiMiXmlMakerGui.createPsiMiXmlMakerPanel();
         psiXmlMakerPanel.setBorder(new TitledBorder("4. Create the PSI-MI.xml file"));
         return psiXmlMakerPanel;
     }

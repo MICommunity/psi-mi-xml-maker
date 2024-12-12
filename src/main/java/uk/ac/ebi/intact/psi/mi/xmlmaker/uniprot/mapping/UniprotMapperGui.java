@@ -1,5 +1,6 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 
+import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 
 import javax.swing.*;
@@ -10,6 +11,7 @@ public class UniprotMapperGui extends JPanel {
     private final JComboBox<String> idColumn = new JComboBox<>();
     private final JComboBox<String> organismColumn = new JComboBox<>();
     private final JComboBox<String> idDbColumn = new JComboBox<>();
+    final XmlMakerUtils utils = new XmlMakerUtils();
 
     private final ExcelFileReader excelFileReader;
 
@@ -74,14 +76,14 @@ public class UniprotMapperGui extends JPanel {
         if (sheets.isEnabled()) {
             String selectedSheet = (String) sheets.getSelectedItem();
             if (selectedSheet != null && !selectedSheet.equals("Select sheet")) {
-                for (String columnName : excelFileReader.getColumns(selectedSheet)) {
+                for (String columnName : excelFileReader.getColumns()) {
                     idColumn.addItem(columnName);
                     organismColumn.addItem(columnName);
                     idDbColumn.addItem(columnName);
                 }
             }
         } else {
-            for (String columnName : excelFileReader.getColumns("")) {
+            for (String columnName : excelFileReader.getColumns()) {
                 idColumn.addItem(columnName);
                 organismColumn.addItem(columnName);
                 idDbColumn.addItem(columnName);
@@ -94,35 +96,42 @@ public class UniprotMapperGui extends JPanel {
         processFile.addActionListener(e -> {
 
             String sheetSelected = (String) sheets.getSelectedItem();
-            String idColumnIndex = (String) idColumn.getSelectedItem();
+            String idColumn = (String) this.idColumn.getSelectedItem();
             int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
             int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
             if (sheets.isEnabled()) {
                 if (sheetSelected == null || sheetSelected.equals("Select sheet") ||
-                        idColumnIndex == null || idColumnIndex.equals("Select column to process")) {
+                        idColumn == null || idColumn.equals("Select column to process")) {
                     JOptionPane.showMessageDialog(null, "Please select a valid sheet and column!", "ERROR", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 try {
-                    excelFileReader.checkAndInsertUniprotResultsExcel(sheetSelected, idColumnIndex, organismColumnIndex, idDbColumnIndex);
+                    excelFileReader.checkAndInsertUniprotResultsExcel(sheetSelected, idColumn, organismColumnIndex, idDbColumnIndex);
+                    if (!excelFileReader.proteinsPartOfMoleculeSet.isEmpty()) {
+                        String participantsList = String.join(", ", excelFileReader.proteinsPartOfMoleculeSet);
+                        utils.showInfoDialog("Those participants have been identified as part of a molecule set: " + participantsList);
+                    }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
                 }
             } else {
-                if (idColumnIndex == null || idColumnIndex.equals("Select column to process")) {
+                if (idColumn == null || idColumn.equals("Select column to process")) {
                     JOptionPane.showMessageDialog(null, "Please select a valid column for processing!", "ERROR", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 try {
-                    excelFileReader.checkAndInsertUniprotResultsFileSeparatedFormat(idColumnIndex, organismColumnIndex, idDbColumnIndex);
+                    excelFileReader.checkAndInsertUniprotResultsFileSeparatedFormat(idColumn, organismColumnIndex, idDbColumnIndex);
+                    if (!excelFileReader.proteinsPartOfMoleculeSet.isEmpty()) {
+                        String participantsList = String.join(", ", excelFileReader.proteinsPartOfMoleculeSet);
+                        utils.showInfoDialog("Those participants have been identified as part of a molecule set: " + participantsList);
+                    }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                     ex.printStackTrace();
                 }
             }
         });
-
         return processFile;
     }
 }

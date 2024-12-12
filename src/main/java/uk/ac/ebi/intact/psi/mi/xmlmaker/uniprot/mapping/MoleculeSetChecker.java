@@ -17,12 +17,8 @@ public class MoleculeSetChecker {
     private final DataFormatter formatter = new DataFormatter();
     private final Map<String, String> proteinAndMoleculeSet = new HashMap<>();
 
-    public MoleculeSetChecker() {
-        try {
-            parseMoleculeSetFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public MoleculeSetChecker()  {
+        parseMoleculeSetFile();
     }
 
     private Workbook readFile() throws IOException {

@@ -1,5 +1,11 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
+import com.opencsv.exceptions.CsvValidationException;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
@@ -14,7 +20,6 @@ import java.awt.*;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,7 +35,9 @@ public class ExcelFileReader {
     public String currentFilePath = null;
     public String fileName;
     public String fileType;
-    public String separator = null;
+    public char separator;
+    @Getter
+    @Setter
     public String publicationId;
 
     public final JLabel currentFileLabel;
@@ -39,8 +46,7 @@ public class ExcelFileReader {
     public final List<String> columns = new ArrayList<>();
     public Workbook workbook;
     public List<List<String>> fileData;
-    private final String[] moleculeSetOption = {"Check in file", "Remove interaction"};
-
+    public final List<String> proteinsPartOfMoleculeSet = new ArrayList<>();
 
     public ExcelFileReader() {
         this.fileName = null;
@@ -63,7 +69,6 @@ public class ExcelFileReader {
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Unable to read xlsx file: " + e.getMessage(), e);
                 }
-                separator = null;
                 break;
             case "xls":
                 LOGGER.info("Reading xls file: " + fileName);
@@ -72,16 +77,15 @@ public class ExcelFileReader {
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Unable to read xls file: " + e.getMessage(), e);
                 }
-                separator = null;
                 break;
             case "csv":
                 LOGGER.info("Reading csv file: " + fileName);
-                separator = ",";
+                separator = ',';
                 readFileWithSeparator();
                 break;
             case "tsv":
                 LOGGER.info("Reading tsv file: " + fileName);
-                separator = "\t";
+                separator = '\t';
                 readFileWithSeparator();
                 break;
             default:
@@ -112,29 +116,32 @@ public class ExcelFileReader {
 
     public List<List<String>> readFileWithSeparator() {
         List<List<String>> data = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(currentFilePath))) {
-            String line;
-            boolean firstLine = true;
-            int maxSize = 0;
-            while ((line = reader.readLine()) != null) {
-                if (firstLine) {
-                    String[] tokens = line.split(separator, -1);
-                    maxSize = tokens.length; //TODO: check other ways to do that because if they are commas in the values it causes issues
-                    firstLine = false;
+
+        try (CSVReader csvReader = new CSVReaderBuilder(new FileReader(currentFilePath))
+                .withCSVParser(new com.opencsv.CSVParserBuilder()
+                        .withSeparator(separator)
+                        .withIgnoreQuotations(false)
+                        .build())
+                .build()) {
+
+            String[] nextLine;
+            while (true) {
+                try {
+                    if ((nextLine = csvReader.readNext()) == null) break;
+                } catch (CsvValidationException e) {
+                    throw new RuntimeException(e);
                 }
-                String[] tokens = line.split(separator, maxSize);
-                List<String> lineCells = new ArrayList<>(Arrays.asList(tokens));
-                if (tokens.length < maxSize) {
-                    for (int i = tokens.length; i < maxSize; i++) {
-                        lineCells.add(" ");
-                    }
+                List<String> lineCells = new ArrayList<>();
+                for (String cell : nextLine) {
+                    lineCells.add(cell == null ? "" : cell);
                 }
                 data.add(lineCells);
             }
-        } catch (Exception e) {
+
+        } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Unable to read file with separator: " + e.getMessage(), e);
         }
-        workbook = null;
+
         fileData = data;
         return data;
     }
@@ -151,38 +158,25 @@ public class ExcelFileReader {
         return sheets;
     }
 
-    public List<String> getColumns(String sheetName) {
+    public List<String> getColumns() {
         columns.clear();
 
         if (fileType.equals("xlsx") || fileType.equals("xls")) {
-            if (workbook == null) {
-                LOGGER.warning("No workbook loaded.");
+            if (fileData == null || fileData.isEmpty()) {
+                LOGGER.warning("No file data loaded.");
                 return columns;
-            }
-            Sheet sheet = workbook.getSheet(sheetName);
-            if (sheet == null) {
-                LOGGER.warning("Sheet not found: " + sheetName);
-                return columns;
-            }
-
-            Row headerRow = sheet.getRow(0);
+            }List<String> headerRow = fileData.get(0);
             if (headerRow != null) {
-                for (Cell cell : headerRow) {
-                    columns.add(cell.getStringCellValue());
-                }
+                columns.addAll(headerRow);
             }
         } else if (fileType.equals("csv") || fileType.equals("tsv")) {
-            String separator = fileType.equals("csv") ? "," : "\t";
-            try (BufferedReader reader = new BufferedReader(new FileReader(currentFilePath))) {
-                String headerLine = reader.readLine();
-                if (headerLine != null) {
-                    String[] headers = headerLine.split(separator);
-                    for (String header : headers) {
-                        columns.add(header.trim());
-                    }
-                }
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Unable to read file with separator: " + e.getMessage(), e);
+            if (fileData == null || fileData.isEmpty()) {
+                LOGGER.warning("No file data loaded.");
+                return columns;
+            }
+            List<String> headerRow = fileData.get(0);
+            if (headerRow != null) {
+                columns.addAll(headerRow);
             }
         }
 
@@ -199,15 +193,7 @@ public class ExcelFileReader {
         return fileName != null ? "Current file: " + fileName : "No file selected";
     }
 
-    public void setPublicationId(String publicationId) {
-        this.publicationId = publicationId;
-    }
-
-    public String getPublicationId() {
-        return publicationId;
-    }
-
-//    MODIFY AND WRITE FILES
+    //    MODIFY AND WRITE FILES
 
 //    TODO: cleanup and extract those function in the ExcelFileWriter.java
 
@@ -229,6 +215,7 @@ public class ExcelFileReader {
 
     public void checkAndInsertUniprotResultsFileSeparatedFormat(String idColumnIndex, int organismColumnIndex,
                                                                 int idDbColumnIndex) {
+        //TODO: check indexes with the new library
         int idInputColumnIndex = 0;
         List<List<String>> data = readFileWithSeparator();
         List<String> header = data.get(0);
@@ -240,8 +227,7 @@ public class ExcelFileReader {
             }
         }
 
-        for (int i = 1; i < data.size(); i++) {
-            List<String> row = data.get(i);
+        for (List<String> row : data) {
             String currentValue = row.get(idInputColumnIndex);
             String uniprotResult = uniprotMapper.fetchUniprotResults(
                     currentValue,
@@ -251,11 +237,12 @@ public class ExcelFileReader {
 
             if (uniprotResult != null && !uniprotResult.isEmpty()) {
                 row.set(idInputColumnIndex, uniprotResult);
-                if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)){
-                    xmlMakerutils.showActionDialog(moleculeSetOption);
+                if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
+                    proteinsPartOfMoleculeSet.add(uniprotResult);
                 }
             }
         }
+
         writeFileWithSeparator(data);
     }
 
@@ -282,8 +269,7 @@ public class ExcelFileReader {
             }
             Cell previousCell = row.getCell(idColumnIndex);
 
-            int organismId = xmlMakerutils.findMostSimilarOrganism(row.getCell(organismColumnIndex).getStringCellValue());
-//            int organismId = Integer.parseInt(xmlMakerutils.fetchTaxIdForOrganism(row.getCell(organismColumnIndex).getStringCellValue()));
+            int organismId = Integer.parseInt(xmlMakerutils.fetchTaxIdForOrganism(row.getCell(organismColumnIndex).getStringCellValue()));
             String organism = String.valueOf(organismId);
             String idDb = row.getCell(idDbColumnIndex).getStringCellValue();
 
@@ -299,7 +285,7 @@ public class ExcelFileReader {
                     previousCell.setCellValue(uniprotResult);
                     if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
                         highlightCells(previousCell);
-                        xmlMakerutils.showActionDialog(moleculeSetOption);
+                        proteinsPartOfMoleculeSet.add(uniprotResult);
                     }
                 }
             }
@@ -325,18 +311,20 @@ public class ExcelFileReader {
         return -1;
     }
 
-    private void writeFileWithSeparator(List<List<String>> data){
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(currentFilePath))) {
+    private void writeFileWithSeparator(List<List<String>> data) {
+        try (CSVWriter csvWriter = new CSVWriter(new FileWriter(currentFilePath), separator, '"',
+                '"', "\n")) {
             for (List<String> row : data) {
-                writer.write(String.join(separator, row));
-                writer.newLine();
+                String[] rowArray = row.toArray(new String[0]);
+                csvWriter.writeNext(rowArray);
             }
+
             xmlMakerutils.showInfoDialog("File modified successfully.");
             selectFileOpener(currentFilePath);
+
         } catch (IOException e) {
-            xmlMakerutils.showErrorDialog("Error modifying to file: " + e.getMessage());
+            xmlMakerutils.showErrorDialog("Error modifying file: " + e.getMessage());
         }
     }
-
 
 }

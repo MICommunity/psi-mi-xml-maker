@@ -20,7 +20,7 @@ public class UniprotMapper {
     final Map<String, String> alreadyParsed = new HashMap<>();
     private static final String ACCEPT_HEADER = "Accept";
     private static final String ACCEPT_JSON = "application/json";
-    XmlMakerUtils utils = new XmlMakerUtils();
+    final XmlMakerUtils utils = new XmlMakerUtils();
 
     public String fetchUniprotResults(String protein, String organismId, String database) {
         String urlString = uniprotQueryConstructor(protein, organismId, database);
@@ -123,8 +123,7 @@ public class UniprotMapper {
 
     private String uniprotQueryConstructor(String query, String organismId, String database) {
         String uniprotApiUrl = "https://rest.uniprot.org/uniprotkb/search?query=(xref:";
-//        organismId = utils.fetchTaxIdForOrganism(organismId);
-        organismId = String.valueOf(utils.findMostSimilarOrganism(organismId));
+        organismId = utils.fetchTaxIdForOrganism(organismId);
         database = chooseDbFromCol(query, database);
         String uniprotApiUrlPart2 = "%20AND%20organism_id:";
         String uniprotApiUrlPart3 = ")&format=json&fields=accession,organism_id";
@@ -135,19 +134,6 @@ public class UniprotMapper {
             return "https://rest.uniprot.org/uniprotkb/search?query=accession:" + query;
         }
     }
-
-//    public String chooseDb(String query) {
-//        if (query.matches("^(NM|NP|NR|NC)_[0-9]{1,8}$")) {
-//            return "RefSeq-" + query;
-//        }
-//        if (!query.matches(".*[^0-9].*")) {
-//            return "GeneID-" + query;
-//        }
-//        if (query.matches("^ENSG\\d{11}$")){
-//            return "ensembl-" + query;
-//        }
-//        return null;
-//    }
 
     public String chooseDbFromCol(String query, String db) {
         if (db.toLowerCase().contains("refseq")) {

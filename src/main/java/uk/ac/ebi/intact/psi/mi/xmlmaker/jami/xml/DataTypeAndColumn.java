@@ -12,11 +12,11 @@ public enum DataTypeAndColumn {
     PARTICIPANT_NAME("Participant name"),
     PARTICIPANT_TYPE("Participant type"),
     PARTICIPANT_ID("Participant ID"),
-    PARTICIPANT_DB("Participant DB"),
     PARTICIPANT_ID_DB("Participant ID database"),
     PARTICIPANT_ORGANISM("Participant taxID"),
     EXPERIMENTAL_ROLE("Experimental role"),
     PARTICIPANT_IDENTIFICATION_METHOD("Participant identification method"),
+    PARTICIPANT_XREF("Participant xref"),
     HOST_ORGANISM("Host organism"),
     INTERACTION_TYPE("Interaction type"),
     FEATURE_SHORT_LABEL("Feature short label"),
@@ -27,7 +27,7 @@ public enum DataTypeAndColumn {
     
     public final String name;
     public final Function<Cell, String> extractString;
-    public static Map<String, DataTypeAndColumn> map = new HashMap<>();
+//    public static final Map<String, DataTypeAndColumn> map = new HashMap<>();
 
     DataTypeAndColumn(String name) {
         this(name, Cell::getStringCellValue);

@@ -30,9 +30,7 @@ public class FileFetcherGui {
         JTextField publicationTitleField = new JTextField("Publication pubmed ID");
         publicationTitleField.setEditable(true);
         JButton textValidationButton = new JButton("Submit");
-        textValidationButton.addActionListener(e -> {
-            excelFileReader.setPublicationId(publicationTitleField.getText());
-        });
+        textValidationButton.addActionListener(e -> excelFileReader.setPublicationId(publicationTitleField.getText()));
 
         fileFetcherPanel.add(fetchFileLabel);
         fileFetcherPanel.add(fetchingButton);

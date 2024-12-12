@@ -5,16 +5,13 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.organisms.OrganismSelector;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
-
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Arrays;
-
 import static org.apache.poi.ss.usermodel.CellType.STRING;
 
 public class InteractionsCreatorGui extends JPanel {
@@ -29,31 +26,15 @@ public class InteractionsCreatorGui extends JPanel {
     public JPanel participantCreatorPanel;
     public final Map<String, Integer> dataAndIndexes = new HashMap<>();
 
-    private final String[] dataNeededForInteractor = {
-            DataTypeAndColumn.INTERACTION_NUMBER.name,
-            DataTypeAndColumn.INTERACTION_DETECTION_METHOD.name,
-            DataTypeAndColumn.INTERACTION_TYPE.name,
-            DataTypeAndColumn.HOST_ORGANISM.name,
-            DataTypeAndColumn.PARTICIPANT_NAME.name,
-            DataTypeAndColumn.PARTICIPANT_ORGANISM.name,
-            DataTypeAndColumn.PARTICIPANT_TYPE.name,
-            DataTypeAndColumn.PARTICIPANT_ID.name,
-            DataTypeAndColumn.PARTICIPANT_ID_DB.name,
-            DataTypeAndColumn.EXPERIMENTAL_ROLE.name,
-            DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name,
-            DataTypeAndColumn.FEATURE_SHORT_LABEL.name,
-            DataTypeAndColumn.FEATURE_TYPE.name,
-            DataTypeAndColumn.FEATURE_START_STATUS.name,
-            DataTypeAndColumn.FEATURE_END_STATUS.name,
-            DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name
-    };
+    final String[] dataNeededForInteractor = Arrays.stream(DataTypeAndColumn.values())
+            .map(dataType -> dataType.name)
+            .toArray(String[]::new);
 
-    public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui, OrganismSelector organismSelector) {
+    public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui) {
         this.excelFileReader = excelFileReader;
         setUpSheets();
         this.participantCreatorPanel = new JPanel(new BorderLayout());
-        this.interactionsCreator = new InteractionsCreator(excelFileReader, uniprotMapperGui, organismSelector,
-                dataAndIndexes, sheets.getSelectedIndex());
+        this.interactionsCreator = new InteractionsCreator(excelFileReader, uniprotMapperGui, dataAndIndexes, sheets.getSelectedIndex());
     }
 
     public JPanel participantCreatorPanel() {
@@ -103,7 +84,7 @@ public class InteractionsCreatorGui extends JPanel {
             if (sheets.isEnabled()) {
                 String selectedSheet = (String) sheets.getSelectedItem();
                 if (selectedSheet != null && !selectedSheet.equals("Select sheet")) {
-                    for (String columnName : excelFileReader.getColumns(selectedSheet)) {
+                    for (String columnName : excelFileReader.getColumns()) {
                         columns.addItem(columnName);
                     }
                 }
