@@ -17,7 +17,7 @@ public class UniprotMapperGui extends JPanel {
 
     public UniprotMapperGui(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
-        setUpSheets();
+//        setUpSheets();
     }
 
     public JPanel uniprotPanel() {
@@ -28,15 +28,12 @@ public class UniprotMapperGui extends JPanel {
         fileProcessingPanel.setLayout(new BoxLayout(fileProcessingPanel, BoxLayout.Y_AXIS));
 
         fileProcessingPanel.add(sheets);
-        sheets.addItem("Select sheet");
 
         fileProcessingPanel.add(idColumn).setPreferredSize(new Dimension(400, 50));
         idColumn.addItem("Select ID column");
-        sheets.addActionListener(e -> setUpColumns());
 
         fileProcessingPanel.add(idDbColumn).setPreferredSize(new Dimension(400, 50));
         idDbColumn.addItem("Select ID database column");
-        sheets.addActionListener(e -> setUpColumns());
 
         fileProcessingPanel.add(organismColumn).setPreferredSize(new Dimension(400, 50));
         organismColumn.addItem("Select organism column");
@@ -76,14 +73,14 @@ public class UniprotMapperGui extends JPanel {
         if (sheets.isEnabled()) {
             String selectedSheet = (String) sheets.getSelectedItem();
             if (selectedSheet != null && !selectedSheet.equals("Select sheet")) {
-                for (String columnName : excelFileReader.getColumns()) {
+                for (String columnName : excelFileReader.getColumns(selectedSheet)) {
                     idColumn.addItem(columnName);
                     organismColumn.addItem(columnName);
                     idDbColumn.addItem(columnName);
                 }
             }
         } else {
-            for (String columnName : excelFileReader.getColumns()) {
+            for (String columnName : excelFileReader.getColumns("")) {
                 idColumn.addItem(columnName);
                 organismColumn.addItem(columnName);
                 idDbColumn.addItem(columnName);

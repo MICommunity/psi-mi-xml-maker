@@ -18,11 +18,13 @@ import javax.swing.*;
 import java.awt.Font;
 import java.awt.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class ExcelFileReader {
 
@@ -158,16 +160,21 @@ public class ExcelFileReader {
         return sheets;
     }
 
-    public List<String> getColumns() {
+    public List<String> getColumns(String sheetSelected) {
         columns.clear();
 
         if (fileType.equals("xlsx") || fileType.equals("xls")) {
-            if (fileData == null || fileData.isEmpty()) {
+            if (workbook == null) {
                 LOGGER.warning("No file data loaded.");
                 return columns;
-            }List<String> headerRow = fileData.get(0);
-            if (headerRow != null) {
-                columns.addAll(headerRow);
+            }
+            if (workbook.getSheet(sheetSelected) != null) {
+                Row headerRow = workbook.getSheet(sheetSelected).getRow(0);
+                if (headerRow != null) {
+                    for (Cell cell : headerRow) {
+                        columns.add(cell.toString());
+                    }
+                }
             }
         } else if (fileType.equals("csv") || fileType.equals("tsv")) {
             if (fileData == null || fileData.isEmpty()) {
@@ -195,7 +202,7 @@ public class ExcelFileReader {
 
     //    MODIFY AND WRITE FILES
 
-//    TODO: cleanup and extract those function in the ExcelFileWriter.java
+//TODO: cleanup and extract those function in the ExcelFileWriter.java
 
     public void checkAndInsertUniprotResultsExcel(String sheetSelected, String selectedColumn,
                                                   int organismColumnIndex, int idDbColumnIndex) {
@@ -215,7 +222,6 @@ public class ExcelFileReader {
 
     public void checkAndInsertUniprotResultsFileSeparatedFormat(String idColumnIndex, int organismColumnIndex,
                                                                 int idDbColumnIndex) {
-        //TODO: check indexes with the new library
         int idInputColumnIndex = 0;
         List<List<String>> data = readFileWithSeparator();
         List<String> header = data.get(0);
@@ -312,11 +318,17 @@ public class ExcelFileReader {
     }
 
     private void writeFileWithSeparator(List<List<String>> data) {
-        try (CSVWriter csvWriter = new CSVWriter(new FileWriter(currentFilePath), separator, '"',
-                '"', "\n")) {
+//        char separator = '\t'; //TODO:check that
+
+        try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(
+                new FileOutputStream(currentFilePath), StandardCharsets.UTF_8),
+                separator, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\n")) {
+
             for (List<String> row : data) {
-                String[] rowArray = row.toArray(new String[0]);
-                csvWriter.writeNext(rowArray);
+                List<String> sanitizedRow = row.stream()
+                        .map(value -> value == null ? "" : value.trim())
+                        .collect(Collectors.toList());
+                csvWriter.writeNext(sanitizedRow.toArray(new String[0]));
             }
 
             xmlMakerutils.showInfoDialog("File modified successfully.");
@@ -325,6 +337,16 @@ public class ExcelFileReader {
         } catch (IOException e) {
             xmlMakerutils.showErrorDialog("Error modifying file: " + e.getMessage());
         }
+    }
+
+    public int getNumberOfFeatures(){
+        int numberOfFeatures = -1;
+        for (String column: columns){
+            if (column.toLowerCase().contains("featureshortlabel")){
+                numberOfFeatures++;
+            }
+        }
+        return numberOfFeatures;
     }
 
 }

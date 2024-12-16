@@ -33,7 +33,7 @@ public class UniprotMapper {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return protein;
     }
 
     private HttpURLConnection createConnection(String urlString) throws Exception {
@@ -70,7 +70,7 @@ public class UniprotMapper {
         } else {
             alreadyParsed.put(protein, " ");
         }
-        return null;
+        return protein;
     }
 
     public String getUniprotAC(JsonObject results) {

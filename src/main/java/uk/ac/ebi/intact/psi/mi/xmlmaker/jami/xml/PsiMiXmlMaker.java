@@ -79,7 +79,7 @@ public class PsiMiXmlMaker {
         PsiJami.initialiseAllFactories();
 
         Map<String, Object> expandedXmlWritingOptions = MIWriterOptionFactory.getInstance().getExpandedXmlOptions(
-                new File(saveLocation),
+                new File(saveLocation + ".xml"),
                 InteractionCategory.evidence,
                 ComplexType.n_ary,
                 new InMemoryLightIdentityObjectCache(),

@@ -11,7 +11,6 @@ import java.util.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 import java.util.stream.Collectors;
 
-
 public class InteractionsCreator {
     final ExcelFileReader excelFileReader;
     final UniprotMapperGui uniprotMapperGui;
@@ -95,6 +94,15 @@ public class InteractionsCreator {
         featureEvidence.getRanges().add(featureRange);
         participantEvidence.addFeature(featureEvidence);
 
+        //TODO: add other features with indexes
+
+        if (excelFileReader.getNumberOfFeatures() > 0){
+            for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++){
+                participantEvidence.addFeature(createFeature(i, data));
+            }
+        }
+
+
         String experimentalPreparation = data.get(DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name);
         String experimentalPreparationMiId = utils.fetchMiId(experimentalPreparation);
         CvTerm experimentalPreparationCv = new XmlCvTerm(experimentalPreparation, experimentalPreparationMiId);
@@ -133,12 +141,18 @@ public class InteractionsCreator {
             if (row == null) {
                 continue;
             }
-
-            //TODO: handle if it is string or numeric values
-
             Map<String, String> dataMap = new HashMap<>();
             for (DataTypeAndColumn value : DataTypeAndColumn.values()) {
-                dataMap.put(value.name, value.extractString.apply(row.getCell(columnAndIndex.get(value.name))));
+                Cell cell = row.getCell(columnAndIndex.get(value.name));
+                if (cell == null) {
+                    dataMap.put(value.name, "N/A");
+                } else {
+                    String extractedValue = value.extractString.apply(cell);
+                    if (extractedValue == null) {
+                        extractedValue = "N/A";
+                    }
+                    dataMap.put(value.name, extractedValue);
+                }
             }
             dataList.add(dataMap);
         }
@@ -189,8 +203,36 @@ public class InteractionsCreator {
             experiment.setParticipantIdentificationMethod(identificationMethodCv);
 
             interaction.setExperiment(experiment);
+
             xmlModelledInteractions.add(interaction);
         }
+    }
+
+    private XmlFeatureEvidence createFeature(int featureIndex, Map<String, String> data) {
+        String featureIndexString = "_" + featureIndex;
+
+        String featureShortLabel = data.get(DataTypeAndColumn.FEATURE_TYPE.name + featureIndexString);
+        String featureType = data.get(DataTypeAndColumn.FEATURE_TYPE.name + featureIndexString);
+        String featureTypeMiId = utils.fetchMiId(featureType);
+        CvTerm featureTypeCv = new XmlCvTerm(featureType, featureTypeMiId);
+        XmlFeatureEvidence featureEvidence = new XmlFeatureEvidence(featureTypeCv);
+        featureEvidence.setShortName(featureShortLabel);
+
+        XmlRange featureRange = new XmlRange();
+        String featureStartRange = data.get(DataTypeAndColumn.FEATURE_START_STATUS.name + featureIndexString);
+        String featureStartRangeMiId = utils.fetchMiId(featureStartRange);
+        XmlCvTerm featureStartRangeCv = new XmlCvTerm(featureStartRange, featureStartRangeMiId);
+        featureRange.setJAXBStartStatus(featureStartRangeCv);
+
+        String featureEndRange = data.get(DataTypeAndColumn.FEATURE_END_STATUS.name + featureIndexString);
+        String featureEndRangeMiId = utils.fetchMiId(featureEndRange);
+        XmlCvTerm featureEndRangeCv = new XmlCvTerm(featureEndRange, featureEndRangeMiId);
+        featureRange.setJAXBEndStatus(featureEndRangeCv);
+
+        featureEvidence.setJAXBRangeWrapper(new AbstractXmlFeature.JAXBRangeWrapper());
+        featureEvidence.getRanges().add(featureRange);
+
+        return featureEvidence;
     }
 
 }
