@@ -2,8 +2,6 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
 import org.apache.poi.ss.usermodel.Cell;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 public enum DataTypeAndColumn {
@@ -22,22 +20,31 @@ public enum DataTypeAndColumn {
     PARTICIPANT_IDENTIFICATION_METHOD("Participant identification method"),
     PARTICIPANT_XREF("Participant xref"),
 
-    FEATURE_SHORT_LABEL("Feature short label"),
-    FEATURE_TYPE("Feature type"),
-    FEATURE_START_STATUS("Feature start status"),
-    FEATURE_END_STATUS("Feature end status"),;
+    FEATURE_SHORT_LABEL("Feature short label", false),
+    FEATURE_TYPE("Feature type", false),
+    FEATURE_START_STATUS("Feature start status", false),
+    FEATURE_END_STATUS("Feature end status", false),
+    ;
 
     public final String name;
     public final Function<Cell, String> extractString;
-    public static final Map<String, DataTypeAndColumn> map = new HashMap<>();
+    public final boolean initial;
 
     DataTypeAndColumn(String name) {
         this(name, Cell::getStringCellValue);
     }
 
+    DataTypeAndColumn(String name, boolean initial) {
+        this(name, Cell::getStringCellValue, initial);
+    }
+
     DataTypeAndColumn(String name, Function<Cell, String> extractString) {
+        this(name, extractString, true);
+    }
+    DataTypeAndColumn(String name, Function<Cell, String> extractString, boolean initial) {
         this.name = name;
         this.extractString = extractString;
+        this.initial = initial;
     }
 
 }

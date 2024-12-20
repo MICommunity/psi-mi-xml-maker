@@ -7,15 +7,12 @@ import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 
+import java.util.List;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Arrays;
+import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static org.apache.poi.ss.usermodel.CellType.STRING;
@@ -30,8 +27,9 @@ import static org.apache.poi.ss.usermodel.CellType.STRING;
  */
 public class InteractionsCreatorGui extends JPanel {
     private final JComboBox<String> sheets = new JComboBox<>();
-    private final JComboBox<String> columns = new JComboBox<>();
-    private JTable table = new JTable();
+    private final List<JComboBox<String>> columnsList = new ArrayList<>();
+    private final List<String> columnNames = new ArrayList<>();
+    private final JTable table = new JTable();
 
     private final ExcelFileReader excelFileReader;
     public final InteractionsCreator interactionsCreator;
@@ -41,6 +39,7 @@ public class InteractionsCreatorGui extends JPanel {
     public final Map<String, Integer> dataAndIndexes = new HashMap<>();
     final ArrayList<String> dataNeededForInteractor = new ArrayList<>(
             Arrays.stream(DataTypeAndColumn.values())
+                    .filter(dataType -> dataType.initial)
                     .map(dataType -> dataType.name)
                     .collect(Collectors.toList())
     );
@@ -68,14 +67,14 @@ public class InteractionsCreatorGui extends JPanel {
         JPanel sheetSelectorPanel = new JPanel();
         sheetSelectorPanel.setLayout(new BoxLayout(sheetSelectorPanel, BoxLayout.Y_AXIS));
 
+        sheetSelectorPanel.add(sheets);
+
         sheets.addActionListener(e -> {
             interactionsCreator.sheetSelected = Objects.requireNonNull(sheets.getSelectedItem()).toString();
             setUpColumns();
             createInteractionDataTable();
         });
-        sheetSelectorPanel.add(sheets);
 
-        table = createInteractionDataTable();
         JScrollPane scrollPane = new JScrollPane(table);
         sheetSelectorPanel.add(scrollPane);
 
@@ -84,6 +83,7 @@ public class InteractionsCreatorGui extends JPanel {
         participantCreatorPanel.add(processFileButton, BorderLayout.SOUTH);
 
         setLayout(new BorderLayout());
+
         add(participantCreatorPanel, BorderLayout.CENTER);
 
         return participantCreatorPanel;
@@ -112,25 +112,15 @@ public class InteractionsCreatorGui extends JPanel {
      * Sets up the columns for the currently selected sheet.
      */
     private void setUpColumns() {
-        columns.removeAllItems();
-        columns.addItem("Select column to process");
-
+        columnNames.clear();
+        columnNames.add("Select column to process");
         if (sheets.isEnabled()) {
             String selectedSheet = (String) sheets.getSelectedItem();
             if (selectedSheet != null && !selectedSheet.equals("Select sheet")) {
-                for (String columnName : excelFileReader.getColumns(selectedSheet)) {
-                    columns.addItem(columnName);
-                }
+                columnNames.addAll(excelFileReader.getColumns(selectedSheet));
             }
         } else {
-            for (String columnName : excelFileReader.columns) {
-                columns.addItem(columnName);
-            }
-        }
-        columns.revalidate();
-        columns.repaint();
-        for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
-            addFeatureCells(i);
+            columnNames.addAll(excelFileReader.getColumns(""));
         }
     }
 
@@ -144,35 +134,24 @@ public class InteractionsCreatorGui extends JPanel {
         processFileButton.addActionListener(e -> {
 
             String sheetSelected = (String) sheets.getSelectedItem();
-            String columnSelected = (String) columns.getSelectedItem();
+            List<String> selectedColumns = getComboBoxSelectedValues();
 
-            if (sheets.isEnabled()) {
-                if (sheetSelected == null || sheetSelected.equals("Select sheet") ||
-                        columnSelected == null || columnSelected.equals("Select column to process")) {
-                    JOptionPane.showMessageDialog(null, "Please select a valid sheet and column!", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                try {
-                    interactionsCreator.createParticipantsWithFileFormat(getDataAndIndexes());
-                    JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(null,
-                            "An error occurred during file processing sheets: " +
-                                    ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
-                }
-            } else {
-                if (columnSelected == null || columnSelected.equals("Select column to process")) {
-                    JOptionPane.showMessageDialog(null, "Please select a valid column for processing!", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                try {
-                    interactionsCreator.createParticipantsWithFileFormat(getDataAndIndexes());
-                    JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
-                }
+            if (sheets.isEnabled() && (sheetSelected == null || sheetSelected.equals("Select sheet"))) {
+                JOptionPane.showMessageDialog(null, "Please select a valid sheet!", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+
+            if (selectedColumns.stream().anyMatch(selected -> selected.equals("Select column to process"))) {
+                JOptionPane.showMessageDialog(null, "Please select a valid column for processing!", "ERROR", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                interactionsCreator.createParticipantsWithFileFormat(getDataAndIndexes());
+                JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                LOGGER.warning(ex.getMessage());
+//                ex.printStackTrace();
+                JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
             }
         });
         return processFileButton;
@@ -221,7 +200,8 @@ public class InteractionsCreatorGui extends JPanel {
         for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
             addFeatureCells(i);
         }
-        return table;
+        table.repaint();
+        table.revalidate();
     }
 
     /**
@@ -258,10 +238,10 @@ public class InteractionsCreatorGui extends JPanel {
      */
     public void addFeatureCells(int featureIndex) {
         ArrayList<String> featureCells = new ArrayList<>();
-        featureCells.add(DataTypeAndColumn.FEATURE_SHORT_LABEL.name);
-        featureCells.add(DataTypeAndColumn.FEATURE_TYPE.name);
-        featureCells.add(DataTypeAndColumn.FEATURE_START_STATUS.name);
-        featureCells.add(DataTypeAndColumn.FEATURE_END_STATUS.name);
+        featureCells.add(DataTypeAndColumn.FEATURE_SHORT_LABEL.name + "_" + featureIndex);
+        featureCells.add(DataTypeAndColumn.FEATURE_TYPE.name + "_" + featureIndex);
+        featureCells.add(DataTypeAndColumn.FEATURE_START_STATUS.name + "_" + featureIndex);
+        featureCells.add(DataTypeAndColumn.FEATURE_END_STATUS.name + "_" + featureIndex);
 
         TableColumnModel columnModel = table.getColumnModel();
 
