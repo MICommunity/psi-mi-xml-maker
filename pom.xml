@@ -15,7 +15,6 @@
     <psi.jami.version>3.6.0-SNAPSHOT</psi.jami.version>
     <spring.version>4.3.30.RELEASE</spring.version>
     <ols.client.version>2.14-SNAPSHOT</ols.client.version>
-<!--    <intact.jami.version>3.1.0-SNAPSHOT</intact.jami.version>-->
     <java.version>11</java.version>
   </properties>
 
@@ -43,12 +42,6 @@
       <groupId>psidev.psi.mi.jami.bridges</groupId>
       <artifactId>jami-uniprot</artifactId>
       <version>${psi.jami.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>jcl-over-slf4j</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
     <dependency>
@@ -98,12 +91,6 @@
       <groupId>psidev.psi.mi.jami.bridges</groupId>
       <artifactId>jami-ols</artifactId>
       <version>${psi.jami.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>jcl-over-slf4j</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 
       <dependency>
@@ -130,6 +117,16 @@
       <version>5.7.1</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.20.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.20.0</version>
+    </dependency>
   </dependencies>
 
 
@@ -152,6 +149,23 @@
         </annotationProcessorPaths>
       </configuration>
     </plugin>
+    <plugin>
+      <groupId>io.github.fvarrui</groupId>
+      <artifactId>javapackager</artifactId>
+      <version>1.7.6</version>
+      <executions>
+        <execution>
+          <phase>package</phase>
+          <goals>
+            <goal>package</goal>
+          </goals>
+          <configuration>
+            <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+
   </plugins>
 </build>
   <repositories>

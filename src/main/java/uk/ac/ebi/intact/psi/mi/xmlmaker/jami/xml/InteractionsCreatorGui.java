@@ -20,6 +20,14 @@ import java.util.stream.Collectors;
 
 import static org.apache.poi.ss.usermodel.CellType.STRING;
 
+/**
+ * This class provides a graphical user interface for creating interaction participants
+ * from an Excel file using the Apache POI library. It integrates with {@link ExcelFileReader}
+ * to read data from Excel sheets and supports the selection of columns to process
+ * for interaction creation.
+ * The class extends {@link JPanel} and includes a table for displaying and configuring
+ * data columns. It supports interaction with Uniprot mapping via {@link UniprotMapperGui}.
+ */
 public class InteractionsCreatorGui extends JPanel {
     private final JComboBox<String> sheets = new JComboBox<>();
     private final JComboBox<String> columns = new JComboBox<>();
@@ -31,27 +39,39 @@ public class InteractionsCreatorGui extends JPanel {
     @Getter
     public JPanel participantCreatorPanel;
     public final Map<String, Integer> dataAndIndexes = new HashMap<>();
-
     final ArrayList<String> dataNeededForInteractor = new ArrayList<>(
             Arrays.stream(DataTypeAndColumn.values())
                     .map(dataType -> dataType.name)
                     .collect(Collectors.toList())
     );
 
+    private static final Logger LOGGER = Logger.getLogger(InteractionsCreatorGui.class.getName());
+
+    /**
+     * Constructs an instance of {@code InteractionsCreatorGui}.
+     *
+     * @param excelFileReader  The Excel file reader used to read data.
+     * @param uniprotMapperGui The Uniprot mapper GUI for integrating with Uniprot.
+     */
     public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui) {
         this.excelFileReader = excelFileReader;
         this.participantCreatorPanel = new JPanel(new BorderLayout());
-        this.interactionsCreator = new InteractionsCreator(excelFileReader, uniprotMapperGui, dataAndIndexes, sheets.getSelectedIndex());
+        this.interactionsCreator = new InteractionsCreator(excelFileReader, uniprotMapperGui, dataAndIndexes);
     }
 
+    /**
+     * Creates and returns the panel for configuring and creating interaction participants.
+     *
+     * @return A {@link JPanel} containing the participant creator interface.
+     */
     public JPanel participantCreatorPanel() {
         JPanel sheetSelectorPanel = new JPanel();
         sheetSelectorPanel.setLayout(new BoxLayout(sheetSelectorPanel, BoxLayout.Y_AXIS));
 
         sheets.addActionListener(e -> {
-            if (!isSettingUpSheets) {
-                setUpColumns();
-            }
+            interactionsCreator.sheetSelected = Objects.requireNonNull(sheets.getSelectedItem()).toString();
+            setUpColumns();
+            createInteractionDataTable();
         });
         sheetSelectorPanel.add(sheets);
 
@@ -69,28 +89,28 @@ public class InteractionsCreatorGui extends JPanel {
         return participantCreatorPanel;
     }
 
-    private boolean isSettingUpSheets = false;
-
+    /**
+     * Sets up the available sheets in the ComboBox for selection.
+     */
     public void setUpSheets() {
-        isSettingUpSheets = true; // Suppress events during setup
-        try {
-            sheets.removeAllItems();
-            sheets.addItem("Select sheet");
-            if (excelFileReader.sheets.isEmpty()) {
-                sheets.setEnabled(false);
-                sheets.setSelectedIndex(0);
-            } else {
-                sheets.setEnabled(true);
-                for (String sheetName : excelFileReader.sheets) {
-                    sheets.addItem(sheetName);
-                }
+        sheets.addItem("Select sheet");
+        if (excelFileReader.sheets.isEmpty()) {
+            sheets.setEnabled(false);
+            sheets.setSelectedIndex(0);
+            setUpColumns();
+        } else {
+            sheets.setEnabled(true);
+            for (String sheetName : excelFileReader.sheets) {
+                sheets.addItem(sheetName);
             }
-        } finally {
-            isSettingUpSheets = false;
+            setUpColumns();
         }
-        setUpColumns();
+
     }
 
+    /**
+     * Sets up the columns for the currently selected sheet.
+     */
     private void setUpColumns() {
         columns.removeAllItems();
         columns.addItem("Select column to process");
@@ -114,6 +134,11 @@ public class InteractionsCreatorGui extends JPanel {
         }
     }
 
+    /**
+     * Creates a button for processing files and attaches an event listener.
+     *
+     * @return A {@link JButton} configured for processing files.
+     */
     private JButton createProcessFileButton() {
         JButton processFileButton = new JButton("Create participants");
         processFileButton.addActionListener(e -> {
@@ -153,10 +178,12 @@ public class InteractionsCreatorGui extends JPanel {
         return processFileButton;
     }
 
-    private JTable createInteractionDataTable() {
-        JTable table = new JTable();
+    /**
+     * Creates the data table for configuring interaction participant columns.
+     */
+    private void createInteractionDataTable() {
         int rows = 1;
-        int cols = dataNeededForInteractor.size();
+        int cols = dataNeededForInteractor.size() + excelFileReader.getNumberOfFeatures() * 4;
         String defaultCellValue = "Select from file";
         String defaultColumnTitle = "Title";
 
@@ -174,38 +201,49 @@ public class InteractionsCreatorGui extends JPanel {
         table.setModel(tableModel);
 
         for (int i = 0; i < dataNeededForInteractor.size(); i++) {
-            table.getColumnModel().getColumn(i).setHeaderValue(dataNeededForInteractor.get(i));
-            table.getColumnModel().getColumn(i).setCellEditor(new DefaultCellEditor(columns));
-            table.getColumnModel().getColumn(i).setPreferredWidth(200);
-            int finalI = i;
-            table.getTableHeader().addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent me) {
-//                    System.out.println(dataNeededForInteractor.get(finalI));
-                }
-            });
-        }
+            TableColumn tableColumn = table.getColumnModel().getColumn(i);
+            tableColumn.setHeaderValue(dataNeededForInteractor.get(i));
+            tableColumn.setPreferredWidth(200);
+//            tableColumn.setMinWidth(200);
+            JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
+            columnsList.add(comboBox);
+            tableColumn.setCellEditor(new DefaultCellEditor(comboBox));
 
-        if (excelFileReader.getNumberOfFeatures() > 0) {
-            addFeatureCells(excelFileReader.getNumberOfFeatures());
+            //TODO: hover on column names
+//            int finalI = i;
+//            table.getTableHeader().addMouseListener(new MouseAdapter() {
+//                @Override
+//                public void mouseEntered(MouseEvent me) {
+////                    System.out.println(dataNeededForInteractor.get(finalI));
+//                }
+//            });
+        }
+        for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
+            addFeatureCells(i);
         }
         return table;
     }
 
+    /**
+     * Retrieves the mapping of data types to column indices.
+     *
+     * @return A {@link Map} linking data types to column indices.
+     */
     public Map<String, Integer> getDataAndIndexes() {
+        List<String> tableColumnsNames = getTableColumnNames();
         if (excelFileReader.workbook == null) {
             for (int i = 0; i < table.getColumnCount(); i++) {
-                int index = excelFileReader.readFileWithSeparator().get(0).indexOf(table.getValueAt(0, i).toString());
-                dataAndIndexes.put(dataNeededForInteractor.get(i), index);
+                int index = excelFileReader.fileData.indexOf(table.getValueAt(0, i).toString());
+                dataAndIndexes.put(tableColumnsNames.get(i), index);
             }
         } else {
             Sheet sheet = excelFileReader.workbook.getSheetAt(sheets.getSelectedIndex() - 1);
             for (int i = 0; i < table.getColumnCount(); i++) {
-                Row row = sheet.getRow(0);
+                Row row = sheet.getRow(0); // get the header
                 for (Cell cell : row) {
                     if (cell.getCellType() == STRING && cell.getStringCellValue()
                             .equals(table.getValueAt(0, i).toString())) {
-                        dataAndIndexes.put(dataNeededForInteractor.get(i), cell.getColumnIndex());
+                        dataAndIndexes.put(tableColumnsNames.get(i), cell.getColumnIndex());
                     }
                 }
             }
@@ -213,6 +251,11 @@ public class InteractionsCreatorGui extends JPanel {
         return dataAndIndexes;
     }
 
+    /**
+     * Adds feature-related cells to the data table.
+     *
+     * @param featureIndex The index of the feature being added.
+     */
     public void addFeatureCells(int featureIndex) {
         ArrayList<String> featureCells = new ArrayList<>();
         featureCells.add(DataTypeAndColumn.FEATURE_SHORT_LABEL.name);
@@ -222,14 +265,55 @@ public class InteractionsCreatorGui extends JPanel {
 
         TableColumnModel columnModel = table.getColumnModel();
 
-        for (String columnName : featureCells) {
-            TableColumn newColumn = new TableColumn();
-            newColumn.setPreferredWidth(200);
+        for (int i = 0; i < featureCells.size(); i++) {
+            String columnName = featureCells.get(i);
+            TableColumn newColumn = columnModel.getColumn(dataNeededForInteractor.size() + featureIndex * 4 + i);
             newColumn.setHeaderValue(columnName);
-            newColumn.setCellEditor(new DefaultCellEditor(columns));
-            columnModel.addColumn(newColumn);
-            dataNeededForInteractor.add(columnName + "_" + featureIndex);
+            newColumn.setPreferredWidth(200);
+//            newColumn.setMinWidth(200);
+            JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
+            columnsList.add(comboBox);
+            newColumn.setCellEditor(new DefaultCellEditor(comboBox));
         }
+    }
+
+    /**
+     * Retrieves the selected values from the ComboBoxes in the table.
+     *
+     * @return A {@link List} of selected column names.
+     */
+    public List<String> getComboBoxSelectedValues() {
+        List<String> selectedValues = new ArrayList<>();
+
+        for (int columnIndex = 0; columnIndex < table.getColumnCount(); columnIndex++) {
+            TableColumn column = table.getColumnModel().getColumn(columnIndex);
+            DefaultCellEditor cellEditor = (DefaultCellEditor) column.getCellEditor();
+
+            if (cellEditor != null) {
+                JComboBox<?> comboBox = (JComboBox<?>) cellEditor.getComponent();
+                Object selectedItem = comboBox.getSelectedItem();
+                selectedValues.add(selectedItem != null ? selectedItem.toString() : "Select from file");
+            } else {
+                Object cellValue = table.getValueAt(0, columnIndex);
+                selectedValues.add(cellValue != null ? cellValue.toString() : "Select from file");
+            }
+        }
+
+        return selectedValues;
+    }
+
+    /**
+     * Retrieves the names of the columns in the data table.
+     *
+     * @return A {@link List} of column names.
+     */
+    public List<String> getTableColumnNames() {
+        List<String> tableColumnNames = new ArrayList<>();
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            String columnName = table.getColumnModel().getColumn(i).getHeaderValue().toString();
+            tableColumnNames.add(columnName);
+        }
+        return tableColumnNames;
     }
 
 }

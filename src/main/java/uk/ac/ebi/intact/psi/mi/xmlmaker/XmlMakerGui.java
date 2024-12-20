@@ -11,9 +11,15 @@ import java.util.logging.Logger;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.PsiMiXmlMakerGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFetcherGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 
+/**
+ * Main GUI class for the PSI-MI XML Maker application.
+ * <p>
+ * Provides a graphical user interface for processing files to create PSI-MI XML files,
+ * update Uniprot IDs, and manage interaction participants.
+ * </p>
+ */
 public class XmlMakerGui {
 
     private static final int FRAME_WIDTH = 2000;
@@ -24,6 +30,10 @@ public class XmlMakerGui {
     private final InteractionsCreatorGui interactionsCreatorGui;
     private final PsiMiXmlMakerGui psiMiXmlMakerGui;
 
+
+    /**
+     * Constructs the XmlMakerGui instance, initializing all dependent components.
+     */
     public XmlMakerGui() {
         this.excelFileReader = new ExcelFileReader();
         this.uniprotMapperGui = new UniprotMapperGui(excelFileReader);
@@ -31,9 +41,12 @@ public class XmlMakerGui {
         this.psiMiXmlMakerGui = new PsiMiXmlMakerGui(interactionsCreatorGui.interactionsCreator, excelFileReader);
     }
 
+    /**
+     * Initializes the main GUI components and displays the application frame.
+     */
     public void initialize() {
         JFrame frame = createMainFrame();
-        frame.add(createExcelFileLabel());
+        frame.add(createFileLabel());
         frame.add(createFileFetcherPanel());
         frame.add(createUniprotMapperPanel());
         frame.add(createFileProcessingPanel());
@@ -42,6 +55,11 @@ public class XmlMakerGui {
         frame.setVisible(true);
     }
 
+    /**
+     * Creates the main application frame.
+     *
+     * @return The main application JFrame.
+     */
     private JFrame createMainFrame() {
         JFrame frame = new JFrame("PSI-MI XML Maker");
         frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
@@ -51,35 +69,65 @@ public class XmlMakerGui {
         return frame;
     }
 
-    private JLabel createExcelFileLabel() {
+    /**
+     * Creates a JLabel to display the selected file.
+     *
+     * @return The JLabel showing the selected file.
+     */
+    private JLabel createFileLabel() {
         return excelFileReader.getFileLabel();
     }
 
+    /**
+     * Creates the panel for fetching files.
+     *
+     * @return The JPanel for file fetching.
+     */
     private JPanel createFileFetcherPanel() {
-        FileFetcherGui fileFetcherGui = new FileFetcherGui(excelFileReader);
-        JPanel fileFetcherPanel = fileFetcherGui.createFileFetcher();
+        JPanel fileFetcherPanel = createFileFetcher();
         fileFetcherPanel.setBorder(new TitledBorder("1. Fetch file"));
         return fileFetcherPanel;
     }
 
+    /**
+     * Creates the panel for mapping Uniprot IDs.
+     *
+     * @return The JPanel for Uniprot mapping.
+     */
     private JPanel createUniprotMapperPanel() {
         JPanel uniprotMapperPanel = uniprotMapperGui.uniprotPanel();
         uniprotMapperPanel.setBorder(new TitledBorder("2. Update the Uniprot ids"));
         return uniprotMapperPanel;
     }
 
+    /**
+     * Creates the panel for processing interaction participants.
+     *
+     * @return The JPanel for interaction participant creation.
+     */
     private JPanel createFileProcessingPanel() {
         JPanel fileProcessingPanel = interactionsCreatorGui.participantCreatorPanel();
+        fileProcessingPanel.setAutoscrolls(true);
         fileProcessingPanel.setBorder(new TitledBorder("3. Create the interaction participants"));
         return fileProcessingPanel;
     }
 
+    /**
+     * Creates the panel for generating PSI-MI XML files.
+     *
+     * @return The JPanel for PSI-MI XML file creation.
+     */
     private JPanel createPsiMiXmlMakerPanel() {
         JPanel psiXmlMakerPanel = psiMiXmlMakerGui.createPsiMiXmlMakerPanel();
         psiXmlMakerPanel.setBorder(new TitledBorder("4. Create the PSI-MI.xml file"));
         return psiXmlMakerPanel;
     }
 
+    /**
+     * Enables drag-and-drop file support for the given JFrame.
+     *
+     * @param frame The JFrame to enable drag-and-drop on.
+     */
     private void makeFrameDnD(JFrame frame) {
         frame.setTransferHandler(new TransferHandler() {
             @Override
@@ -97,6 +145,13 @@ public class XmlMakerGui {
         });
     }
 
+
+    /**
+     * Handles file import through drag-and-drop.
+     *
+     * @param support The TransferSupport containing file information.
+     * @return True if the file import is successful; false otherwise.
+     */
     private boolean handleFileImport(TransferHandler.TransferSupport support) {
         try {
             Transferable transferable = support.getTransferable();
@@ -113,10 +168,14 @@ public class XmlMakerGui {
         return false;
     }
 
-    private void processFile(File file) {
+    /**
+     * Processes the given file by validating its type and setting up the appropriate panels.
+     *
+     * @param file The file to process.
+     */
+    public void processFile(File file) {
         String filePath = file.getAbsolutePath();
         if (isValidFileType(filePath)) {
-            XmlMakerUtils.processFile(filePath, excelFileReader);
             excelFileReader.selectFileOpener(filePath);
             uniprotMapperGui.setUpSheets();
             interactionsCreatorGui.setUpSheets();
@@ -125,34 +184,85 @@ public class XmlMakerGui {
         }
     }
 
+    /**
+     * Validates the file type based on its extension.
+     *
+     * @param filePath The path of the file to validate.
+     * @return True if the file type is valid; false otherwise.
+     */
     private boolean isValidFileType(String filePath) {
         String fileExtension = filePath.substring(filePath.lastIndexOf(".") + 1).toLowerCase();
         return fileExtension.equals("xls") || fileExtension.equals("xlsx") || fileExtension.equals("csv") || fileExtension.equals("tsv");
     }
 
+    /**
+     * Creates the menu bar for the application.
+     *
+     * @return The JMenuBar with menu options.
+     */
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("File");
 
         JMenuItem importFile = new JMenuItem("Import file");
-        importFile.addActionListener(e -> openFileChooser());
+        importFile.addActionListener(e -> fetchFile());
 
         menu.add(importFile);
         menuBar.add(menu);
         return menuBar;
     }
 
-    private void openFileChooser() {
+    /**
+     * Creates the panel for file fetching.
+     *
+     * @return The JPanel for file fetching operations.
+     */
+    public JPanel createFileFetcher() {
+        JPanel fileFetcherPanel = new JPanel();
+        JLabel fetchFileLabel = new JLabel("Drag or fetch the file to process");
+        fetchFileLabel.setHorizontalAlignment(JLabel.CENTER);
+
+        JButton fetchingButton = new JButton("Fetch file");
+        fetchingButton.addActionListener(e -> fetchFile());
+
+        JTextField publicationTitleField = new JTextField("Publication pubmed ID");
+        publicationTitleField.setEditable(true);
+        JButton textValidationButton = new JButton("Submit");
+        textValidationButton.addActionListener(e -> excelFileReader.setPublicationId(publicationTitleField.getText()));
+
+        fileFetcherPanel.add(fetchFileLabel);
+        fileFetcherPanel.add(fetchingButton);
+        fileFetcherPanel.add(publicationTitleField);
+        fileFetcherPanel.add(textValidationButton);
+        return fileFetcherPanel;
+    }
+
+    /**
+     * Opens a file chooser to fetch a file for processing.
+     */
+    private void fetchFile() {
         JFileChooser chooser = new JFileChooser();
         int result = chooser.showOpenDialog(null);
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = chooser.getSelectedFile();
             if (selectedFile != null) {
-                processFile(selectedFile);
+                try {
+                    processFile(selectedFile);
+                } catch (Exception e) {
+                    System.err.println("Error processing file: " + e.getMessage());
+                    LOGGER.log(Level.SEVERE, "Error processing file: " + selectedFile.getAbsolutePath(), e);
+                }
+            } else {
+                System.err.println("No file was selected.");
             }
         }
     }
 
+    /**
+     * The main method to start the PSI-MI XML Maker application.
+     *
+     * @param args Command-line arguments (not used).
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new XmlMakerGui().initialize());
     }

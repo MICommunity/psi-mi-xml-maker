@@ -1,5 +1,7 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import psidev.psi.mi.jami.commons.MIWriterOptionFactory;
@@ -13,7 +15,6 @@ import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 
-import javax.swing.*;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -22,6 +23,9 @@ import java.util.*;
 
 @Component
 public class PsiMiXmlMaker {
+
+    private static final Logger logger = LogManager.getLogger(PsiMiXmlMaker.class);
+
     final InteractionsCreator interactionsCreator;
     final List<XmlInteractionEvidence> xmlModelledInteractions;
     private String publicationId;
@@ -42,6 +46,12 @@ public class PsiMiXmlMaker {
 
     public void interactionsWriter(String saveLocation) {
         publicationId = excelFileReader.getPublicationId();
+        logger.info("Starting interaction writer with publication ID: {}", publicationId);
+
+        if (publicationId == null) {
+            logger.error("Publication ID is null. Please enter the publication ID.");
+            return;
+        }
 
         Publication intactPubmedRef = new BibRef(publicationId);
         String intactMiId = utils.fetchMiId("intact");
@@ -51,13 +61,8 @@ public class PsiMiXmlMaker {
         source.setUrl("https://www.ebi.ac.uk");
         source.setFullName("European Bioinformatics Institute");
 
-        if (publicationId == null) {
-            utils.showErrorDialog("Please enter the publication ID!");
-        }
         XmlXref primaryXref = createXref("pubmed", "primary-reference", "pubmed", publicationId);
-        //TODO: check why it is not considered primary
         XmlXref secondaryXref = createXref("psi-mi", "identity", "psi-mi", intactMiId);
-
 
         CvTermXrefContainer xrefContainer = new CvTermXrefContainer();
         xrefContainer.setJAXBPrimaryRef(primaryXref);
@@ -70,8 +75,10 @@ public class PsiMiXmlMaker {
         try {
             defaultReleaseDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
         } catch (DatatypeConfigurationException e) {
+            logger.error("Error while creating default release date", e);
             throw new RuntimeException(e);
         }
+
         Collection<Annotation> defaultEntryAnnotations = new ArrayList<>();
         XmlAnnotation defaultEntryAnnotation = new XmlAnnotation();
         defaultEntryAnnotations.add(defaultEntryAnnotation);
@@ -92,7 +99,6 @@ public class PsiMiXmlMaker {
                 PsiXmlVersion.v3_0_0
         );
 
-
         InteractionWriterFactory writerFactory = InteractionWriterFactory.getInstance();
         InteractionWriter xmlInteractionWriter = null;
 
@@ -101,30 +107,17 @@ public class PsiMiXmlMaker {
             xmlInteractionWriter.start();
             xmlInteractionWriter.write(xmlModelledInteractions);
             xmlInteractionWriter.end();
-            SwingUtilities.invokeLater(() ->
-                    JOptionPane.showMessageDialog(null, "Writing completed successfully!",
-                            "Success", JOptionPane.INFORMATION_MESSAGE)
-            );
+            logger.info("PSI-XML writing completed successfully. File saved at: {}", saveLocation);
 
         } catch (Exception e) {
-            System.err.println("Error during PSI-XML writing: " + e.getMessage());
-            e.printStackTrace();
-            SwingUtilities.invokeLater(() ->
-                    JOptionPane.showMessageDialog(null, "An error occurred: " +
-                            e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE)
-            );
+            logger.error("Error during PSI-XML writing", e);
 
         } finally {
             if (xmlInteractionWriter != null) {
                 try {
                     xmlInteractionWriter.close();
                 } catch (Exception e) {
-                    System.err.println("Error while closing the PSI-XML writer: " + e.getMessage());
-                    e.printStackTrace();
-                    SwingUtilities.invokeLater(() ->
-                            JOptionPane.showMessageDialog(null, "Error closing writer: " +
-                                    e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE)
-                    );
+                    logger.error("Error while closing the PSI-XML writer", e);
                 }
             }
         }
@@ -138,5 +131,4 @@ public class PsiMiXmlMaker {
 
         return new XmlXref(databaseCv, id, refTypeCv);
     }
-
 }

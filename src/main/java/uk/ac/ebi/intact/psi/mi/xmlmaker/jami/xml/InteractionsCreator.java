@@ -7,10 +7,19 @@ import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
+
+import java.io.File;
 import java.util.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
+
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+/**
+ * The InteractionsCreator class is responsible for processing Excel files or directory-based input files
+ * to create biological interaction evidence in the XML format using the JAMI library.
+ * It processes participants, interactions, and related data, and generates XML objects for interaction modeling.
+ */
 public class InteractionsCreator {
     final ExcelFileReader excelFileReader;
     final UniprotMapperGui uniprotMapperGui;
@@ -18,37 +27,56 @@ public class InteractionsCreator {
 
     final List<XmlParticipantEvidence> xmlParticipants = new ArrayList<>();
     final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
+    final List<Map<String, String>> dataList = new ArrayList<>();
     final Map<String, Integer> columnAndIndex;
-    final int sheetSelected;
+
+    String sheetSelected;
 
     @Setter @Getter
     public String publicationId;
 
-    final List<Map<String, String>> dataList = new ArrayList<>();
+    private static final Logger LOGGER = Logger.getLogger(InteractionsCreator.class.getName());
 
-    public InteractionsCreator(ExcelFileReader reader, UniprotMapperGui uniprotMapperGui, Map<String, Integer> columnAndIndex, int sheetSelected) {
+
+    /**
+     * Constructs an InteractionsCreator with the specified Excel reader, Uniprot mapper GUI, and column-to-index mapping.
+     *
+     * @param reader          the Excel file reader for fetching data from Excel files.
+     * @param uniprotMapperGui the Uniprot mapper GUI for mapping protein data.
+     * @param columnAndIndex   the mapping of column names to their corresponding indices in the dataset.
+     */
+    public InteractionsCreator(ExcelFileReader reader, UniprotMapperGui uniprotMapperGui, Map<String, Integer> columnAndIndex) {
         this.excelFileReader = reader;
         this.uniprotMapperGui = uniprotMapperGui;
         this.columnAndIndex = columnAndIndex;
-        this.sheetSelected = sheetSelected;
         this.publicationId = excelFileReader.publicationId;
     }
 
-    public void createParticipantsWithFileFormat(Map<String, Integer> columnAndIndex){
+    /**
+     * Creates participants and interactions based on the provided file format.
+     * Clears existing participants and interactions and repopulates them using the data read from files or the workbook.
+     *
+     * @param columnAndIndex the mapping of column names to their corresponding indexes in the dataset.
+     */
+    public void createParticipantsWithFileFormat(Map<String, Integer> columnAndIndex) {
         xmlParticipants.clear();
         xmlModelledInteractions.clear();
         dataList.clear();
 
-        excelFileReader.selectFileOpener(excelFileReader.currentFilePath);
-        if (excelFileReader.workbook == null){
-            fetchDataFileWithSeparator(columnAndIndex);
+        if (excelFileReader.workbook == null) {
+            processSubFilesInDirectory(excelFileReader.outputDirName, columnAndIndex);
         } else {
             fetchDataWithWorkbook(columnAndIndex);
         }
-        createGroups();
         createInteractions();
     }
 
+    /**
+     * Creates a participant object from the given data map.
+     *
+     * @param data a map containing participant data with keys corresponding to column names.
+     * @return the created XmlParticipantEvidence object representing the participant.
+     */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
         String name = data.get(DataTypeAndColumn.PARTICIPANT_NAME.name);
 
@@ -72,36 +100,11 @@ public class InteractionsCreator {
         CvTerm experimentalRoleCv = new XmlCvTerm(experimentalRole, experimentalRoleMiId);
         participantEvidence.setExperimentalRole(experimentalRoleCv);
 
-        String featureShortLabel = data.get(DataTypeAndColumn.FEATURE_SHORT_LABEL.name);
-        String featureType = data.get(DataTypeAndColumn.FEATURE_TYPE.name);
-        String featureTypeMiId = utils.fetchMiId(featureType);
-        CvTerm featureTypeCv = new XmlCvTerm(featureType, featureTypeMiId);
-        XmlFeatureEvidence featureEvidence = new XmlFeatureEvidence(featureTypeCv);
-        featureEvidence.setShortName(featureShortLabel);
-
-        XmlRange featureRange = new XmlRange();
-        String featureStartRange = data.get(DataTypeAndColumn.FEATURE_START_STATUS.name);
-        String featureStartRangeMiId = utils.fetchMiId(featureStartRange);
-        XmlCvTerm featureStartRangeCv = new XmlCvTerm(featureStartRange, featureStartRangeMiId);
-        featureRange.setJAXBStartStatus(featureStartRangeCv);
-
-        String featureEndRange = data.get(DataTypeAndColumn.FEATURE_END_STATUS.name);
-        String featureEndRangeMiId = utils.fetchMiId(featureEndRange);
-        XmlCvTerm featureEndRangeCv = new XmlCvTerm(featureEndRange, featureEndRangeMiId);
-        featureRange.setJAXBEndStatus(featureEndRangeCv);
-
-        featureEvidence.setJAXBRangeWrapper(new AbstractXmlFeature.JAXBRangeWrapper());
-        featureEvidence.getRanges().add(featureRange);
-        participantEvidence.addFeature(featureEvidence);
-
-        //TODO: add other features with indexes
-
-        if (excelFileReader.getNumberOfFeatures() > 0){
-            for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++){
+        if (excelFileReader.getNumberOfFeatures()>0){
+            for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
                 participantEvidence.addFeature(createFeature(i, data));
             }
         }
-
 
         String experimentalPreparation = data.get(DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name);
         String experimentalPreparationMiId = utils.fetchMiId(experimentalPreparation);
@@ -121,48 +124,103 @@ public class InteractionsCreator {
         return participantEvidence;
     }
 
-    public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex) {
-        List<List<String>> data = excelFileReader.readFileWithSeparator();
+    /**
+     * Fetches data from a file using a separator (e.g., CSV or TSV) and stores it in a list of maps for processing.
+     *
+     * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
+     * @param data           the data extracted from the file as a list of string lists.
+     */
+    public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex, List<List<String>> data) {
         for (List<String> datum : data) {
             Map<String, String> dataMap = new HashMap<>();
             for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
-                dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
-            }
-            dataList.add(dataMap);
-        }
-    }
-
-    public void fetchDataWithWorkbook(Map<String, Integer> columnAndIndex) {
-        Workbook workbook = excelFileReader.workbook;
-        Sheet sheet = workbook.getSheetAt(sheetSelected);
-
-        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-            Row row = sheet.getRow(i);
-            if (row == null) {
-                continue;
-            }
-            Map<String, String> dataMap = new HashMap<>();
-            for (DataTypeAndColumn value : DataTypeAndColumn.values()) {
-                Cell cell = row.getCell(columnAndIndex.get(value.name));
-                if (cell == null) {
-                    dataMap.put(value.name, "N/A");
-                } else {
-                    String extractedValue = value.extractString.apply(cell);
-                    if (extractedValue == null) {
-                        extractedValue = "N/A";
+                if (column.initial) {
+                    dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
+                }
+                if (excelFileReader.getNumberOfFeatures()>0){
+                    for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
+                        if (!column.initial) {
+                            dataMap.put(column.name + "_" + i, datum.get(columnAndIndex.get(column.name + "_" + i)));
+                        }
                     }
-                    dataMap.put(value.name, extractedValue);
                 }
             }
             dataList.add(dataMap);
         }
     }
 
+    /**
+     * Fetches data from a workbook and stores it in a list of maps for further processing.
+     *
+     * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
+     */
+    public void fetchDataWithWorkbook(Map<String, Integer> columnAndIndex) {
+        Workbook workbook = excelFileReader.workbook;
+
+        if (workbook == null) {
+            throw new IllegalArgumentException("Workbook is null. Cannot fetch data.");
+        }
+
+        Sheet sheet = workbook.getSheet(sheetSelected);
+        if (sheet == null) {
+            sheet = workbook.getSheetAt(0);
+            System.err.println("Invalid sheetSelected: " + sheetSelected + ". Defaulting to the first sheet: " + sheet.getSheetName());
+        }
+
+        int totalRows = sheet.getLastRowNum();
+        int currentRow = 1; // Skip header row
+
+        while (currentRow <= totalRows) {
+            int chunkEnd = Math.min(currentRow + excelFileReader.CHUNK_SIZE - 1, totalRows);
+            for (int i = currentRow; i <= chunkEnd; i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) {
+                    continue;
+                }
+                Map<String, String> dataMap = new HashMap<>();
+                for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
+                    if (column.initial) {
+                        Cell cell = row.getCell(columnAndIndex.get(column.name));
+                        if (cell != null) {
+                            if (cell.getCellType() == CellType.STRING){
+                                dataMap.put(column.name, cell.getStringCellValue());
+                            } else if (cell.getCellType() == CellType.NUMERIC){
+                                dataMap.put(column.name, String.valueOf(cell.getNumericCellValue()));
+                            } else if (cell.getCellType() == CellType.BLANK){
+                                dataMap.put(column.name, "N/A");
+                            }
+                        } else {
+                            dataMap.put(column.name, "N/A");
+                        }
+                    }
+                    if (excelFileReader.getNumberOfFeatures()>0){
+                        for (int j = 0; j < excelFileReader.getNumberOfFeatures(); j++) {
+                            if (!column.initial) {
+                                Cell cell = row.getCell(columnAndIndex.get(column.name + "_" + j));
+                                dataMap.put(column.name + "_" + j, cell.getStringCellValue());
+                            }
+                        }
+                    }
+                }
+                dataList.add(dataMap);
+            }
+            currentRow = chunkEnd + 1;
+        }
+    }
+
+    /**
+     * Groups the dataset into interactions by grouping participant data based on the interaction number.
+     *
+     * @return a map where keys are interaction numbers, and values are lists of participant data maps.
+     */
     public Map<String, List<Map<String, String>>> createGroups(){
         return dataList.stream().collect(Collectors.groupingBy(participant ->
                 participant.get(DataTypeAndColumn.INTERACTION_NUMBER.name)));
     }
 
+    /**
+     * Creates interactions by processing grouped participant data and linking them to experiments and publications.
+     */
     public void createInteractions(){
         Map<String, List<Map<String, String>>> groups = createGroups();
 
@@ -208,6 +266,13 @@ public class InteractionsCreator {
         }
     }
 
+    /**
+     * Creates a feature evidence object for a participant based on feature data.
+     *
+     * @param featureIndex the index of the feature.
+     * @param data         the map containing feature data.
+     * @return the created XmlFeatureEvidence object.
+     */
     private XmlFeatureEvidence createFeature(int featureIndex, Map<String, String> data) {
         String featureIndexString = "_" + featureIndex;
 
@@ -233,6 +298,36 @@ public class InteractionsCreator {
         featureEvidence.getRanges().add(featureRange);
 
         return featureEvidence;
+    }
+
+    /**
+     * Processes subfiles in a directory to fetch data for participants and interactions.
+     *
+     * @param directoryPath  the path of the directory containing subfiles.
+     * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
+     */
+    public void processSubFilesInDirectory(String directoryPath, Map<String, Integer> columnAndIndex) {
+        File directory = new File(directoryPath);
+
+        if (!directory.exists() || !directory.isDirectory()) {
+            throw new IllegalArgumentException("Provided path is not a valid directory: " + directoryPath);
+        }
+
+        File[] files = directory.listFiles((dir, name) -> name.endsWith(".csv") || name.endsWith(".tsv"));
+        if (files == null || files.length == 0) {
+            return;
+        }
+
+        Arrays.sort(files);
+
+        for (File file : files) {
+            try {
+                fetchDataFileWithSeparator(columnAndIndex, excelFileReader.readSubFile(file.getPath()));
+            } catch (Exception e) {
+                System.err.println("Error processing file " + file.getName() + ": " + e.getMessage());
+                LOGGER.warning("Error processing file " + file.getName() + ": " + e.getMessage());
+            }
+        }
     }
 
 }
