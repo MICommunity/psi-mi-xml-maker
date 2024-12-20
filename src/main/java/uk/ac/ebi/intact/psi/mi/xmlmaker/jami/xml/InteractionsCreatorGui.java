@@ -150,7 +150,7 @@ public class InteractionsCreatorGui extends JPanel {
                 JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 LOGGER.warning(ex.getMessage());
-//                ex.printStackTrace();
+                ex.printStackTrace();
                 JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
             }
         });
@@ -187,15 +187,6 @@ public class InteractionsCreatorGui extends JPanel {
             JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
             columnsList.add(comboBox);
             tableColumn.setCellEditor(new DefaultCellEditor(comboBox));
-
-            //TODO: hover on column names
-//            int finalI = i;
-//            table.getTableHeader().addMouseListener(new MouseAdapter() {
-//                @Override
-//                public void mouseEntered(MouseEvent me) {
-////                    System.out.println(dataNeededForInteractor.get(finalI));
-//                }
-//            });
         }
         for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
             addFeatureCells(i);

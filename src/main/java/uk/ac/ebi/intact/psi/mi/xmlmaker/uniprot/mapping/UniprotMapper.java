@@ -39,8 +39,8 @@ public class UniprotMapper {
             return parseResponse(connection, protein);
         } catch (Exception e) {
             LOGGER.error("Error fetching UniProt results for protein '{}': {}", protein, e.getMessage(), e);
+            return protein;
         }
-        return protein;
     }
 
     private HttpURLConnection createConnection(String urlString) throws Exception {
@@ -55,25 +55,22 @@ public class UniprotMapper {
 
     private String parseResponse(HttpURLConnection connection, String protein) {
         StringBuilder content = new StringBuilder();
-
         try (BufferedReader queryResults = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
             String inputLine;
             while ((inputLine = queryResults.readLine()) != null) {
                 content.append(inputLine);
             }
-            LOGGER.debug("Response received for protein '{}': {}", protein, content);
             return extractUniprotAccession(content.toString(), protein);
         } catch (Exception e) {
             LOGGER.error("Error parsing response for protein '{}': {}", protein, e.getMessage(), e);
+            return protein;
         } finally {
             connection.disconnect();
         }
-        return null;
     }
 
     private String extractUniprotAccession(String jsonString, String protein) {
         LOGGER.debug("Extracting UniProt accession from JSON response for protein '{}'", protein);
-
         try {
             JsonElement parsedElement = JsonParser.parseString(jsonString);
             JsonObject jsonResponse = parsedElement.getAsJsonObject();
@@ -85,12 +82,13 @@ public class UniprotMapper {
                 return uniprotAccession;
             } else {
                 LOGGER.warn("No UniProt accession found for protein '{}'.", protein);
-                alreadyParsed.put(protein, " ");
+                alreadyParsed.put(protein, protein);
+                return protein;
             }
         } catch (Exception e) {
             LOGGER.error("Error extracting UniProt accession for protein '{}': {}", protein, e.getMessage(), e);
+            return protein;
         }
-        return protein;
     }
 
     public String getUniprotAC(JsonObject results) {
@@ -172,6 +170,6 @@ public class UniprotMapper {
         if (db.toLowerCase().contains("ensembl")) {
             return "ensembl-" + query;
         }
-        return null;
+        return "null";
     }
 }

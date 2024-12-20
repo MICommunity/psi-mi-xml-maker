@@ -135,13 +135,11 @@ public class UniprotMapperGui extends JPanel {
     public JButton processFileButton() {
         JButton processFile = new JButton("Update the UniProt IDs");
         processFile.addActionListener(e -> {
-            // Validate inputs
             String sheetSelected = (String) sheets.getSelectedItem();
             String idColumn = (String) this.idColumn.getSelectedItem();
             int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
             int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
 
-            // Ensure a valid sheet and column are selected
             if (sheets.isEnabled()) {
                 if (isInvalidSelection(sheetSelected, idColumn)) {
                     JOptionPane.showMessageDialog(null, "Please select a valid sheet and column!", "ERROR", JOptionPane.ERROR_MESSAGE);

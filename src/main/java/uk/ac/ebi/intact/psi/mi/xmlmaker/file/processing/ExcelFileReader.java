@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 public class ExcelFileReader {
 
     private static final Logger LOGGER = Logger.getLogger(ExcelFileReader.class.getName());
-    public final int CHUNK_SIZE = 5; // Default chunk size for processing large files
+    public final int CHUNK_SIZE = 100; // Default chunk size for processing large files
 
     private final MoleculeSetChecker moleculeSetChecker = new MoleculeSetChecker();
     private final DataFormatter formatter = new DataFormatter();
@@ -264,8 +264,6 @@ public class ExcelFileReader {
 
     //MODIFY AND WRITE FILES
 
-    //TODO: cleanup and extract those function in the ExcelFileWriter.java
-
     /**
      * Checks the selected Excel sheet and inserts Uniprot results into the specified column.
      * If the column or sheet is not found, displays an error dialog.
@@ -380,30 +378,45 @@ public class ExcelFileReader {
             if (row == null) {
                 row = sheet.createRow(rowIndex);
             }
+
             Cell previousCell = row.getCell(idColumnIndex);
+            Cell previousDbCell = row.getCell(idDbColumnIndex);
 
-            int organismId = Integer.parseInt(xmlMakerutils.fetchTaxIdForOrganism(row.getCell(organismColumnIndex).getStringCellValue()));
+            if (previousCell == null) {
+                previousCell = row.createCell(idColumnIndex);
+            }
+            if (previousDbCell == null) {
+                previousDbCell = row.createCell(idDbColumnIndex);
+            }
+
+            String organismValue = row.getCell(organismColumnIndex) != null ?
+                    row.getCell(organismColumnIndex).getStringCellValue() : "";
+            int organismId = Integer.parseInt(xmlMakerutils.fetchTaxIdForOrganism(organismValue));
             String organism = String.valueOf(organismId);
-            String idDb = row.getCell(idDbColumnIndex).getStringCellValue();
+            String idDb = previousDbCell.getStringCellValue();
 
-            if (previousCell != null) {
-                String geneValue = formatter.formatCellValue(previousCell);
-                String uniprotResult;
-                if (rowIndex == 0) {
-                    uniprotResult = "Updated " + geneValue; // geneValue == header cell
-                } else {
-                    uniprotResult = uniprotMapper.fetchUniprotResults(geneValue, organism, idDb);
+            String geneValue = formatter.formatCellValue(previousCell);
+            String uniprotResult = "";
+
+            if (rowIndex == 0) {
+                uniprotResult = "Updated " + geneValue; // geneValue == header cell
+            } else if (!geneValue.isEmpty()) {
+                uniprotResult = uniprotMapper.fetchUniprotResults(geneValue, organism, idDb);
+            }
+
+            if (uniprotResult != null && !uniprotResult.isEmpty()) {
+                previousCell.setCellValue(uniprotResult);
+                if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
+                    highlightCells(previousCell);
+                    proteinsPartOfMoleculeSet.add(uniprotResult);
                 }
-                if (uniprotResult != null && !uniprotResult.isEmpty()) {
-                    previousCell.setCellValue(uniprotResult);
-                    if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
-                        highlightCells(previousCell);
-                        proteinsPartOfMoleculeSet.add(uniprotResult);
-                    }
-                }
+                previousDbCell.setCellValue("UniprotKB");
+            } else {
+                previousCell.setCellValue(geneValue);
             }
         }
     }
+
     /**
      * Highlights a cell by setting its background color to red if it contains
      * a protein that is part of the molecule set.

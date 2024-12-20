@@ -37,7 +37,6 @@ public class InteractionsCreator {
 
     private static final Logger LOGGER = Logger.getLogger(InteractionsCreator.class.getName());
 
-
     /**
      * Constructs an InteractionsCreator with the specified Excel reader, Uniprot mapper GUI, and column-to-index mapping.
      *
@@ -78,50 +77,89 @@ public class InteractionsCreator {
      * @return the created XmlParticipantEvidence object representing the participant.
      */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
-        String name = data.get(DataTypeAndColumn.PARTICIPANT_NAME.name);
+        String name = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_NAME);
+        if (name == null) {
+            LOGGER.warning("Participant name is required but missing or empty.");
+            return null;
+        }
 
-        String participantType = data.get(DataTypeAndColumn.PARTICIPANT_TYPE.name);
+        String participantType = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_TYPE);
         String participantTypeMiId = utils.fetchMiId(participantType);
+        if (participantTypeMiId == null || participantTypeMiId.trim().isEmpty()) {
+            LOGGER.warning("Missing or invalid MI ID for participant type: " + participantType);
+            return null;
+        }
+        assert participantType != null;
         CvTerm type = new XmlCvTerm(participantType, participantTypeMiId);
 
-        String participantOrganism = data.get(DataTypeAndColumn.PARTICIPANT_ORGANISM.name);
-        Organism organism = new XmlOrganism(Integer.parseInt(utils.fetchTaxIdForOrganism(participantOrganism)));
+        String participantOrganism = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ORGANISM);
+        Organism organism = new XmlOrganism(Integer.parseInt(
+                utils.fetchTaxIdForOrganism(
+                        Objects.requireNonNull(participantOrganism))));
 
-        String participantId = data.get(DataTypeAndColumn.PARTICIPANT_ID.name);
-        String participantIdDb = data.get(DataTypeAndColumn.PARTICIPANT_ID_DB.name);
+        String participantId = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ID);
+        String participantIdDb = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ID_DB);
         String participantIdDbMiId = utils.fetchMiId(participantIdDb);
-        Xref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, participantIdDbMiId), participantId);
+        if (participantIdDbMiId == null || participantIdDbMiId.trim().isEmpty() || participantId == null || participantId.trim().isEmpty()) {
+            LOGGER.warning("Missing or invalid participant ID or ID DB.");
+            return null;
+        }
 
+        assert participantIdDb != null;
+        Xref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, participantIdDbMiId), participantId);
         Interactor participant = new XmlPolymer(name, type, organism, uniqueId);
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
 
-        String experimentalRole = data.get(DataTypeAndColumn.EXPERIMENTAL_ROLE.name);
-        String experimentalRoleMiId = utils.fetchMiId(experimentalRole);
-        CvTerm experimentalRoleCv = new XmlCvTerm(experimentalRole, experimentalRoleMiId);
-        participantEvidence.setExperimentalRole(experimentalRoleCv);
+        String experimentalRole = getNonNullValue(data, DataTypeAndColumn.EXPERIMENTAL_ROLE);
+        if (experimentalRole != null) {
+            String experimentalRoleMiId = utils.fetchMiId(experimentalRole);
+            CvTerm experimentalRoleCv = new XmlCvTerm(experimentalRole, experimentalRoleMiId);
+            participantEvidence.setExperimentalRole(experimentalRoleCv);
+        }
 
-        if (excelFileReader.getNumberOfFeatures()>0){
+        if (excelFileReader.getNumberOfFeatures() > 0) {
             for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
-                participantEvidence.addFeature(createFeature(i, data));
+                XmlFeatureEvidence feature = createFeature(i, data);
+                participantEvidence.addFeature(feature);
             }
         }
 
-        String experimentalPreparation = data.get(DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name);
-        String experimentalPreparationMiId = utils.fetchMiId(experimentalPreparation);
-        CvTerm experimentalPreparationCv = new XmlCvTerm(experimentalPreparation, experimentalPreparationMiId);
-        participantEvidence.getExperimentalPreparations().add(experimentalPreparationCv);
+        String experimentalPreparation = getNonNullValue(data, DataTypeAndColumn.EXPERIMENTAL_PREPARATION);
+        if (experimentalPreparation != null) {
+            String experimentalPreparationMiId = utils.fetchMiId(experimentalPreparation);
+            CvTerm experimentalPreparationCv = new XmlCvTerm(experimentalPreparation, experimentalPreparationMiId);
+            participantEvidence.getExperimentalPreparations().add(experimentalPreparationCv);
+        }
 
-        //TODO: FETCH XREFS
-//        CvTerm xrefCv = new XmlCvTerm("test", "MI0123");
-//        XmlXref xref = new XmlXref(xrefCv, "idTEST", "MI0123");
-//        participantEvidence.getXrefs().add(xref);
+        String xref = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_XREF);
+        if (xref != null) {
+            String xrefMiId = utils.fetchMiId(xref);
+            CvTerm xrefCv = new XmlCvTerm(xref, xrefMiId);
+            Xref xmlXref = new XmlXref(xrefCv, xref);
+            participantEvidence.getXrefs().add(xmlXref);
+        }
 
-        String participantIdentificationMethod = data.get(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name);
-        String participantIdentificationMethodMiId = utils.fetchMiId(participantIdentificationMethod);
-        CvTerm participantIdentificationMethodCv = new XmlCvTerm(participantIdentificationMethod, participantIdentificationMethodMiId);
-        participantEvidence.getIdentificationMethods().add(participantIdentificationMethodCv);
+        String participantIdentificationMethod = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD);
+        if (participantIdentificationMethod != null) {
+            String participantIdentificationMethodMiId = utils.fetchMiId(participantIdentificationMethod);
+            CvTerm participantIdentificationMethodCv = new XmlCvTerm(participantIdentificationMethod, participantIdentificationMethodMiId);
+            participantEvidence.getIdentificationMethods().add(participantIdentificationMethodCv);
+        }
 
         return participantEvidence;
+    }
+
+    /**
+     * Retrieves the value from the provided data map for the given column name, ensuring the value is neither null nor empty.
+     * If the value is null or empty (after trimming whitespace), the method returns null.
+     *
+     * @param data A map containing column names as keys and their corresponding values.
+     * @param column The column whose value is to be fetched from the map.
+     * @return The value from the map if it is non-null and non-empty, otherwise returns null.
+     */
+    private String getNonNullValue(Map<String, String> data, DataTypeAndColumn column) {
+        String value = data.get(column.name);
+        return (value == null || value.trim().isEmpty()) ? null : value;
     }
 
     /**
@@ -236,26 +274,47 @@ public class InteractionsCreator {
             String hostOrganism = participant.get(DataTypeAndColumn.HOST_ORGANISM.name);
             String interactionType = participant.get(DataTypeAndColumn.INTERACTION_TYPE.name);
 
+            interactionCreator(interaction, interactionDetectionMethod, participantIdentificationMethod, hostOrganism, interactionType);
+        }
+    }
+
+    /**
+     * Creates and sets the details of an interaction based on the provided parameters, including interaction type,
+     * detection method, participant identification method, and host organism. This method also links the interaction
+     * to an experiment and a publication if relevant details are provided.
+     *
+     * @param interaction The interaction object to be populated with details.
+     * @param interactionDetectionMethod The method used to detect the interaction, used to create a CvTerm for detection method.
+     * @param participantIdentificationMethod The method used to identify the participant, used to create a CvTerm for identification method.
+     * @param hostOrganism The host organism associated with the interaction, used to fetch the organism's tax ID.
+     * @param interactionType The type of the interaction, used to create a CvTerm for interaction type.
+     */
+    private void interactionCreator(XmlInteractionEvidence interaction, String interactionDetectionMethod, String participantIdentificationMethod, String hostOrganism, String interactionType) {
+        if (interactionType != null) {
             String interactionTypeMiId = utils.fetchMiId(interactionType);
             CvTerm interactionTypeCv = new XmlCvTerm(interactionType, interactionTypeMiId);
             interaction.setInteractionType(interactionTypeCv);
+        }
 
-            int hostOrganismInt = Integer.parseInt(utils.fetchTaxIdForOrganism(hostOrganism));
-            Organism organism = new XmlOrganism(hostOrganismInt);
+        int hostOrganismInt = Integer.parseInt(Objects.requireNonNull(utils.fetchTaxIdForOrganism(hostOrganism)));
+        Organism organism = new XmlOrganism(hostOrganismInt);
 
+        if (interactionDetectionMethod != null) {
             String interactionDetectionMiId = utils.fetchMiId(interactionDetectionMethod);
             CvTerm detectionMethod = new XmlCvTerm(interactionDetectionMethod, interactionDetectionMiId);
             Publication publication = new BibRef(excelFileReader.getPublicationId());
             XmlExperiment experiment = new XmlExperiment(publication, detectionMethod, organism);
 
-            String identificationMethodMiId = utils.fetchMiId(participantIdentificationMethod);
-            CvTerm identificationMethodCv = new XmlCvTerm(participantIdentificationMethod, identificationMethodMiId);
+            if (participantIdentificationMethod != null) {
+                String identificationMethodMiId = utils.fetchMiId(participantIdentificationMethod);
+                CvTerm identificationMethodCv = new XmlCvTerm(participantIdentificationMethod, identificationMethodMiId);
+                experiment.setParticipantIdentificationMethod(identificationMethodCv);
+            }
 
-            experiment.setParticipantIdentificationMethod(identificationMethodCv);
             interaction.setExperiment(experiment);
-
-            xmlModelledInteractions.add(interaction);
         }
+
+        xmlModelledInteractions.add(interaction);
     }
 
     /**
@@ -293,26 +352,7 @@ public class InteractionsCreator {
 
             }
 
-            String interactionTypeMiId = utils.fetchMiId(interactionType);
-            CvTerm interactionTypeCv = new XmlCvTerm(interactionType, interactionTypeMiId);
-            interaction.setInteractionType(interactionTypeCv);
-
-            int hostOrganismInt = Integer.parseInt(utils.fetchTaxIdForOrganism(hostOrganism));
-            Organism organism = new XmlOrganism(hostOrganismInt);
-
-            String interactionDetectionMiId = utils.fetchMiId(interactionDetectionMethod);
-            CvTerm detectionMethod = new XmlCvTerm(interactionDetectionMethod, interactionDetectionMiId);
-            Publication publication = new BibRef(excelFileReader.getPublicationId());
-            XmlExperiment experiment = new XmlExperiment(publication, detectionMethod, organism);
-
-            String identificationMethodMiId = utils.fetchMiId(participantIdentificationMethod);
-            CvTerm identificationMethodCv = new XmlCvTerm(participantIdentificationMethod, identificationMethodMiId);
-
-            experiment.setParticipantIdentificationMethod(identificationMethodCv);
-
-            interaction.setExperiment(experiment);
-
-            xmlModelledInteractions.add(interaction);
+            interactionCreator(interaction, interactionDetectionMethod, participantIdentificationMethod, hostOrganism, interactionType);
         }
     }
 
