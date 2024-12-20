@@ -2,14 +2,12 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
 import uk.ac.ebi.pride.utilities.ols.web.service.model.Term;
 
 import javax.swing.*;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -20,6 +18,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.*;
 
+/**
+ * Utility class for XML creation and management tasks in the PSI-MI context.
+ * This class includes methods to interact with external APIs, encode URLs,
+ * retrieve ontology terms, and handle user interactions with dialog messages.
+ * It also manages logging for debugging and troubleshooting purposes.
+ */
 public class XmlMakerUtils {
 
     private static final Logger LOGGER = Logger.getLogger(XmlMakerUtils.class.getName());
@@ -40,16 +44,31 @@ public class XmlMakerUtils {
         }
     }
 
+    /**
+     * Displays an error message in a dialog box.
+     *
+     * @param message the error message to display
+     */
     public void showErrorDialog(String message) {
         LOGGER.severe("Error: " + message);
         JOptionPane.showMessageDialog(new JFrame(), message, "ERROR", JOptionPane.ERROR_MESSAGE);
     }
 
+    /**
+     * Displays an informational message in a dialog box.
+     *
+     * @param message the informational message to display
+     */
     public void showInfoDialog(String message) {
-        LOGGER.info("Info: " + message);
         JOptionPane.showMessageDialog(new JFrame(), message, "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    /**
+     * Fetches the Taxonomy ID for a given organism name using the OLS API.
+     *
+     * @param organismName the name of the organism
+     * @return the raw API response as a string, or null if the request fails
+     */
     public String fetchTaxIdWithApi(String organismName) {
         String urlString = "https://www.ebi.ac.uk/ols4/api/search?q=" + encodeForURL(organismName) + "&ontology=ncbitaxon";
         try {
@@ -75,6 +94,13 @@ public class XmlMakerUtils {
         return null;
     }
 
+    /**
+     * Creates an HTTP connection for a given URL.
+     *
+     * @param urlString the URL to connect to
+     * @return a HttpURLConnection object
+     * @throws Exception if an error occurs while creating the connection
+     */
     public HttpURLConnection createConnection(String urlString) throws Exception {
         LOGGER.fine("Creating HTTP connection to URL: " + urlString);
         URL url = new URL(urlString);
@@ -83,21 +109,29 @@ public class XmlMakerUtils {
         return connection;
     }
 
+    /**
+     * Fetches the Taxonomy ID for a given organism name by processing the API response.
+     *
+     * @param organismName the name of the organism
+     * @return the extracted Taxonomy ID as a string, or null if extraction fails
+     */
     public String fetchTaxIdForOrganism(String organismName) {
-        LOGGER.info("Fetching TaxID for organism: " + organismName);
         String apiResponse = fetchTaxIdWithApi(organismName);
         if (apiResponse != null) {
-            String taxId = extractOboId(apiResponse);
-            LOGGER.fine("Extracted TaxID: " + taxId + " for organism: " + organismName);
-            return taxId;
+            return extractOboId(apiResponse);
         }
         LOGGER.warning("Failed to fetch TaxID for organism: " + organismName);
         return null;
     }
 
+    /**
+     * Encodes a string for safe use in a URL.
+     *
+     * @param input the string to encode
+     * @return the URL-encoded string
+     */
     public static String encodeForURL(String input) {
         try {
-            LOGGER.fine("Encoding input for URL: " + input);
             return URLEncoder.encode(input, StandardCharsets.UTF_8);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed to encode input for URL: " + input, e);
@@ -105,24 +139,31 @@ public class XmlMakerUtils {
         }
     }
 
+    /**
+     * Fetches the MI (Molecular Interaction) ID for a given term using the OLS client.
+     *
+     * @param input the term for which to fetch the MI ID
+     * @return the MI ID as a string, or null if the term is not found
+     */
     public String fetchMiId(String input) {
-//        LOGGER.info("Fetching MI ID for input: " + input);
         String miId = miIds.get(input);
-        if (miId != null) {
-//            LOGGER.fine("Found MI ID in cache: " + miId + " for input: " + input);
-        } else {
-            try {
-                Term term = olsClient.getExactTermByName(input, "mi");
-                miId = (term != null && term.getOboId() != null) ? term.getOboId().getIdentifier() : null;
-                miIds.put(input, miId);
-//                LOGGER.fine("Retrieved MI ID: " + miId + " for input: " + input);
-            } catch (NullPointerException e) {
-                LOGGER.log(Level.WARNING, "Failed to retrieve MI ID for input: " + input, e);
-                showErrorDialog("Failed to retrieve MI ID for " + input);
-            }
+        try {
+            Term term = olsClient.getExactTermByName(input, "mi");
+            miId = (term != null && term.getOboId() != null) ? term.getOboId().getIdentifier() : null;
+            miIds.put(input, miId);
+        } catch (NullPointerException e) {
+            LOGGER.log(Level.WARNING, "Failed to retrieve MI ID for input: " + input, e);
+            showErrorDialog("Failed to retrieve MI ID for " + input);
         }
         return miId;
     }
+
+    /**
+     * Extracts the OBO (Open Biomedical Ontologies) ID from a JSON response.
+     *
+     * @param json the JSON response string
+     * @return the extracted OBO ID as a string, or null if extraction fails
+     */
 
     public static String extractOboId(String json) {
         if (json == null || json.isEmpty()) {
@@ -140,10 +181,7 @@ public class XmlMakerUtils {
                 String oboId = firstDoc.path("obo_id").asText();
 
                 if (oboId.startsWith("NCBITaxon:")) {
-                    LOGGER.fine("Extracted OBO ID: " + oboId);
                     return oboId.substring("NCBITaxon:".length());
-                } else {
-                    LOGGER.warning("OBO ID does not start with 'NCBITaxon:'");
                 }
             } else {
                 LOGGER.warning("No documents found in JSON response");

@@ -2,8 +2,6 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import psidev.psi.mi.jami.commons.MIWriterOptionFactory;
 import psidev.psi.mi.jami.commons.PsiJami;
 import psidev.psi.mi.jami.datasource.InteractionWriter;
@@ -21,7 +19,18 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
 import java.util.*;
 
-@Component
+/**
+ * PsiMiXmlMaker is a Spring component responsible for creating PSI-MI XML files
+ * based on interaction data. It utilizes the JAMI library for creating XML files
+ * and provides functionality to write interaction data to XML files.
+ * Dependencies:
+ * - InteractionsCreator for creating and handling interaction objects.
+ * - ExcelFileReader for reading the publication ID from an external file.
+ * - XmlMakerUtils for utility functions.
+ * Usage:
+ * This class is designed to be used as a Spring-managed bean.
+ * Use the `interactionsWriter` method to generate and save a PSI-MI XML file.
+ */
 public class PsiMiXmlMaker {
 
     private static final Logger logger = LogManager.getLogger(PsiMiXmlMaker.class);
@@ -30,13 +39,14 @@ public class PsiMiXmlMaker {
     final List<XmlInteractionEvidence> xmlModelledInteractions;
     private String publicationId;
     final XmlMakerUtils utils = new XmlMakerUtils();
-    private ExcelFileReader excelFileReader;
+    private final ExcelFileReader excelFileReader;
 
-    @Autowired
-    public void setExcelFileReader(ExcelFileReader excelFileReader) {
-        this.excelFileReader = excelFileReader;
-    }
-
+    /**
+     * Constructs a PsiMiXmlMaker instance with the given dependencies.
+     *
+     * @param interactionsCreator an instance of InteractionsCreator
+     * @param excelFileReader     an instance of ExcelFileReader
+     */
     public PsiMiXmlMaker(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
         this.interactionsCreator = interactionsCreator;
         xmlModelledInteractions = interactionsCreator.xmlModelledInteractions;
@@ -44,6 +54,11 @@ public class PsiMiXmlMaker {
         publicationId = this.excelFileReader.getPublicationId();
     }
 
+    /**
+     * Writes interaction data to a PSI-MI XML file at the specified location.
+     *
+     * @param saveLocation the directory path where the XML file will be saved
+     */
     public void interactionsWriter(String saveLocation) {
         publicationId = excelFileReader.getPublicationId();
         logger.info("Starting interaction writer with publication ID: {}", publicationId);
@@ -90,7 +105,7 @@ public class PsiMiXmlMaker {
                 InteractionCategory.evidence,
                 ComplexType.n_ary,
                 new InMemoryLightIdentityObjectCache(),
-                Collections.newSetFromMap(new IdentityHashMap()),
+                Collections.newSetFromMap(new IdentityHashMap<>()),
                 source,
                 defaultReleaseDate,
                 defaultEntryAnnotations,
@@ -123,6 +138,15 @@ public class PsiMiXmlMaker {
         }
     }
 
+    /**
+     * Creates an XmlXref object for the given parameters.
+     *
+     * @param name     the name of the database
+     * @param refType  the reference type
+     * @param database the database name
+     * @param id       the identifier
+     * @return an instance of XmlXref
+     */
     public XmlXref createXref(String name, String refType, String database, String id) {
         String dbMiId = utils.fetchMiId(name);
         String refTypeMiId = utils.fetchMiId(refType);

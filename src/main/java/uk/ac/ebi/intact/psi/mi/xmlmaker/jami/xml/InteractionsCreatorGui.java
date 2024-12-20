@@ -295,5 +295,4 @@ public class InteractionsCreatorGui extends JPanel {
         }
         return tableColumnNames;
     }
-
 }

@@ -2,9 +2,11 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.logging.Logger;
 
 /**
  * The UniprotMapperGui class provides a graphical user interface (GUI) for interacting with an Excel file
@@ -18,8 +20,8 @@ public class UniprotMapperGui extends JPanel {
     private final JComboBox<String> organismColumn = new JComboBox<>();
     private final JComboBox<String> idDbColumn = new JComboBox<>();
     private final XmlMakerUtils utils = new XmlMakerUtils();
-
     private final ExcelFileReader excelFileReader;
+    private static final Logger LOGGER = Logger.getLogger(UniprotMapperGui.class.getName());
 
     /**
      * Constructs a new instance of the UniprotMapperGui class.
@@ -210,7 +212,7 @@ public class UniprotMapperGui extends JPanel {
      */
     private void handleProcessingError(Exception ex) {
         JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
-        ex.printStackTrace();
+        LOGGER.warning(ex.getMessage());
     }
 
     /**

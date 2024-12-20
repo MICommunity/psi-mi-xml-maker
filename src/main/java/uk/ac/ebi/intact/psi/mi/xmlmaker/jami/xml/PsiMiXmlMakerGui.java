@@ -6,14 +6,37 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
+/**
+ * PsiMiXmlMakerGui provides a graphical user interface (GUI) for generating
+ * PSI-MI XML files using the PsiMiXmlMaker class. The GUI allows users to
+ * specify a save location, select a date, and initiate the XML generation process.
+ * Dependencies:
+ * - PsiMiXmlMaker for handling the XML creation logic.
+ * - InteractionsCreator for creating interaction data.
+ * - ExcelFileReader for reading publication-related data.
+ * Usage:
+ * Create an instance of this class with the required dependencies and integrate
+ * the panel returned by `createPsiMiXmlMakerPanel` into a JFrame or other container.
+ */
 public class PsiMiXmlMakerGui {
     private final PsiMiXmlMaker xmlMaker;
     private JTextField saveLocationField;
 
+    /**
+     * Constructs a PsiMiXmlMakerGui instance with the given dependencies.
+     *
+     * @param interactionsCreator an instance of InteractionsCreator for creating interaction data
+     * @param excelFileReader     an instance of ExcelFileReader for reading publication-related data
+     */
     public PsiMiXmlMakerGui(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
         this.xmlMaker = new PsiMiXmlMaker(interactionsCreator, excelFileReader);
     }
 
+    /**
+     * Creates the main panel containing the GUI for generating PSI-MI XML files.
+     *
+     * @return a JPanel with the PSI-MI XML maker controls
+     */
     public JPanel createPsiMiXmlMakerPanel() {
         JPanel xmlPanel = new JPanel();
         xmlPanel.setLayout(new BoxLayout(xmlPanel, BoxLayout.Y_AXIS));
@@ -44,6 +67,11 @@ public class PsiMiXmlMakerGui {
         return xmlPanel;
     }
 
+    /**
+     * Creates a panel for selecting a date.
+     *
+     * @return a JPanel containing date selection controls
+     */
     private JPanel createDateSelectionPanel() {
         JPanel dateSelectionPanel = new JPanel();
         dateSelectionPanel.setLayout(new FlowLayout());
@@ -60,6 +88,11 @@ public class PsiMiXmlMakerGui {
         return dateSelectionPanel;
     }
 
+    /**
+     * Creates a panel for specifying the save location.
+     *
+     * @return a JPanel containing save location controls
+     */
     private JPanel createSaveLocationPanel() {
         JPanel saveLocationPanel = new JPanel();
         saveLocationPanel.setLayout(new FlowLayout());
@@ -76,6 +109,11 @@ public class PsiMiXmlMakerGui {
         return saveLocationPanel;
     }
 
+    /**
+     * Creates a button for browsing and selecting a directory.
+     *
+     * @return a JButton for opening a file chooser dialog
+     */
     private JButton getJButton() {
         JButton browseButton = new JButton("Browse...");
 
@@ -91,6 +129,11 @@ public class PsiMiXmlMakerGui {
         return browseButton;
     }
 
+    /**
+     * Retrieves the save location entered by the user.
+     *
+     * @return a String representing the save location directory
+     */
     public String getSaveLocation() {
         return saveLocationField.getText();
     }

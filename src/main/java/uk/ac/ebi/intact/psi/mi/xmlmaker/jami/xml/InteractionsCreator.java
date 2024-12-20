@@ -170,6 +170,8 @@ public class InteractionsCreator {
         int totalRows = sheet.getLastRowNum();
         int currentRow = 1; // Skip header row
 
+        Map<String, List<Map<String, String>>> interactionChunks = new HashMap<>();
+
         while (currentRow <= totalRows) {
             int chunkEnd = Math.min(currentRow + excelFileReader.CHUNK_SIZE - 1, totalRows);
             for (int i = currentRow; i <= chunkEnd; i++) {
@@ -202,9 +204,57 @@ public class InteractionsCreator {
                         }
                     }
                 }
-                dataList.add(dataMap);
+                String interactionNumber = dataMap.get(DataTypeAndColumn.INTERACTION_NUMBER.name);
+                interactionChunks.computeIfAbsent(interactionNumber, k -> new ArrayList<>()).add(dataMap);
             }
             currentRow = chunkEnd + 1;
+        }
+
+        for (Map.Entry<String, List<Map<String, String>>> interactionEntry : interactionChunks.entrySet()) {
+            processInteractionChunk(interactionEntry.getValue());
+        }
+    }
+
+    /**
+     * Processes a chunk of participant data and creates an interaction model.
+     * Each participant in the chunk is used to populate the interaction object,
+     * setting properties such as interaction type, host organism, and detection methods.
+     * The resulting interaction is added to the list of modeled interactions.
+     *
+     * @param participants a list of maps, where each map contains participant data
+     *                     with keys corresponding to column names.
+     */
+    private void processInteractionChunk(List<Map<String, String>> participants) {
+        XmlInteractionEvidence interaction = new XmlInteractionEvidence();
+
+        for (Map<String, String> participant : participants) {
+            XmlParticipantEvidence newParticipant = createParticipant(participant);
+            interaction.addParticipant(newParticipant);
+
+            String interactionDetectionMethod = participant.get(DataTypeAndColumn.INTERACTION_DETECTION_METHOD.name);
+            String participantIdentificationMethod = participant.get(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name);
+            String hostOrganism = participant.get(DataTypeAndColumn.HOST_ORGANISM.name);
+            String interactionType = participant.get(DataTypeAndColumn.INTERACTION_TYPE.name);
+
+            String interactionTypeMiId = utils.fetchMiId(interactionType);
+            CvTerm interactionTypeCv = new XmlCvTerm(interactionType, interactionTypeMiId);
+            interaction.setInteractionType(interactionTypeCv);
+
+            int hostOrganismInt = Integer.parseInt(utils.fetchTaxIdForOrganism(hostOrganism));
+            Organism organism = new XmlOrganism(hostOrganismInt);
+
+            String interactionDetectionMiId = utils.fetchMiId(interactionDetectionMethod);
+            CvTerm detectionMethod = new XmlCvTerm(interactionDetectionMethod, interactionDetectionMiId);
+            Publication publication = new BibRef(excelFileReader.getPublicationId());
+            XmlExperiment experiment = new XmlExperiment(publication, detectionMethod, organism);
+
+            String identificationMethodMiId = utils.fetchMiId(participantIdentificationMethod);
+            CvTerm identificationMethodCv = new XmlCvTerm(participantIdentificationMethod, identificationMethodMiId);
+
+            experiment.setParticipantIdentificationMethod(identificationMethodCv);
+            interaction.setExperiment(experiment);
+
+            xmlModelledInteractions.add(interaction);
         }
     }
 
