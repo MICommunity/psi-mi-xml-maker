@@ -172,4 +172,8 @@ public class UniprotMapper {
         }
         return "null";
     }
+
+    public void clearAlreadyParsed(){
+        alreadyParsed.clear();
+    }
 }

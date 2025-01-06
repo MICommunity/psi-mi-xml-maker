@@ -12,6 +12,7 @@ import java.io.File;
 import java.util.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -69,13 +70,6 @@ public class InteractionsCreator {
         }
         createInteractions();
     }
-
-    /**
-     * Creates a participant object from the given data map.
-     *
-     * @param data a map containing participant data with keys corresponding to column names.
-     * @return the created XmlParticipantEvidence object representing the participant.
-     */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
         String name = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_NAME);
         if (name == null) {
@@ -84,7 +78,30 @@ public class InteractionsCreator {
         }
 
         String participantType = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_TYPE);
-        String participantTypeMiId = utils.fetchMiId(participantType);
+        String participantOrganism = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ORGANISM);
+        String participantId = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ID);
+        String participantIdDb = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ID_DB);
+        String experimentalRole = getNonNullValue(data, DataTypeAndColumn.EXPERIMENTAL_ROLE);
+        String experimentalPreparation = getNonNullValue(data, DataTypeAndColumn.EXPERIMENTAL_PREPARATION);
+        String xref = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_XREF);
+        String participantIdentificationMethod = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD);
+
+        CompletableFuture<String> participantTypeMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(participantType));
+        CompletableFuture<String> participantIdDbMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(participantIdDb));
+        CompletableFuture<String> experimentalRoleMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(experimentalRole));
+        CompletableFuture<String> experimentalPreparationMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(experimentalPreparation));
+        CompletableFuture<String> xrefMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(xref));
+        CompletableFuture<String> participantIdentificationMethodMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(participantIdentificationMethod));
+
+        CompletableFuture.allOf(participantTypeMiIdFuture, participantIdDbMiIdFuture, experimentalRoleMiIdFuture, experimentalPreparationMiIdFuture, xrefMiIdFuture, participantIdentificationMethodMiIdFuture).join();
+
+        String participantTypeMiId = participantTypeMiIdFuture.join();
+        String participantIdDbMiId = participantIdDbMiIdFuture.join();
+        String experimentalRoleMiId = experimentalRoleMiIdFuture.join();
+        String experimentalPreparationMiId = experimentalPreparationMiIdFuture.join();
+        String xrefMiId = xrefMiIdFuture.join();
+        String participantIdentificationMethodMiId = participantIdentificationMethodMiIdFuture.join();
+
         if (participantTypeMiId == null || participantTypeMiId.trim().isEmpty()) {
             LOGGER.warning("Missing or invalid MI ID for participant type: " + participantType);
             return null;
@@ -92,27 +109,18 @@ public class InteractionsCreator {
         assert participantType != null;
         CvTerm type = new XmlCvTerm(participantType, participantTypeMiId);
 
-        String participantOrganism = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ORGANISM);
-        Organism organism = new XmlOrganism(Integer.parseInt(
-                utils.fetchTaxIdForOrganism(
-                        Objects.requireNonNull(participantOrganism))));
-
-        String participantId = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ID);
-        String participantIdDb = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ID_DB);
-        String participantIdDbMiId = utils.fetchMiId(participantIdDb);
-        if (participantIdDbMiId == null || participantIdDbMiId.trim().isEmpty() || participantId == null || participantId.trim().isEmpty()) {
+        if (participantIdDbMiId == null || participantId == null) {
             LOGGER.warning("Missing or invalid participant ID or ID DB.");
             return null;
         }
-
         assert participantIdDb != null;
         Xref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, participantIdDbMiId), participantId);
+        Organism organism = new XmlOrganism(Integer.parseInt(utils.fetchTaxIdForOrganism(Objects.requireNonNull(participantOrganism))));
+
         Interactor participant = new XmlPolymer(name, type, organism, uniqueId);
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
 
-        String experimentalRole = getNonNullValue(data, DataTypeAndColumn.EXPERIMENTAL_ROLE);
         if (experimentalRole != null) {
-            String experimentalRoleMiId = utils.fetchMiId(experimentalRole);
             CvTerm experimentalRoleCv = new XmlCvTerm(experimentalRole, experimentalRoleMiId);
             participantEvidence.setExperimentalRole(experimentalRoleCv);
         }
@@ -124,30 +132,25 @@ public class InteractionsCreator {
             }
         }
 
-        String experimentalPreparation = getNonNullValue(data, DataTypeAndColumn.EXPERIMENTAL_PREPARATION);
         if (experimentalPreparation != null) {
-            String experimentalPreparationMiId = utils.fetchMiId(experimentalPreparation);
             CvTerm experimentalPreparationCv = new XmlCvTerm(experimentalPreparation, experimentalPreparationMiId);
             participantEvidence.getExperimentalPreparations().add(experimentalPreparationCv);
         }
 
-        String xref = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_XREF);
         if (xref != null) {
-            String xrefMiId = utils.fetchMiId(xref);
             CvTerm xrefCv = new XmlCvTerm(xref, xrefMiId);
             Xref xmlXref = new XmlXref(xrefCv, xref);
             participantEvidence.getXrefs().add(xmlXref);
         }
 
-        String participantIdentificationMethod = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD);
         if (participantIdentificationMethod != null) {
-            String participantIdentificationMethodMiId = utils.fetchMiId(participantIdentificationMethod);
             CvTerm participantIdentificationMethodCv = new XmlCvTerm(participantIdentificationMethod, participantIdentificationMethodMiId);
             participantEvidence.getIdentificationMethods().add(participantIdentificationMethodCv);
         }
 
         return participantEvidence;
     }
+
 
     /**
      * Retrieves the value from the provided data map for the given column name, ensuring the value is neither null nor empty.
@@ -391,7 +394,7 @@ public class InteractionsCreator {
     }
 
     /**
-     * Processes subfiles in a directory to fetch data for participants and interactions.
+     * Processes subfiles in a directory in an optimized way by leveraging parallel streams for better performance.
      *
      * @param directoryPath  the path of the directory containing subfiles.
      * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
@@ -404,20 +407,24 @@ public class InteractionsCreator {
         }
 
         File[] files = directory.listFiles((dir, name) -> name.endsWith(".csv") || name.endsWith(".tsv"));
+
         if (files == null || files.length == 0) {
+            LOGGER.warning("No CSV or TSV files found in the directory: " + directoryPath);
             return;
         }
 
-        Arrays.sort(files);
-
-        for (File file : files) {
-            try {
-                fetchDataFileWithSeparator(columnAndIndex, excelFileReader.readSubFile(file.getPath()));
-            } catch (Exception e) {
-                System.err.println("Error processing file " + file.getName() + ": " + e.getMessage());
-                LOGGER.warning("Error processing file " + file.getName() + ": " + e.getMessage());
-            }
-        }
+        Arrays.stream(files)
+                .sorted(Comparator.comparing(File::getName))
+                .parallel()
+                .forEach(file -> {
+                    try {
+                        LOGGER.info("Processing file: " + file.getName());
+                        List<List<String>> data = excelFileReader.readSubFile(file.getPath());
+                        fetchDataFileWithSeparator(columnAndIndex, data);
+                    } catch (Exception e) {
+                        LOGGER.warning("Error processing file " + file.getName() + ": " + e.getMessage());
+                    }
+                });
     }
 
 }

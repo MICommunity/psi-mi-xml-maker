@@ -144,12 +144,14 @@ public class ExcelFileReader {
     public void readFileWithSeparator() {
         List<String> header = null;
 
-        try (CSVReader csvReader = new CSVReaderBuilder(new FileReader(currentFilePath))
-                .withCSVParser(new com.opencsv.CSVParserBuilder()
-                        .withSeparator(separator)
-                        .withIgnoreQuotations(false)
-                        .build())
-                .build()) {
+        try (InputStream fileStream = new FileInputStream(new File(currentFilePath));
+             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileStream));
+             CSVReader csvReader = new CSVReaderBuilder(bufferedReader)
+                     .withCSVParser(new com.opencsv.CSVParserBuilder()
+                             .withSeparator(separator)
+                             .withIgnoreQuotations(false)
+                             .build())
+                     .build()) {
 
             List<List<String>> chunk = new ArrayList<>();
             String[] nextLine;
@@ -176,6 +178,7 @@ public class ExcelFileReader {
             if (!chunk.isEmpty()) {
                 createSubFilesWithSeparator(chunk);
             }
+
         } catch (IOException | CsvValidationException e) {
             LOGGER.log(Level.SEVERE, "Unable to read file with separator", e);
             xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
@@ -342,6 +345,7 @@ public class ExcelFileReader {
             LOGGER.log(Level.SEVERE, "Error processing file: " + currentFilePath, e);
             xmlMakerutils.showErrorDialog("Error processing file: " + e.getMessage());
         }
+        uniprotMapper.clearAlreadyParsed();
     }
     /**
      * Writes the current workbook to a file. If an error occurs, displays an error dialog.
@@ -415,6 +419,7 @@ public class ExcelFileReader {
                 previousCell.setCellValue(geneValue);
             }
         }
+        uniprotMapper.clearAlreadyParsed(); // Save space
     }
 
     /**
