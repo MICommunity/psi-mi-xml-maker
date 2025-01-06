@@ -151,7 +151,6 @@ public class InteractionsCreator {
         return participantEvidence;
     }
 
-
     /**
      * Retrieves the value from the provided data map for the given column name, ensuring the value is neither null nor empty.
      * If the value is null or empty (after trimming whitespace), the method returns null.

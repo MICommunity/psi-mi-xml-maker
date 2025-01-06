@@ -95,8 +95,12 @@ public class XmlMakerUtils {
      * Fetches the Taxonomy ID for a given organism name by processing the API response.
      */
     public String fetchTaxIdForOrganism(String organismName) {
-        String apiResponse = fetchTaxIdWithApi(organismName);
-        return apiResponse != null ? extractOboId(apiResponse) : null;
+        if (organismName.matches("\\d+")) {
+            return organismName; //already a taxid
+        } else {
+            String apiResponse = fetchTaxIdWithApi(organismName);
+            return apiResponse != null ? extractOboId(apiResponse) : null;
+        }
     }
 
     /**

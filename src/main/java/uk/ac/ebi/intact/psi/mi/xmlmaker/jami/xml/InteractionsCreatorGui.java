@@ -76,15 +76,12 @@ public class InteractionsCreatorGui extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setPreferredSize(new Dimension(scrollPane.getPreferredSize().width, 200)); // Set the height to 200 pixels
         sheetSelectorPanel.add(scrollPane);
 
         JButton processFileButton = createProcessFileButton();
         participantCreatorPanel.add(sheetSelectorPanel, BorderLayout.NORTH);
         participantCreatorPanel.add(processFileButton, BorderLayout.SOUTH);
-
-        setLayout(new BorderLayout());
-
-        add(participantCreatorPanel, BorderLayout.CENTER);
 
         return participantCreatorPanel;
     }
@@ -150,7 +147,6 @@ public class InteractionsCreatorGui extends JPanel {
                 JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 LOGGER.warning(ex.getMessage());
-                ex.printStackTrace();
                 JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
             }
         });

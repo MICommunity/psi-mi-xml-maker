@@ -75,7 +75,7 @@ public class PsiMiXmlMakerGui {
     private JPanel createDateSelectionPanel() {
         JPanel dateSelectionPanel = new JPanel();
         dateSelectionPanel.setLayout(new FlowLayout());
-        dateSelectionPanel.setBorder(BorderFactory.createTitledBorder("Select Date"));
+        dateSelectionPanel.setBorder(BorderFactory.createTitledBorder("4.1 Select the publication Date"));
 
         JLabel dateLabel = new JLabel("Date:");
         SpinnerDateModel dateModel = new SpinnerDateModel();
@@ -96,7 +96,7 @@ public class PsiMiXmlMakerGui {
     private JPanel createSaveLocationPanel() {
         JPanel saveLocationPanel = new JPanel();
         saveLocationPanel.setLayout(new FlowLayout());
-        saveLocationPanel.setBorder(BorderFactory.createTitledBorder("Save Location"));
+        saveLocationPanel.setBorder(BorderFactory.createTitledBorder("4.2 Select the saving location"));
 
         JLabel saveLocationLabel = new JLabel("Save to:");
         saveLocationField = new JTextField(20);

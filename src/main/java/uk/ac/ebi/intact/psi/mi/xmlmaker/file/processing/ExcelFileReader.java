@@ -80,6 +80,7 @@ public class ExcelFileReader {
         fileType = getFileExtension(filePath);
         currentFileLabel.setText(getFileName());
         currentFilePath = filePath;
+        fileData = new ArrayList<>();
 
         try {
             switch (fileType) {

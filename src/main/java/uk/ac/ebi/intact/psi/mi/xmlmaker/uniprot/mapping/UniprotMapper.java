@@ -11,10 +11,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 
 public class UniprotMapper {
@@ -151,9 +149,9 @@ public class UniprotMapper {
         organismId = utils.fetchTaxIdForOrganism(organismId);
         database = chooseDbFromCol(query, database);
         String uniprotApiUrlPart2 = "%20AND%20organism_id:";
-        String uniprotApiUrlPart3 = ")&format=json&fields=accession,organism_id";
+        String uniprotApiUrlPart3 = "&format=json&fields=accession,organism_id";
 
-        if (database != null) {
+        if (!Objects.equals(database, "null")) {
             return uniprotApiUrl + database + uniprotApiUrlPart2 + organismId + uniprotApiUrlPart3;
         } else {
             return "https://rest.uniprot.org/uniprotkb/search?query=accession:" + query;

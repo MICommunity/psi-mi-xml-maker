@@ -2,9 +2,11 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -202,13 +204,27 @@ public class XmlMakerGui {
      */
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        JMenu menu = new JMenu("File");
 
+        JMenu menu = new JMenu("File");
         JMenuItem importFile = new JMenuItem("Import file");
         importFile.addActionListener(e -> fetchFile());
-
         menu.add(importFile);
+
+        JMenu helpMenu = new JMenu("Help");
+        JMenuItem userGuide = new JMenuItem("How to use");
+        userGuide.addActionListener(e -> {
+            File htmlFile = new File("target/reports/apidocs/index.html");
+            try {
+                Desktop.getDesktop().browse(htmlFile.toURI());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        helpMenu.add(userGuide);
+
+
         menuBar.add(menu);
+        menuBar.add(helpMenu);
         return menuBar;
     }
 
@@ -219,21 +235,31 @@ public class XmlMakerGui {
      */
     public JPanel createFileFetcher() {
         JPanel fileFetcherPanel = new JPanel();
+        fileFetcherPanel.setLayout(new BoxLayout(fileFetcherPanel, BoxLayout.Y_AXIS));
+
+        JPanel fileSelectionPanel = new JPanel();
+        fileSelectionPanel.setLayout(new FlowLayout());
+        fileSelectionPanel.setBorder(BorderFactory.createTitledBorder("1.1 Input the file to process"));
         JLabel fetchFileLabel = new JLabel("Drag or fetch the file to process");
         fetchFileLabel.setHorizontalAlignment(JLabel.CENTER);
-
         JButton fetchingButton = new JButton("Fetch file");
         fetchingButton.addActionListener(e -> fetchFile());
+        fileSelectionPanel.add(fetchFileLabel);
+        fileSelectionPanel.add(fetchingButton);
+
+        JPanel pubmedInputPanel = new JPanel();
+        pubmedInputPanel.setLayout(new FlowLayout());
+        pubmedInputPanel.setBorder(BorderFactory.createTitledBorder("1.2 Enter the PubMed ID"));
 
         JTextField publicationTitleField = new JTextField("Publication pubmed ID");
         publicationTitleField.setEditable(true);
         JButton textValidationButton = new JButton("Submit");
         textValidationButton.addActionListener(e -> excelFileReader.setPublicationId(publicationTitleField.getText()));
+        pubmedInputPanel.add(publicationTitleField);
+        pubmedInputPanel.add(textValidationButton);
 
-        fileFetcherPanel.add(fetchFileLabel);
-        fileFetcherPanel.add(fetchingButton);
-        fileFetcherPanel.add(publicationTitleField);
-        fileFetcherPanel.add(textValidationButton);
+        fileFetcherPanel.add(fileSelectionPanel);
+        fileFetcherPanel.add(pubmedInputPanel);
         return fileFetcherPanel;
     }
 
