@@ -211,8 +211,8 @@ public class XmlMakerGui {
         menu.add(importFile);
 
         JMenu helpMenu = new JMenu("Help");
-        JMenuItem userGuide = new JMenuItem("How to use");
-        userGuide.addActionListener(e -> {
+        JMenuItem documentation = new JMenuItem("Documentation");
+        documentation.addActionListener(e -> {
             File htmlFile = new File("target/reports/apidocs/index.html");
             try {
                 Desktop.getDesktop().browse(htmlFile.toURI());
@@ -220,8 +220,18 @@ public class XmlMakerGui {
                 throw new RuntimeException(ex);
             }
         });
-        helpMenu.add(userGuide);
+        helpMenu.add(documentation);
 
+        JMenuItem userGuide = new JMenuItem("How to use");
+        userGuide.addActionListener(e -> {
+            File htmlFile = new File("src/main/resources/UserHelp.html");
+            try {
+                Desktop.getDesktop().browse(htmlFile.toURI());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        helpMenu.add(userGuide);
 
         menuBar.add(menu);
         menuBar.add(helpMenu);
