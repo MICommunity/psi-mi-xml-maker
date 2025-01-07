@@ -42,14 +42,14 @@ Once the setup is complete, you can launch the PSI-MI XML-maker and start genera
     Once done, a click on the "Update the Uniprot ids" button will launch the process.
 
 ### 3. Create the participants
-   Before creating the interactions, the user has to create the participants. 
-   The same way as the Uniprot update, the user has to select the sheet for the XLSX or XLSX file. 
-   Then the user has to associate the participant's elements to the columns in the file. 
-   Once done, a click on the "Create participant" button will launch the process. 
-   The participants will be created and associated depending on their interactions.
+    Before creating the interactions, the user has to create the participants. 
+    The same way as the Uniprot update, the user has to select the sheet for the XLSX or XLSX file. 
+    Then the user has to associate the participant's elements to the columns in the file. 
+    Once done, a click on the "Create participant" button will launch the process. 
+    The participants will be created and associated depending on their interactions.
 
 ### 4. Create the PSI-MI 3.0 XML file
-   Finally, the user has to select the date of the publication. 
-   Then, the saving location has to be saved. 
-   Clicking on the "Browse..." button will open the saving file browser. 
-   Once those requirements filed, clicking on the "Create XML file" button will write and save the XML file.
+    Finally, the user has to select the date of the publication. 
+    Then, the saving location has to be saved. 
+    Clicking on the "Browse..." button will open the saving file browser. 
+    Once those requirements filed, clicking on the "Create XML file" button will write and save the XML file.
