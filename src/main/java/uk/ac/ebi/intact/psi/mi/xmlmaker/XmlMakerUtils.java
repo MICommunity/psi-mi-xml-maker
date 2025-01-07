@@ -96,7 +96,7 @@ public class XmlMakerUtils {
      */
     public String fetchTaxIdForOrganism(String organismName) {
         if (organismName.matches("\\d+")) {
-            return organismName; //already a taxid
+            return organismName; //already a taxId
         } else {
             String apiResponse = fetchTaxIdWithApi(organismName);
             return apiResponse != null ? extractOboId(apiResponse) : null;

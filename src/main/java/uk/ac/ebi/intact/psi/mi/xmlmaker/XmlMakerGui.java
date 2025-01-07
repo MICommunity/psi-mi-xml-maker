@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.PsiMiXmlMakerGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionWriterGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 
@@ -30,7 +30,7 @@ public class XmlMakerGui {
     private final ExcelFileReader excelFileReader;
     private final UniprotMapperGui uniprotMapperGui;
     private final InteractionsCreatorGui interactionsCreatorGui;
-    private final PsiMiXmlMakerGui psiMiXmlMakerGui;
+    private final InteractionWriterGui interactionWriterGui;
 
 
     /**
@@ -40,7 +40,8 @@ public class XmlMakerGui {
         this.excelFileReader = new ExcelFileReader();
         this.uniprotMapperGui = new UniprotMapperGui(excelFileReader);
         this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui);
-        this.psiMiXmlMakerGui = new PsiMiXmlMakerGui(interactionsCreatorGui.interactionsCreator, excelFileReader);
+        this.interactionWriterGui = new InteractionWriterGui(interactionsCreatorGui.interactionsCreator, excelFileReader);
+
     }
 
     /**
@@ -120,7 +121,7 @@ public class XmlMakerGui {
      * @return The JPanel for PSI-MI XML file creation.
      */
     private JPanel createPsiMiXmlMakerPanel() {
-        JPanel psiXmlMakerPanel = psiMiXmlMakerGui.createPsiMiXmlMakerPanel();
+        JPanel psiXmlMakerPanel = interactionWriterGui.createPsiMiXmlMakerPanel();
         psiXmlMakerPanel.setBorder(new TitledBorder("4. Create the PSI-MI.xml file"));
         return psiXmlMakerPanel;
     }
@@ -224,7 +225,7 @@ public class XmlMakerGui {
 
         JMenuItem userGuide = new JMenuItem("How to use");
         userGuide.addActionListener(e -> {
-            File htmlFile = new File("src/main/resources/UserHelp.html");
+            File htmlFile = new File("target/reports/apidocs/index.html");
             try {
                 Desktop.getDesktop().browse(htmlFile.toURI());
             } catch (IOException ex) {
@@ -261,7 +262,7 @@ public class XmlMakerGui {
         pubmedInputPanel.setLayout(new FlowLayout());
         pubmedInputPanel.setBorder(BorderFactory.createTitledBorder("1.2 Enter the PubMed ID"));
 
-        JTextField publicationTitleField = new JTextField("Publication pubmed ID");
+        JTextField publicationTitleField = new JTextField("Publication PubMed ID");
         publicationTitleField.setEditable(true);
         JButton textValidationButton = new JButton("Submit");
         textValidationButton.addActionListener(e -> excelFileReader.setPublicationId(publicationTitleField.getText()));

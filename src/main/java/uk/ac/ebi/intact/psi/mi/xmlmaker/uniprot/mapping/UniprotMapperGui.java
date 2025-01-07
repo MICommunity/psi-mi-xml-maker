@@ -46,7 +46,7 @@ public class UniprotMapperGui extends JPanel {
 
         setupComboBoxDefaults();
 
-        fileProcessingPanel.add(sheets);
+        fileProcessingPanel.add(setComboBoxDimension(sheets, "Select sheet"));
         fileProcessingPanel.add(setComboBoxDimension(idColumn, "Select ID column"));
         fileProcessingPanel.add(setComboBoxDimension(idDbColumn, "Select ID database column"));
         fileProcessingPanel.add(setComboBoxDimension(organismColumn, "Select organism column"));
@@ -66,10 +66,12 @@ public class UniprotMapperGui extends JPanel {
      * This method is called in uniprotPanel() to set the default selections.
      */
     private void setupComboBoxDefaults() {
-        idColumn.addItem("Select ID column");
+        idColumn.addItem("Select participant ID column");
+        idColumn.setEnabled(false);
         idDbColumn.addItem("Select ID database column");
+        idDbColumn.setEnabled(false);
         organismColumn.addItem("Select organism column");
-        sheets.addItem("Select sheet");
+        organismColumn.setEnabled(false);
     }
 
     /**
@@ -90,6 +92,7 @@ public class UniprotMapperGui extends JPanel {
      * If no sheets are available, disables the combo box.
      */
     public void setUpSheets() {
+        setupComboBoxDefaults();
         if (excelFileReader.sheets.isEmpty()) {
             sheets.setEnabled(false);
             sheets.setSelectedIndex(0);
@@ -99,6 +102,7 @@ public class UniprotMapperGui extends JPanel {
                 sheets.addItem(sheetName);
             }
         }
+
     }
 
     /**
@@ -107,13 +111,16 @@ public class UniprotMapperGui extends JPanel {
      */
     public void setUpColumns() {
         idColumn.removeAllItems();
-        idColumn.addItem("Select participant ID column to process");
+        idColumn.addItem("Select participant ID column");
+        idColumn.setEnabled(true);
 
         organismColumn.removeAllItems();
         organismColumn.addItem("Select organism column");
+        organismColumn.setEnabled(true);
 
         idDbColumn.removeAllItems();
         idDbColumn.addItem("Select ID database column");
+        idDbColumn.setEnabled(true);
 
         String selectedSheet = "";
         if (sheets.isEnabled()) {

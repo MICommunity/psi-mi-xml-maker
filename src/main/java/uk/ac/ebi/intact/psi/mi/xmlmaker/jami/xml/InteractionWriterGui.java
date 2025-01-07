@@ -7,29 +7,29 @@ import java.awt.*;
 import java.io.File;
 
 /**
- * PsiMiXmlMakerGui provides a graphical user interface (GUI) for generating
- * PSI-MI XML files using the PsiMiXmlMaker class. The GUI allows users to
+ * InteractionWriterGui provides a graphical user interface (GUI) for generating
+ * PSI-MI XML files using the InteractionWriter class. The GUI allows users to
  * specify a save location, select a date, and initiate the XML generation process.
  * Dependencies:
- * - PsiMiXmlMaker for handling the XML creation logic.
+ * - InteractionWriter for handling the XML creation logic.
  * - InteractionsCreator for creating interaction data.
  * - ExcelFileReader for reading publication-related data.
  * Usage:
  * Create an instance of this class with the required dependencies and integrate
  * the panel returned by `createPsiMiXmlMakerPanel` into a JFrame or other container.
  */
-public class PsiMiXmlMakerGui {
-    private final PsiMiXmlMaker xmlMaker;
+public class InteractionWriterGui {
+    private final InteractionWriter xmlMaker;
     private JTextField saveLocationField;
 
     /**
-     * Constructs a PsiMiXmlMakerGui instance with the given dependencies.
+     * Constructs a InteractionWriterGui instance with the given dependencies.
      *
      * @param interactionsCreator an instance of InteractionsCreator for creating interaction data
      * @param excelFileReader     an instance of ExcelFileReader for reading publication-related data
      */
-    public PsiMiXmlMakerGui(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
-        this.xmlMaker = new PsiMiXmlMaker(interactionsCreator, excelFileReader);
+    public InteractionWriterGui(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
+        this.xmlMaker = new InteractionWriter(interactionsCreator, excelFileReader);
     }
 
     /**

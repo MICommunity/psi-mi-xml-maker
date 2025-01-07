@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import psidev.psi.mi.jami.commons.MIWriterOptionFactory;
 import psidev.psi.mi.jami.commons.PsiJami;
-import psidev.psi.mi.jami.datasource.InteractionWriter;
 import psidev.psi.mi.jami.factory.InteractionWriterFactory;
 import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
@@ -20,7 +19,7 @@ import java.io.File;
 import java.util.*;
 
 /**
- * PsiMiXmlMaker is a Spring component responsible for creating PSI-MI XML files
+ * InteractionWriter is a Spring component responsible for creating PSI-MI XML files
  * based on interaction data. It utilizes the JAMI library for creating XML files
  * and provides functionality to write interaction data to XML files.
  * Dependencies:
@@ -31,23 +30,23 @@ import java.util.*;
  * This class is designed to be used as a Spring-managed bean.
  * Use the `interactionsWriter` method to generate and save a PSI-MI XML file.
  */
-public class PsiMiXmlMaker {
+public class InteractionWriter {
 
-    private static final Logger logger = LogManager.getLogger(PsiMiXmlMaker.class);
+    private static final Logger logger = LogManager.getLogger(InteractionWriter.class);
 
     final InteractionsCreator interactionsCreator;
     final List<XmlInteractionEvidence> xmlModelledInteractions;
-    private String publicationId;
+    public String publicationId;
     final XmlMakerUtils utils = new XmlMakerUtils();
     private final ExcelFileReader excelFileReader;
 
     /**
-     * Constructs a PsiMiXmlMaker instance with the given dependencies.
+     * Constructs a InteractionWriter instance with the given dependencies.
      *
      * @param interactionsCreator an instance of InteractionsCreator
      * @param excelFileReader     an instance of ExcelFileReader
      */
-    public PsiMiXmlMaker(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
+    public InteractionWriter(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
         this.interactionsCreator = interactionsCreator;
         xmlModelledInteractions = interactionsCreator.xmlModelledInteractions;
         this.excelFileReader = excelFileReader;
@@ -115,7 +114,7 @@ public class PsiMiXmlMaker {
         );
 
         InteractionWriterFactory writerFactory = InteractionWriterFactory.getInstance();
-        InteractionWriter xmlInteractionWriter = null;
+        psidev.psi.mi.jami.datasource.InteractionWriter xmlInteractionWriter = null;
 
         try {
             xmlInteractionWriter = writerFactory.getInteractionWriterWith(expandedXmlWritingOptions);

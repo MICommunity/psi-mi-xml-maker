@@ -81,6 +81,8 @@ public class ExcelFileReader {
         currentFileLabel.setText(getFileName());
         currentFilePath = filePath;
         fileData = new ArrayList<>();
+        sheets.clear();
+        columns.clear();
 
         try {
             switch (fileType) {
@@ -139,13 +141,15 @@ public class ExcelFileReader {
     }
 
     /**
-     * Reads a specific chunk of rows from a CSV or TSV file and stores its contents.
+     * Reads the CSV/TSV file and store its content.
      *
+     * @return the file data
      */
-    public void readFileWithSeparator() {
+    public List<List<String>> readFileWithSeparator() {
         List<String> header = null;
+        List<List<String>> chunk = new ArrayList<>();
 
-        try (InputStream fileStream = new FileInputStream(new File(currentFilePath));
+        try (InputStream fileStream = new FileInputStream(currentFilePath);
              BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileStream));
              CSVReader csvReader = new CSVReaderBuilder(bufferedReader)
                      .withCSVParser(new com.opencsv.CSVParserBuilder()
@@ -153,11 +157,7 @@ public class ExcelFileReader {
                              .withIgnoreQuotations(false)
                              .build())
                      .build()) {
-
-            List<List<String>> chunk = new ArrayList<>();
             String[] nextLine;
-            int rowIndex = 0;
-
             if ((nextLine = csvReader.readNext()) != null) {
                 header = Arrays.stream(nextLine)
                         .map(cell -> cell == null ? "" : cell.trim())
@@ -168,18 +168,7 @@ public class ExcelFileReader {
                 chunk.add(Arrays.stream(nextLine)
                         .map(cell -> cell == null ? "" : cell.trim())
                         .collect(Collectors.toList()));
-                rowIndex++;
-
-                if (rowIndex % CHUNK_SIZE == 0) {
-                    createSubFilesWithSeparator(chunk);
-                    chunk.clear();
-                }
             }
-
-            if (!chunk.isEmpty()) {
-                createSubFilesWithSeparator(chunk);
-            }
-
         } catch (IOException | CsvValidationException e) {
             LOGGER.log(Level.SEVERE, "Unable to read file with separator", e);
             xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
@@ -188,6 +177,7 @@ public class ExcelFileReader {
         if (header != null) {
             fileData = header;
         }
+        return chunk;
     }
 
     // GUI
@@ -196,6 +186,7 @@ public class ExcelFileReader {
      * Gets the list of sheet names in the current workbook.
      */
     public void getSheets() {
+        sheets.clear();
         if (workbook != null) {
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
                 sheets.add(workbook.getSheetName(i));
@@ -232,7 +223,6 @@ public class ExcelFileReader {
             }
             columns.addAll(fileData);
         }
-
         return columns;
     }
 

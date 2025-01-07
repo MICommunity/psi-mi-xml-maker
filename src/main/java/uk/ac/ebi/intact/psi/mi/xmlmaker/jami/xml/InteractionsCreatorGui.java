@@ -28,14 +28,14 @@ import static org.apache.poi.ss.usermodel.CellType.STRING;
 public class InteractionsCreatorGui extends JPanel {
     private final JComboBox<String> sheets = new JComboBox<>();
     private final List<JComboBox<String>> columnsList = new ArrayList<>();
-    private final List<String> columnNames = new ArrayList<>();
+    private List<String> columnNames = new ArrayList<>();
     private final JTable table = new JTable();
 
     private final ExcelFileReader excelFileReader;
     public final InteractionsCreator interactionsCreator;
 
     @Getter
-    public JPanel participantCreatorPanel;
+    public JPanel participantCreatorPanel ;
     public final Map<String, Integer> dataAndIndexes = new HashMap<>();
     final ArrayList<String> dataNeededForInteractor = new ArrayList<>(
             Arrays.stream(DataTypeAndColumn.values())
@@ -75,7 +75,7 @@ public class InteractionsCreatorGui extends JPanel {
             createInteractionDataTable();
         });
 
-        JScrollPane scrollPane = new JScrollPane(table);
+        JScrollPane scrollPane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         scrollPane.setPreferredSize(new Dimension(scrollPane.getPreferredSize().width, 200)); // Set the height to 200 pixels
         sheetSelectorPanel.add(scrollPane);
 
@@ -94,13 +94,11 @@ public class InteractionsCreatorGui extends JPanel {
         if (excelFileReader.sheets.isEmpty()) {
             sheets.setEnabled(false);
             sheets.setSelectedIndex(0);
-            setUpColumns();
         } else {
             sheets.setEnabled(true);
             for (String sheetName : excelFileReader.sheets) {
                 sheets.addItem(sheetName);
             }
-            setUpColumns();
         }
 
     }
@@ -109,6 +107,7 @@ public class InteractionsCreatorGui extends JPanel {
      * Sets up the columns for the currently selected sheet.
      */
     private void setUpColumns() {
+        columnsList.clear();
         columnNames.clear();
         columnNames.add("Select column to process");
         if (sheets.isEnabled()) {
@@ -147,7 +146,8 @@ public class InteractionsCreatorGui extends JPanel {
                 JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 LOGGER.warning(ex.getMessage());
-                JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "An error occurred during file processing: "
+                        + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
             }
         });
         return processFileButton;
@@ -175,11 +175,11 @@ public class InteractionsCreatorGui extends JPanel {
         TableModel tableModel = new DefaultTableModel(data, columnTitles);
         table.setModel(tableModel);
 
+
         for (int i = 0; i < dataNeededForInteractor.size(); i++) {
             TableColumn tableColumn = table.getColumnModel().getColumn(i);
             tableColumn.setHeaderValue(dataNeededForInteractor.get(i));
-            tableColumn.setPreferredWidth(200);
-//            tableColumn.setMinWidth(200);
+            tableColumn.setPreferredWidth(150);
             JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
             columnsList.add(comboBox);
             tableColumn.setCellEditor(new DefaultCellEditor(comboBox));
@@ -187,6 +187,7 @@ public class InteractionsCreatorGui extends JPanel {
         for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
             addFeatureCells(i);
         }
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.repaint();
         table.revalidate();
     }
@@ -236,8 +237,7 @@ public class InteractionsCreatorGui extends JPanel {
             String columnName = featureCells.get(i);
             TableColumn newColumn = columnModel.getColumn(dataNeededForInteractor.size() + featureIndex * 4 + i);
             newColumn.setHeaderValue(columnName);
-            newColumn.setPreferredWidth(200);
-//            newColumn.setMinWidth(200);
+            newColumn.setPreferredWidth(150);
             JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
             columnsList.add(comboBox);
             newColumn.setCellEditor(new DefaultCellEditor(comboBox));

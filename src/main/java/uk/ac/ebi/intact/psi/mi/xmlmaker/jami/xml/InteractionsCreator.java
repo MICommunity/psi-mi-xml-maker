@@ -25,16 +25,15 @@ public class InteractionsCreator {
     final ExcelFileReader excelFileReader;
     final UniprotMapperGui uniprotMapperGui;
     final XmlMakerUtils utils = new XmlMakerUtils();
-
-    final List<XmlParticipantEvidence> xmlParticipants = new ArrayList<>();
-    final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
-    final List<Map<String, String>> dataList = new ArrayList<>();
+    public List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
+    public List<Map<String, String>> dataList = new ArrayList<>();
     final Map<String, Integer> columnAndIndex;
 
-    String sheetSelected;
+    public String sheetSelected;
 
     @Setter @Getter
     public String publicationId;
+    public int numberOfFeature = 0;
 
     private static final Logger LOGGER = Logger.getLogger(InteractionsCreator.class.getName());
 
@@ -59,19 +58,20 @@ public class InteractionsCreator {
      * @param columnAndIndex the mapping of column names to their corresponding indexes in the dataset.
      */
     public void createParticipantsWithFileFormat(Map<String, Integer> columnAndIndex) {
-        xmlParticipants.clear();
         xmlModelledInteractions.clear();
         dataList.clear();
-
+        numberOfFeature = excelFileReader.getNumberOfFeatures();
         if (excelFileReader.workbook == null) {
-            processSubFilesInDirectory(excelFileReader.outputDirName, columnAndIndex);
+            fetchDataFileWithSeparator(columnAndIndex);
         } else {
             fetchDataWithWorkbook(columnAndIndex);
         }
         createInteractions();
     }
+
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
         String name = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_NAME);
+
         if (name == null) {
             LOGGER.warning("Participant name is required but missing or empty.");
             return null;
@@ -103,19 +103,25 @@ public class InteractionsCreator {
         String participantIdentificationMethodMiId = participantIdentificationMethodMiIdFuture.join();
 
         if (participantTypeMiId == null || participantTypeMiId.trim().isEmpty()) {
-            LOGGER.warning("Missing or invalid MI ID for participant type: " + participantType);
+            LOGGER.warning("Missing or invalid MI ID for participant: " + name);
             return null;
         }
         assert participantType != null;
         CvTerm type = new XmlCvTerm(participantType, participantTypeMiId);
 
         if (participantIdDbMiId == null || participantId == null) {
-            LOGGER.warning("Missing or invalid participant ID or ID DB.");
+            LOGGER.warning("Missing or invalid participant ID or ID DB for participant: " + name);
             return null;
         }
         assert participantIdDb != null;
         Xref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, participantIdDbMiId), participantId);
-        Organism organism = new XmlOrganism(Integer.parseInt(utils.fetchTaxIdForOrganism(Objects.requireNonNull(participantOrganism))));
+
+        if (participantOrganism == null || participantOrganism.isEmpty()) {
+            LOGGER.warning("Missing or invalid participant organism for participant: " + name);
+            return null;
+        }
+        String taxId = utils.fetchTaxIdForOrganism(Objects.requireNonNull(participantOrganism));
+        Organism organism = new XmlOrganism(Integer.parseInt(taxId));
 
         Interactor participant = new XmlPolymer(name, type, organism, uniqueId);
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
@@ -125,8 +131,8 @@ public class InteractionsCreator {
             participantEvidence.setExperimentalRole(experimentalRoleCv);
         }
 
-        if (excelFileReader.getNumberOfFeatures() > 0) {
-            for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
+        if (numberOfFeature > 0) {
+            for (int i = 0; i < numberOfFeature; i++) {
                 XmlFeatureEvidence feature = createFeature(i, data);
                 participantEvidence.addFeature(feature);
             }
@@ -168,17 +174,18 @@ public class InteractionsCreator {
      * Fetches data from a file using a separator (e.g., CSV or TSV) and stores it in a list of maps for processing.
      *
      * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
-     * @param data           the data extracted from the file as a list of string lists.
      */
-    public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex, List<List<String>> data) {
+    public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex) {
+        //TODO: check for column where the number of cells is different
+        List<List<String>> data = excelFileReader.readFileWithSeparator();
         for (List<String> datum : data) {
             Map<String, String> dataMap = new HashMap<>();
             for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
                 if (column.initial) {
                     dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
                 }
-                if (excelFileReader.getNumberOfFeatures()>0){
-                    for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
+                if (numberOfFeature>0){
+                    for (int i = 0; i < numberOfFeature; i++) {
                         if (!column.initial) {
                             dataMap.put(column.name + "_" + i, datum.get(columnAndIndex.get(column.name + "_" + i)));
                         }
@@ -235,8 +242,8 @@ public class InteractionsCreator {
                             dataMap.put(column.name, "N/A");
                         }
                     }
-                    if (excelFileReader.getNumberOfFeatures()>0){
-                        for (int j = 0; j < excelFileReader.getNumberOfFeatures(); j++) {
+                    if (numberOfFeature>0){
+                        for (int j = 0; j < numberOfFeature; j++) {
                             if (!column.initial) {
                                 Cell cell = row.getCell(columnAndIndex.get(column.name + "_" + j));
                                 dataMap.put(column.name + "_" + j, cell.getStringCellValue());
@@ -291,7 +298,9 @@ public class InteractionsCreator {
      * @param hostOrganism The host organism associated with the interaction, used to fetch the organism's tax ID.
      * @param interactionType The type of the interaction, used to create a CvTerm for interaction type.
      */
-    private void interactionCreator(XmlInteractionEvidence interaction, String interactionDetectionMethod, String participantIdentificationMethod, String hostOrganism, String interactionType) {
+    private void interactionCreator(XmlInteractionEvidence interaction, String interactionDetectionMethod,
+                                    String participantIdentificationMethod,
+                                    String hostOrganism, String interactionType) {
         if (interactionType != null) {
             String interactionTypeMiId = utils.fetchMiId(interactionType);
             CvTerm interactionTypeCv = new XmlCvTerm(interactionType, interactionTypeMiId);
@@ -315,7 +324,6 @@ public class InteractionsCreator {
 
             interaction.setExperiment(experiment);
         }
-
         xmlModelledInteractions.add(interaction);
     }
 
@@ -419,7 +427,7 @@ public class InteractionsCreator {
                     try {
                         LOGGER.info("Processing file: " + file.getName());
                         List<List<String>> data = excelFileReader.readSubFile(file.getPath());
-                        fetchDataFileWithSeparator(columnAndIndex, data);
+                        fetchDataFileWithSeparator(columnAndIndex);
                     } catch (Exception e) {
                         LOGGER.warning("Error processing file " + file.getName() + ": " + e.getMessage());
                     }
