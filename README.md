@@ -9,10 +9,10 @@ The PSI-MI XML-maker runs under [JDK11](https://www.oracle.com/uk/java/technolog
 
 ## How to launch for the first time?
 
-In your console, run the command `export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home` to be set up on JDK11.
-To be sure that you are on this version you can check with the command `java --version`.
-Then go to the *PSI-MI-XML-Maker* directory by using the command `cd path_to_directory/PSI-MI-XML-Maker` and run `mvn clean install`.
-After the build is complete, you may be prompted to grant access to the Finder. Once you grant access, you can save the PSI-MI XML-maker as an app.
+1. In your console, run the command `export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home` to be set up on JDK11.
+2. To be sure that you are on this version you can check with the command `java --version`.
+3. Then go to the *PSI-MI-XML-Maker* directory by using the command `cd path_to_directory/PSI-MI-XML-Maker` and run `mvn clean install`.
+4. After the build is complete, you may be prompted to grant access to the Finder. Once you grant access, you can save the PSI-MI XML-maker as an app.
 
 Once the setup is complete, you can launch the PSI-MI XML-maker and start generating XML files based on the PSI-MI 3.0 format.
 
