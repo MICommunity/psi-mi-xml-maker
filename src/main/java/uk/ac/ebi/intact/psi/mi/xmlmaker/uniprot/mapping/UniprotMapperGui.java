@@ -1,8 +1,8 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 
+import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,13 +22,15 @@ public class UniprotMapperGui extends JPanel {
     private final XmlMakerUtils utils = new XmlMakerUtils();
     private final ExcelFileReader excelFileReader;
     private static final Logger LOGGER = Logger.getLogger(UniprotMapperGui.class.getName());
+    private final LoadingSpinner loadingSpinner;
 
     /**
      * Constructs a new instance of the UniprotMapperGui class.
      * @param excelFileReader The ExcelFileReader instance to interact with the Excel file.
      */
-    public UniprotMapperGui(ExcelFileReader excelFileReader) {
+    public UniprotMapperGui(ExcelFileReader excelFileReader, LoadingSpinner loadingSpinner) {
         this.excelFileReader = excelFileReader;
+        this.loadingSpinner = loadingSpinner;
     }
 
     /**
@@ -72,6 +74,7 @@ public class UniprotMapperGui extends JPanel {
         idDbColumn.setEnabled(false);
         organismColumn.addItem("Select organism column");
         organismColumn.setEnabled(false);
+
     }
 
     /**
@@ -139,28 +142,64 @@ public class UniprotMapperGui extends JPanel {
      *
      * @return The JButton that processes the file.
      */
+    /**
+     * Creates and returns a button to process the Excel file for UniProt mapping.
+     * When clicked, the button validates user inputs and processes the selected sheet or file.
+     *
+     * @return The JButton that processes the file.
+     */
     public JButton processFileButton() {
         JButton processFile = new JButton("Update the UniProt IDs");
         processFile.addActionListener(e -> {
-            String sheetSelected = (String) sheets.getSelectedItem();
-            String idColumn = (String) this.idColumn.getSelectedItem();
-            int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
-            int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
+            // Show the spinner before starting the background task
+            loadingSpinner.showSpinner();
 
-            if (sheets.isEnabled()) {
-                if (isInvalidSelection(sheetSelected, idColumn)) {
-                    JOptionPane.showMessageDialog(null, "Please select a valid sheet and column!", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    return;
+            // Use SwingWorker for background processing
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    String sheetSelected = (String) sheets.getSelectedItem();
+                    String idColumnSelectedItem = (String) idColumn.getSelectedItem();
+                    int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
+                    int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
+
+                    if (sheets.isEnabled()) {
+                        if (isInvalidSelection(sheetSelected, idColumnSelectedItem)) {
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                                    null,
+                                    "Please select a valid sheet and column!",
+                                    "ERROR",
+                                    JOptionPane.ERROR_MESSAGE
+                            ));
+                            return null;
+                        }
+                        processSheet(sheetSelected, idColumnSelectedItem, organismColumnIndex, idDbColumnIndex);
+                    } else {
+                        if (idColumnSelectedItem == null || idColumnSelectedItem.equals("Select column to process")) {
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                                    null,
+                                    "Please select a valid column for processing!",
+                                    "ERROR",
+                                    JOptionPane.ERROR_MESSAGE
+                            ));
+                            return null;
+                        }
+                        processFileWithoutSheet(idColumnSelectedItem, organismColumnIndex, idDbColumnIndex);
+                    }
+                    return null;
                 }
-                processSheet(sheetSelected, idColumn, organismColumnIndex, idDbColumnIndex);
-            } else {
-                if (idColumn == null || idColumn.equals("Select column to process")) {
-                    JOptionPane.showMessageDialog(null, "Please select a valid column for processing!", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    return;
+
+                @Override
+                protected void done() {
+                    // Hide the spinner after the task completes
+                    loadingSpinner.hideSpinner();
                 }
-                processFileWithoutSheet(idColumn, organismColumnIndex, idDbColumnIndex);
-            }
+            };
+
+            // Start the background task
+            worker.execute();
         });
+
         return processFile;
     }
 

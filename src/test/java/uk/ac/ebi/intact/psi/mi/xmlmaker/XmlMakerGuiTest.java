@@ -28,9 +28,10 @@ public class XmlMakerGuiTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
+        LoadingSpinner loadingSpinner = new LoadingSpinner();
         super.setUp();
         reader = new ExcelFileReader();
-        UniprotMapperGui uniprotMapperGui = new UniprotMapperGui(reader);
+        UniprotMapperGui uniprotMapperGui = new UniprotMapperGui(reader, loadingSpinner);
         interactionsCreator = new InteractionsCreator(reader, uniprotMapperGui, COLUMN_AND_INDEX);
     }
 

@@ -31,17 +31,18 @@ public class XmlMakerGui {
     private final UniprotMapperGui uniprotMapperGui;
     private final InteractionsCreatorGui interactionsCreatorGui;
     private final InteractionWriterGui interactionWriterGui;
+    private final LoadingSpinner loadingSpinner;
 
 
     /**
      * Constructs the XmlMakerGui instance, initializing all dependent components.
      */
     public XmlMakerGui() {
+        this.loadingSpinner = new LoadingSpinner();
         this.excelFileReader = new ExcelFileReader();
-        this.uniprotMapperGui = new UniprotMapperGui(excelFileReader);
-        this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui);
+        this.uniprotMapperGui = new UniprotMapperGui(excelFileReader, loadingSpinner);
+        this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui, loadingSpinner);
         this.interactionWriterGui = new InteractionWriterGui(interactionsCreatorGui.interactionsCreator, excelFileReader);
-
     }
 
     /**
@@ -55,6 +56,7 @@ public class XmlMakerGui {
         frame.add(createFileProcessingPanel());
         frame.add(createPsiMiXmlMakerPanel());
         makeFrameDnD(frame);
+        frame.setGlassPane(loadingSpinner.createLoadingGlassPane(frame));
         frame.setVisible(true);
     }
 
@@ -182,6 +184,7 @@ public class XmlMakerGui {
             excelFileReader.selectFileOpener(filePath);
             uniprotMapperGui.setUpSheets();
             interactionsCreatorGui.setUpSheets();
+
         } else {
             JOptionPane.showMessageDialog(null, "Unsupported file type. Please provide a valid file (.xls, .xlsx, .csv, or .tsv).", "Invalid File", JOptionPane.WARNING_MESSAGE);
         }

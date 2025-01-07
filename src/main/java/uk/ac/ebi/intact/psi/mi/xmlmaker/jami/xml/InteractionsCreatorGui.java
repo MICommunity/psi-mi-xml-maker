@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 
@@ -30,6 +31,7 @@ public class InteractionsCreatorGui extends JPanel {
     private final List<JComboBox<String>> columnsList = new ArrayList<>();
     private List<String> columnNames = new ArrayList<>();
     private final JTable table = new JTable();
+    private final LoadingSpinner loadingSpinner;
 
     private final ExcelFileReader excelFileReader;
     public final InteractionsCreator interactionsCreator;
@@ -52,10 +54,11 @@ public class InteractionsCreatorGui extends JPanel {
      * @param excelFileReader  The Excel file reader used to read data.
      * @param uniprotMapperGui The Uniprot mapper GUI for integrating with Uniprot.
      */
-    public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui) {
+    public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui, LoadingSpinner loadingSpinner) {
         this.excelFileReader = excelFileReader;
         this.participantCreatorPanel = new JPanel(new BorderLayout());
         this.interactionsCreator = new InteractionsCreator(excelFileReader, uniprotMapperGui, dataAndIndexes);
+        this.loadingSpinner = loadingSpinner;
     }
 
     /**
@@ -128,27 +131,67 @@ public class InteractionsCreatorGui extends JPanel {
     private JButton createProcessFileButton() {
         JButton processFileButton = new JButton("Create participants");
         processFileButton.addActionListener(e -> {
+            // Show the loading spinner
+            loadingSpinner.showSpinner();
 
-            String sheetSelected = (String) sheets.getSelectedItem();
-            List<String> selectedColumns = getComboBoxSelectedValues();
+            // Use SwingWorker for background processing
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    String sheetSelected = (String) sheets.getSelectedItem();
+                    List<String> selectedColumns = getComboBoxSelectedValues();
 
-            if (sheets.isEnabled() && (sheetSelected == null || sheetSelected.equals("Select sheet"))) {
-                JOptionPane.showMessageDialog(null, "Please select a valid sheet!", "ERROR", JOptionPane.ERROR_MESSAGE);
-            }
+                    if (sheets.isEnabled() && (sheetSelected == null || sheetSelected.equals("Select sheet"))) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                                null,
+                                "Please select a valid sheet!",
+                                "ERROR",
+                                JOptionPane.ERROR_MESSAGE
+                        ));
+                        return null;
+                    }
 
-            if (selectedColumns.stream().anyMatch(selected -> selected.equals("Select column to process"))) {
-                JOptionPane.showMessageDialog(null, "Please select a valid column for processing!", "ERROR", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
+                    if (selectedColumns.stream().anyMatch(selected -> selected.equals("Select column to process"))) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                                null,
+                                "Please select a valid column for processing!",
+                                "ERROR",
+                                JOptionPane.ERROR_MESSAGE
+                        ));
+                        return null;
+                    }
 
-            try {
-                interactionsCreator.createParticipantsWithFileFormat(getDataAndIndexes());
-                JOptionPane.showMessageDialog(null, "Participants created successfully", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception ex) {
-                LOGGER.warning(ex.getMessage());
-                JOptionPane.showMessageDialog(null, "An error occurred during file processing: "
-                        + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
-            }
+                    try {
+                        // Perform the processing in the background
+                        interactionsCreator.createParticipantsWithFileFormat(getDataAndIndexes());
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                                null,
+                                "Participants created successfully",
+                                "SUCCESS",
+                                JOptionPane.INFORMATION_MESSAGE
+                        ));
+                    } catch (Exception ex) {
+                        LOGGER.warning(ex.getMessage());
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                                null,
+                                "An error occurred during file processing: " + ex.getMessage(),
+                                "ERROR",
+                                JOptionPane.ERROR_MESSAGE
+                        ));
+                    }
+
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    // Hide the spinner when the task is complete
+                    loadingSpinner.hideSpinner();
+                }
+            };
+
+            // Execute the background worker
+            worker.execute();
         });
         return processFileButton;
     }
