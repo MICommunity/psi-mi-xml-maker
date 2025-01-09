@@ -25,8 +25,8 @@ public class InteractionsCreator {
     final ExcelFileReader excelFileReader;
     final UniprotMapperGui uniprotMapperGui;
     final XmlMakerUtils utils = new XmlMakerUtils();
-    public List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
-    public List<Map<String, String>> dataList = new ArrayList<>();
+    public final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
+    public final List<Map<String, String>> dataList = new ArrayList<>();
     final Map<String, Integer> columnAndIndex;
 
     public String sheetSelected;
@@ -176,18 +176,31 @@ public class InteractionsCreator {
      * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
      */
     public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex) {
-        //TODO: check for column where the number of cells is different
         List<List<String>> data = excelFileReader.readFileWithSeparator();
+
+        int expectedNumberOfColumns = data.get(0).size(); // to avoid any issue if one row is not the same size
+
         for (List<String> datum : data) {
+            if (datum.size() < expectedNumberOfColumns) {
+                System.err.println("Row has fewer cells than expected. Skipping row: " + datum);
+                continue;
+            }
+
             Map<String, String> dataMap = new HashMap<>();
             for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
                 if (column.initial) {
                     dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
                 }
-                if (numberOfFeature>0){
+                if (numberOfFeature > 0) {
                     for (int i = 0; i < numberOfFeature; i++) {
                         if (!column.initial) {
-                            dataMap.put(column.name + "_" + i, datum.get(columnAndIndex.get(column.name + "_" + i)));
+                            String key = column.name + "_" + i;
+                            Integer index = columnAndIndex.get(key);
+                            if (index != null && index < datum.size()) {
+                                dataMap.put(key, datum.get(index));
+                            } else {
+                                System.err.println("Index out of bounds for key: " + key);
+                            }
                         }
                     }
                 }
@@ -195,6 +208,7 @@ public class InteractionsCreator {
             dataList.add(dataMap);
         }
     }
+
 
     /**
      * Fetches data from a workbook and stores it in a list of maps for further processing.

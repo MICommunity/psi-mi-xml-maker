@@ -142,22 +142,14 @@ public class UniprotMapperGui extends JPanel {
      *
      * @return The JButton that processes the file.
      */
-    /**
-     * Creates and returns a button to process the Excel file for UniProt mapping.
-     * When clicked, the button validates user inputs and processes the selected sheet or file.
-     *
-     * @return The JButton that processes the file.
-     */
     public JButton processFileButton() {
         JButton processFile = new JButton("Update the UniProt IDs");
         processFile.addActionListener(e -> {
-            // Show the spinner before starting the background task
             loadingSpinner.showSpinner();
 
-            // Use SwingWorker for background processing
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
-                protected Void doInBackground() throws Exception {
+                protected Void doInBackground() {
                     String sheetSelected = (String) sheets.getSelectedItem();
                     String idColumnSelectedItem = (String) idColumn.getSelectedItem();
                     int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
@@ -191,12 +183,10 @@ public class UniprotMapperGui extends JPanel {
 
                 @Override
                 protected void done() {
-                    // Hide the spinner after the task completes
                     loadingSpinner.hideSpinner();
                 }
             };
 
-            // Start the background task
             worker.execute();
         });
 
@@ -257,6 +247,7 @@ public class UniprotMapperGui extends JPanel {
     private void handleProcessingError(Exception ex) {
         JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         LOGGER.warning(ex.getMessage());
+        ex.printStackTrace();
     }
 
     /**

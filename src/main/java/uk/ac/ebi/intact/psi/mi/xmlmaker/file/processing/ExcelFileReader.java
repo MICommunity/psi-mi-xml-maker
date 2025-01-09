@@ -295,7 +295,7 @@ public class ExcelFileReader {
     public void checkAndInsertUniprotResultsFileSeparatedFormat(String idColumnName, int organismColumnIndex,
                                                                 int idDbColumnIndex) {
         try {
-            List<List<String>> data = readSubFile(currentFilePath);
+            List<List<String>> data = readFileWithSeparator();
             if (data.isEmpty()) {
                 LOGGER.warning("No data to process in the file.");
                 xmlMakerutils.showErrorDialog("The file contains no data to process.");
@@ -315,8 +315,7 @@ public class ExcelFileReader {
                 return;
             }
 
-            for (int rowIndex = 1; rowIndex < data.size(); rowIndex++) { // Skip header row
-                List<String> row = data.get(rowIndex);
+            for (List<String> row : data) {
                 String idValue = row.get(idColumnIndex).trim();
                 String organism = row.get(organismColumnIndex).trim();
                 String idDb = row.get(idDbColumnIndex).trim();
@@ -386,32 +385,37 @@ public class ExcelFileReader {
 
             String organismValue = row.getCell(organismColumnIndex) != null ?
                     row.getCell(organismColumnIndex).getStringCellValue() : "";
-            int organismId = Integer.parseInt(xmlMakerutils.fetchTaxIdForOrganism(organismValue));
-            String organism = String.valueOf(organismId);
+            String organism = xmlMakerutils.fetchTaxIdForOrganism(organismValue);
             String idDb = previousDbCell.getStringCellValue();
-
-            String geneValue = formatter.formatCellValue(previousCell);
+            String previousId = formatter.formatCellValue(previousCell);
             String uniprotResult = "";
 
             if (rowIndex == 0) {
-                uniprotResult = "Updated " + geneValue; // geneValue == header cell
-            } else if (!geneValue.isEmpty()) {
-                uniprotResult = uniprotMapper.fetchUniprotResults(geneValue, organism, idDb);
+                uniprotResult = "Updated " + previousId;
+                previousDbCell.setCellValue("Database updated");
+            } else if (!previousId.isEmpty() && !organismValue.isEmpty()) {
+                uniprotResult = uniprotMapper.fetchUniprotResults(previousId, organism, idDb);
             }
 
-            if (uniprotResult != null && !uniprotResult.isEmpty()) {
+            if (uniprotResult != null && !uniprotResult.isEmpty() && !uniprotResult.equals(previousId)) {
+                // Update the cell value and set the database value
                 previousCell.setCellValue(uniprotResult);
+                previousDbCell.setCellValue("UniprotKB");
+
+                // Highlight if part of the molecule set
                 if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
                     highlightCells(previousCell);
                     proteinsPartOfMoleculeSet.add(uniprotResult);
                 }
-                previousDbCell.setCellValue("UniprotKB");
             } else {
-                previousCell.setCellValue(geneValue);
+                // Retain previous values if no update occurs
+                previousCell.setCellValue(previousId);
+                previousDbCell.setCellValue(idDb);
             }
         }
-        uniprotMapper.clearAlreadyParsed(); // Save space
+        uniprotMapper.clearAlreadyParsed();
     }
+
 
     /**
      * Highlights a cell by setting its background color to red if it contains
@@ -455,6 +459,9 @@ public class ExcelFileReader {
         try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(
                 new FileOutputStream(currentFilePath), StandardCharsets.UTF_8),
                 separator, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\n")) {
+
+            csvWriter.writeNext(fileData.stream()
+                    .map(value -> value == null ? "" : value.trim()).toArray(String[]::new));
 
             for (List<String> row : data) {
                 csvWriter.writeNext(row.stream()

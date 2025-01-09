@@ -151,9 +151,11 @@ public class XmlMakerUtils {
                 }
             } else {
                 LOGGER.warning("No documents found in JSON response");
+                return null;
             }
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception occurred while extracting OBO ID from JSON", e);
+            return null;
         }
         return null;
     }

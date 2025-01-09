@@ -29,7 +29,7 @@ import static org.apache.poi.ss.usermodel.CellType.STRING;
 public class InteractionsCreatorGui extends JPanel {
     private final JComboBox<String> sheets = new JComboBox<>();
     private final List<JComboBox<String>> columnsList = new ArrayList<>();
-    private List<String> columnNames = new ArrayList<>();
+    private final List<String> columnNames = new ArrayList<>();
     private final JTable table = new JTable();
     private final LoadingSpinner loadingSpinner;
 
@@ -137,7 +137,7 @@ public class InteractionsCreatorGui extends JPanel {
             // Use SwingWorker for background processing
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
                 @Override
-                protected Void doInBackground() throws Exception {
+                protected Void doInBackground() {
                     String sheetSelected = (String) sheets.getSelectedItem();
                     List<String> selectedColumns = getComboBoxSelectedValues();
 

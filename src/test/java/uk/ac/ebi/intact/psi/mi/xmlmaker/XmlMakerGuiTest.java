@@ -14,8 +14,8 @@ import java.util.logging.Logger;
 
 /**
  * The XmlMakerGuiTest class is used to test different functions of the XML maker.
- * It takes in input different similar files saved under different formats. Those files are
- * containing lines with missing cells to check the good processing of those.
+ * It takes in input different similar files saved under different formats. Those files
+ * contain lines with missing cells to check the good processing of those.
  */
 public class XmlMakerGuiTest extends TestCase {
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGuiTest.class.getName());
