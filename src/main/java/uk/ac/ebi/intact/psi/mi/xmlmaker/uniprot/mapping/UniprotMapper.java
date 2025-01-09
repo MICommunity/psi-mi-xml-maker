@@ -148,15 +148,12 @@ public class UniprotMapper {
         String uniprotApiUrl = "https://rest.uniprot.org/uniprotkb/search?query=(xref:";
         organismId = utils.fetchTaxIdForOrganism(organismId);
         database = chooseDbFromCol(query, database);
-        System.out.println(database);
         String uniprotApiUrlPart2 = "%20AND%20organism_id:";
         String uniprotApiUrlPart3 = "&format=json&fields=accession,organism_id";
 
         if (!Objects.equals(database, "null") && !Objects.equals(organismId, "null")) {
-            System.out.println(database + " URL CONSTRUCTED");
             return uniprotApiUrl + database + uniprotApiUrlPart2 + organismId + uniprotApiUrlPart3;
         } else {
-            System.out.println(database + " URL NULL");
             return "https://rest.uniprot.org/uniprotkb/search?query=accession:" + query;
         }
     }

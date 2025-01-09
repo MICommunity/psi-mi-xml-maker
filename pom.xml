@@ -161,11 +161,14 @@
           </goals>
           <configuration>
             <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
+            <macConfig>
+              <icnsFile>${project.basedir}/src/main/resources/psi.icns</icnsFile>
+            </macConfig>
+            <iconFile>src/main/resources/psi.icns</iconFile>
           </configuration>
         </execution>
       </executions>
     </plugin>
-
     <plugin>
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-javadoc-plugin</artifactId>
