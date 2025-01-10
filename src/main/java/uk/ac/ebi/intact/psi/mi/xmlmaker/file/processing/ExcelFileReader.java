@@ -35,8 +35,6 @@ import java.util.stream.Collectors;
 public class ExcelFileReader {
 
     private static final Logger LOGGER = Logger.getLogger(ExcelFileReader.class.getName());
-    public final int CHUNK_SIZE = 100; // Default chunk size for processing large files
-
     private final MoleculeSetChecker moleculeSetChecker = new MoleculeSetChecker();
     private final DataFormatter formatter = new DataFormatter();
     private final UniprotMapper uniprotMapper = new UniprotMapper();
@@ -490,73 +488,5 @@ public class ExcelFileReader {
             }
         }
         return numberOfFeatures;
-    }
-
-    /**
-     * Creates sub-files from chunks of data.
-     *
-     * @param data The chunked data to be written.
-     */
-    public void createSubFilesWithSeparator(List<List<String>> data) {
-        String fileExtension = fileType.equals("csv") ? ".csv" : ".tsv";
-        outputDirName = currentFilePath.replace(fileExtension, "_chunks"); // Directory name for chunks
-        File outputDir = new File(outputDirName);
-
-        if (!outputDir.exists()) {
-            if (outputDir.mkdirs()) {
-                LOGGER.log(Level.INFO, "Output directory created: " + outputDirName);
-            } else {
-                LOGGER.log(Level.SEVERE, "Failed to create output directory: " + outputDirName);
-                xmlMakerutils.showErrorDialog("Error creating output directory: " + outputDirName);
-                return;
-            }
-        }
-
-        String chunkFileName = new File(outputDir, "chunk_" + lastChunkIndex + fileExtension).getPath();
-        lastChunkIndex++;
-
-        try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(
-                new FileOutputStream(chunkFileName), StandardCharsets.UTF_8),
-                separator, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\n")) {
-
-            for (List<String> row : data) {
-                csvWriter.writeNext(row.toArray(new String[0]));
-            }
-
-            LOGGER.log(Level.INFO, "Chunk file created: " + chunkFileName);
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Error writing chunk file", e);
-            xmlMakerutils.showErrorDialog("Error writing chunk file: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Reads a CSV or TSV file and stores its contents.
-     *
-     * @return A list of rows, where each row is a list of cell values.
-     */
-    public List<List<String>> readSubFile(String filePath) {
-        List<List<String>> data = new ArrayList<>();
-        try (CSVReader csvReader = new CSVReaderBuilder(new FileReader(filePath))
-                .withCSVParser(new com.opencsv.CSVParserBuilder()
-                        .withSeparator(separator)
-                        .withIgnoreQuotations(false)
-                        .build())
-                .build()) {
-
-            String[] nextLine;
-            while ((nextLine = csvReader.readNext()) != null) {
-                List<String> lineCells = new ArrayList<>();
-                for (String cell : nextLine) {
-                    lineCells.add(cell == null ? "" : cell.trim());
-                }
-                data.add(lineCells);
-            }
-            return data;
-        } catch (IOException | CsvValidationException e) {
-            LOGGER.log(Level.SEVERE, "Unable to read file with separator", e);
-            xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
-            return new ArrayList<>();
-        }
     }
 }

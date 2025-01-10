@@ -106,7 +106,7 @@ public class XmlMakerGuiTest extends TestCase {
         reader.selectFileOpener(TEST_FILE_PATH + "test_sample.xlsx");
         interactionsCreator.sheetSelected = "test_sample";
         interactionsCreator.fetchDataWithWorkbook(COLUMN_AND_INDEX);
-        int interactionsSize = interactionsCreator.xmlModelledInteractions.size();
+        int interactionsSize = interactionsCreator.dataList.size();
         assertEquals(24, interactionsSize);
     }
 

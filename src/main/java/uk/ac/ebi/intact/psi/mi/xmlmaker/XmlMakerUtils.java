@@ -34,7 +34,7 @@ public class XmlMakerUtils {
             LOGGER.addHandler(consoleHandler);
             LOGGER.setLevel(Level.FINE);
         } catch (IOException e) {
-            System.err.println("Failed to set up logger handlers: " + e.getMessage());
+            LOGGER.warning("Failed to set up logger handlers: " + e.getMessage());
         }
     }
 
@@ -99,7 +99,7 @@ public class XmlMakerUtils {
             return organismName; //already a taxId
         } else {
             String apiResponse = fetchTaxIdWithApi(organismName);
-            return apiResponse != null ? extractOboId(apiResponse) : null;
+            return apiResponse != null ? extractOboId(apiResponse) : organismName;
         }
     }
 

@@ -289,11 +289,10 @@ public class XmlMakerGui {
                 try {
                     processFile(selectedFile);
                 } catch (Exception e) {
-                    System.err.println("Error processing file: " + e.getMessage());
                     LOGGER.log(Level.SEVERE, "Error processing file: " + selectedFile.getAbsolutePath(), e);
                 }
             } else {
-                System.err.println("No file was selected.");
+                LOGGER.warning("No file was selected.");
             }
         }
     }

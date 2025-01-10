@@ -7,8 +7,6 @@ import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
-
-import java.io.File;
 import java.util.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 
@@ -69,6 +67,30 @@ public class InteractionsCreator {
         createInteractions();
     }
 
+    /**
+     * Creates an {@link XmlParticipantEvidence} instance from the provided data.
+     *
+     * <p>Extracts and validates participant attributes, resolves MI IDs asynchronously,
+     * and constructs the participant evidence object with the given details. Returns
+     * {@code null} if required fields are missing or invalid.
+     *
+     * @param data a {@link Map} containing participant attributes, with keys defined
+     *             in {@link DataTypeAndColumn}.
+     * @return an {@link XmlParticipantEvidence} instance, or {@code null} if validation fails.
+     *
+     * <p>Required fields:
+     * <ul>
+     *   <li>{@code PARTICIPANT_NAME}: Non-null, non-empty participant name.</li>
+     *   <li>{@code PARTICIPANT_ID} and {@code PARTICIPANT_ID_DB}: Valid unique ID and database.</li>
+     *   <li>{@code PARTICIPANT_ORGANISM}: Resolved to a valid taxonomy ID.</li>
+     * </ul>
+     *
+     * <p>Optional attributes include type, experimental role, preparations, cross-references,
+     * and identification methods, which are resolved if provided. Features can also be added
+     * via {@link #createFeature(int, Map)}.
+     *
+     * @throws NumberFormatException if the organism's taxonomy ID is invalid.
+     */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
         String name = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_NAME);
 
@@ -178,11 +200,14 @@ public class InteractionsCreator {
     public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex) {
         List<List<String>> data = excelFileReader.readFileWithSeparator();
 
-        int expectedNumberOfColumns = data.get(0).size(); // to avoid any issue if one row is not the same size
+        int expectedNumberOfColumns = data.get(0).size(); // Ensure uniform row size
+        int totalRows = data.size();
+        int currentRow = 0;
 
-        for (List<String> datum : data) {
+        for (int rowIndex = currentRow; rowIndex < totalRows; rowIndex++) {
+            List<String> datum = data.get(rowIndex);
             if (datum.size() < expectedNumberOfColumns) {
-                System.err.println("Row has fewer cells than expected. Skipping row: " + datum);
+                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
                 continue;
             }
 
@@ -199,7 +224,7 @@ public class InteractionsCreator {
                             if (index != null && index < datum.size()) {
                                 dataMap.put(key, datum.get(index));
                             } else {
-                                System.err.println("Index out of bounds for key: " + key);
+                                LOGGER.warning("Index out of bounds for key: " + key);
                             }
                         }
                     }
@@ -208,7 +233,6 @@ public class InteractionsCreator {
             dataList.add(dataMap);
         }
     }
-
 
     /**
      * Fetches data from a workbook and stores it in a list of maps for further processing.
@@ -225,7 +249,7 @@ public class InteractionsCreator {
         Sheet sheet = workbook.getSheet(sheetSelected);
         if (sheet == null) {
             sheet = workbook.getSheetAt(0);
-            System.err.println("Invalid sheetSelected: " + sheetSelected + ". Defaulting to the first sheet: " + sheet.getSheetName());
+            LOGGER.warning("Invalid sheetSelected: " + sheetSelected + ". Defaulting to the first sheet: " + sheet.getSheetName());
         }
 
         int totalRows = sheet.getLastRowNum();
@@ -233,71 +257,51 @@ public class InteractionsCreator {
 
         Map<String, List<Map<String, String>>> interactionChunks = new HashMap<>();
 
-        while (currentRow <= totalRows) {
-            int chunkEnd = Math.min(currentRow + excelFileReader.CHUNK_SIZE - 1, totalRows);
-            for (int i = currentRow; i <= chunkEnd; i++) {
+            for (int i = currentRow; i <= totalRows; i++) {
                 Row row = sheet.getRow(i);
-                if (row == null) {
-                    continue;
-                }
+                if (row == null) continue;
+
                 Map<String, String> dataMap = new HashMap<>();
                 for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
-                    if (column.initial) {
-                        Cell cell = row.getCell(columnAndIndex.get(column.name));
-                        if (cell != null) {
-                            if (cell.getCellType() == CellType.STRING){
-                                dataMap.put(column.name, cell.getStringCellValue());
-                            } else if (cell.getCellType() == CellType.NUMERIC){
-                                dataMap.put(column.name, String.valueOf(cell.getNumericCellValue()));
-                            } else if (cell.getCellType() == CellType.BLANK){
-                                dataMap.put(column.name, "N/A");
-                            }
-                        } else {
-                            dataMap.put(column.name, "N/A");
-                        }
+                    String columnKey = column.name;
+                    Integer colIndex = columnAndIndex.get(columnKey);
+                    if (colIndex != null) {
+                        Cell cell = row.getCell(colIndex);
+                        dataMap.put(columnKey, getCellValueAsString(cell));
+                    } else {
+                        dataMap.put(columnKey, "N/A");
                     }
-                    if (numberOfFeature>0){
+
+                    if (!column.initial && numberOfFeature > 0) {
                         for (int j = 0; j < numberOfFeature; j++) {
-                            if (!column.initial) {
-                                Cell cell = row.getCell(columnAndIndex.get(column.name + "_" + j));
-                                dataMap.put(column.name + "_" + j, cell.getStringCellValue());
+                            String featureKey = columnKey + "_" + j;
+                            Integer featureIndex = columnAndIndex.get(featureKey);
+                            if (featureIndex != null) {
+                                Cell featureCell = row.getCell(featureIndex);
+                                dataMap.put(featureKey, getCellValueAsString(featureCell));
+                            } else {
+                                dataMap.put(featureKey, "N/A");
                             }
                         }
                     }
                 }
-                String interactionNumber = dataMap.get(DataTypeAndColumn.INTERACTION_NUMBER.name);
-                interactionChunks.computeIfAbsent(interactionNumber, k -> new ArrayList<>()).add(dataMap);
+
+                String interactionNumber = dataMap.get(DataTypeAndColumn.INTERACTION_NUMBER.name());
+                if (interactionNumber != null) {
+                    interactionChunks.computeIfAbsent(interactionNumber, k -> new ArrayList<>()).add(dataMap);
+                }
+                dataList.add(dataMap);
             }
-            currentRow = chunkEnd + 1;
         }
 
-        for (Map.Entry<String, List<Map<String, String>>> interactionEntry : interactionChunks.entrySet()) {
-            processInteractionChunk(interactionEntry.getValue());
-        }
-    }
-
-    /**
-     * Processes a chunk of participant data and creates an interaction model.
-     * Each participant in the chunk is used to populate the interaction object,
-     * setting properties such as interaction type, host organism, and detection methods.
-     * The resulting interaction is added to the list of modeled interactions.
-     *
-     * @param participants a list of maps, where each map contains participant data
-     *                     with keys corresponding to column names.
-     */
-    private void processInteractionChunk(List<Map<String, String>> participants) {
-        XmlInteractionEvidence interaction = new XmlInteractionEvidence();
-
-        for (Map<String, String> participant : participants) {
-            XmlParticipantEvidence newParticipant = createParticipant(participant);
-            interaction.addParticipant(newParticipant);
-
-            String interactionDetectionMethod = participant.get(DataTypeAndColumn.INTERACTION_DETECTION_METHOD.name);
-            String participantIdentificationMethod = participant.get(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name);
-            String hostOrganism = participant.get(DataTypeAndColumn.HOST_ORGANISM.name);
-            String interactionType = participant.get(DataTypeAndColumn.INTERACTION_TYPE.name);
-
-            interactionCreator(interaction, interactionDetectionMethod, participantIdentificationMethod, hostOrganism, interactionType);
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "N/A";
+        switch (cell.getCellType()) {
+            case STRING: return cell.getStringCellValue();
+            case NUMERIC: return String.valueOf(cell.getNumericCellValue());
+            case BOOLEAN: return String.valueOf(cell.getBooleanCellValue());
+            case FORMULA: return cell.getCellFormula();
+            default: return "N/A";
         }
     }
 
@@ -321,8 +325,22 @@ public class InteractionsCreator {
             interaction.setInteractionType(interactionTypeCv);
         }
 
-        int hostOrganismInt = Integer.parseInt(Objects.requireNonNull(utils.fetchTaxIdForOrganism(hostOrganism)));
-        Organism organism = new XmlOrganism(hostOrganismInt);
+        Organism organism = null;
+        if (hostOrganism != null) {
+            String hostOrganismTaxId = utils.fetchTaxIdForOrganism(hostOrganism);
+            if (hostOrganismTaxId != null) {
+                try {
+                    int hostOrganismInt = Integer.parseInt(hostOrganismTaxId);
+                    organism = new XmlOrganism(hostOrganismInt);
+                } catch (NumberFormatException e) {
+                    LOGGER.warning("Invalid host organism tax ID: " + hostOrganism);
+                }
+            } else {
+                LOGGER.warning("No Tax ID found for host organism: " + hostOrganism);
+            }
+        } else {
+            LOGGER.warning("Host organism is null. Skipping organism creation.");
+        }
 
         if (interactionDetectionMethod != null) {
             String interactionDetectionMiId = utils.fetchMiId(interactionDetectionMethod);
@@ -338,6 +356,7 @@ public class InteractionsCreator {
 
             interaction.setExperiment(experiment);
         }
+
         xmlModelledInteractions.add(interaction);
     }
 
@@ -413,39 +432,4 @@ public class InteractionsCreator {
 
         return featureEvidence;
     }
-
-    /**
-     * Processes subfiles in a directory in an optimized way by leveraging parallel streams for better performance.
-     *
-     * @param directoryPath  the path of the directory containing subfiles.
-     * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
-     */
-    public void processSubFilesInDirectory(String directoryPath, Map<String, Integer> columnAndIndex) {
-        File directory = new File(directoryPath);
-
-        if (!directory.exists() || !directory.isDirectory()) {
-            throw new IllegalArgumentException("Provided path is not a valid directory: " + directoryPath);
-        }
-
-        File[] files = directory.listFiles((dir, name) -> name.endsWith(".csv") || name.endsWith(".tsv"));
-
-        if (files == null || files.length == 0) {
-            LOGGER.warning("No CSV or TSV files found in the directory: " + directoryPath);
-            return;
-        }
-
-        Arrays.stream(files)
-                .sorted(Comparator.comparing(File::getName))
-                .parallel()
-                .forEach(file -> {
-                    try {
-                        LOGGER.info("Processing file: " + file.getName());
-                        List<List<String>> data = excelFileReader.readSubFile(file.getPath());
-                        fetchDataFileWithSeparator(columnAndIndex);
-                    } catch (Exception e) {
-                        LOGGER.warning("Error processing file " + file.getName() + ": " + e.getMessage());
-                    }
-                });
-    }
-
 }
