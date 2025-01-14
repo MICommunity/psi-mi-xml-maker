@@ -14,6 +14,8 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionWriterGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
+
 
 /**
  * Main GUI class for the PSI-MI XML Maker application.
@@ -32,6 +34,7 @@ public class XmlMakerGui {
     private final InteractionsCreatorGui interactionsCreatorGui;
     private final InteractionWriterGui interactionWriterGui;
     private final LoadingSpinner loadingSpinner;
+    private final XmlMakerUtils xmlMakerUtils = new XmlMakerUtils();
 
 
     /**
@@ -54,7 +57,13 @@ public class XmlMakerGui {
         frame.add(createFileFetcherPanel());
         frame.add(createUniprotMapperPanel());
         frame.add(createFileProcessingPanel());
-        frame.add(createPsiMiXmlMakerPanel());
+        frame.add(createSaveOptionsPanel());
+        JButton saveButton = new JButton("Create XML file(s)");
+        saveButton.addActionListener(e -> {
+            this.interactionsCreatorGui.interactionsCreator.setColumnAndIndex(this.interactionsCreatorGui.getDataAndIndexes());
+            this.interactionsCreatorGui.interactionsCreator.createParticipantsWithFileFormat();
+        });
+        frame.add(saveButton);
         makeFrameDnD(frame);
         frame.setGlassPane(loadingSpinner.createLoadingGlassPane(frame));
         frame.setVisible(true);
@@ -122,9 +131,9 @@ public class XmlMakerGui {
      *
      * @return The JPanel for PSI-MI XML file creation.
      */
-    private JPanel createPsiMiXmlMakerPanel() {
+    private JPanel createSaveOptionsPanel() {
         JPanel psiXmlMakerPanel = interactionWriterGui.createPsiMiXmlMakerPanel();
-        psiXmlMakerPanel.setBorder(new TitledBorder("4. Create the PSI-MI.xml file"));
+        psiXmlMakerPanel.setBorder(new TitledBorder("4. Save options"));
         return psiXmlMakerPanel;
     }
 

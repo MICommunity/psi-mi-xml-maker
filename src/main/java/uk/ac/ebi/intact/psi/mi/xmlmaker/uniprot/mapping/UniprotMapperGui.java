@@ -1,9 +1,8 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.logging.Logger;
@@ -203,7 +202,7 @@ public class UniprotMapperGui extends JPanel {
      */
     private void processSheet(String sheetSelected, String idColumn, int organismColumnIndex, int idDbColumnIndex) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsExcel(sheetSelected, idColumn, organismColumnIndex, idDbColumnIndex);
+            excelFileReader.checkAndInsertUniprotResultsIterator(sheetSelected, idColumn, organismColumnIndex, idDbColumnIndex);
             showMoleculeSetDialog();
         } catch (Exception ex) {
             handleProcessingError(ex);
@@ -220,7 +219,7 @@ public class UniprotMapperGui extends JPanel {
      */
     private void processFileWithoutSheet(String idColumn, int organismColumnIndex, int idDbColumnIndex) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsFileSeparatedFormat(idColumn, organismColumnIndex, idDbColumnIndex);
+            excelFileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, organismColumnIndex, idDbColumnIndex);
             showMoleculeSetDialog();
         } catch (Exception ex) {
             handleProcessingError(ex);

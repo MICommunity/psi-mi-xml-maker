@@ -20,14 +20,20 @@ import java.util.stream.Collectors;
  * It processes participants, interactions, and related data, and generates XML objects for interaction modeling.
  */
 public class InteractionsCreator {
+    // TODO add customisable option
+    private static final int MAX_INTERACTIONS_PER_FILE = 1_000;
     final ExcelFileReader excelFileReader;
+    final InteractionWriter interactionWriter;
     final UniprotMapperGui uniprotMapperGui;
     final XmlMakerUtils utils = new XmlMakerUtils();
     public final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
     public final List<Map<String, String>> dataList = new ArrayList<>();
-    final Map<String, Integer> columnAndIndex;
 
+    @Setter
+    Map<String, Integer> columnAndIndex;
     public String sheetSelected;
+
+    private boolean isFileFinished;
 
     @Setter @Getter
     public String publicationId;
@@ -42,8 +48,9 @@ public class InteractionsCreator {
      * @param uniprotMapperGui the Uniprot mapper GUI for mapping protein data.
      * @param columnAndIndex   the mapping of column names to their corresponding indices in the dataset.
      */
-    public InteractionsCreator(ExcelFileReader reader, UniprotMapperGui uniprotMapperGui, Map<String, Integer> columnAndIndex) {
+    public InteractionsCreator(ExcelFileReader reader, InteractionWriter writer, UniprotMapperGui uniprotMapperGui, Map<String, Integer> columnAndIndex) {
         this.excelFileReader = reader;
+        this.interactionWriter = writer;
         this.uniprotMapperGui = uniprotMapperGui;
         this.columnAndIndex = columnAndIndex;
         this.publicationId = excelFileReader.publicationId;
@@ -52,10 +59,8 @@ public class InteractionsCreator {
     /**
      * Creates participants and interactions based on the provided file format.
      * Clears existing participants and interactions and repopulates them using the data read from files or the workbook.
-     *
-     * @param columnAndIndex the mapping of column names to their corresponding indexes in the dataset.
-     */
-    public void createParticipantsWithFileFormat(Map<String, Integer> columnAndIndex) {
+     **/
+    public void createParticipantsWithFileFormat() {
         xmlModelledInteractions.clear();
         dataList.clear();
         numberOfFeature = excelFileReader.getNumberOfFeatures();
@@ -64,7 +69,6 @@ public class InteractionsCreator {
         } else {
             fetchDataWithWorkbook(columnAndIndex);
         }
-        createInteractions();
     }
 
     /**
@@ -92,65 +96,58 @@ public class InteractionsCreator {
      * @throws NumberFormatException if the organism's taxonomy ID is invalid.
      */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
-        String name = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_NAME);
+        DataTypeAndColumn[] required = {PARTICIPANT_NAME, PARTICIPANT_ID, PARTICIPANT_ID_DB, PARTICIPANT_TYPE, PARTICIPANT_ORGANISM};
 
-        if (name == null) {
-            LOGGER.warning("Participant name is required but missing or empty.");
-            return null;
+        for (DataTypeAndColumn requiredColumn : required) {
+            if (data.get(requiredColumn.name) == null || data.get(requiredColumn.name).isBlank()) {
+                LOGGER.warning(requiredColumn.name + " is required but missing or empty.");
+                return null;
+            }
         }
 
-        String participantType = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_TYPE);
-        String participantOrganism = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ORGANISM);
-        String participantId = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ID);
-        String participantIdDb = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_ID_DB);
-        String experimentalRole = getNonNullValue(data, DataTypeAndColumn.EXPERIMENTAL_ROLE);
-        String experimentalPreparation = getNonNullValue(data, DataTypeAndColumn.EXPERIMENTAL_PREPARATION);
-        String xref = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_XREF);
-        String participantIdentificationMethod = getNonNullValue(data, DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD);
+        Map<DataTypeAndColumn, CompletableFuture<CvTerm>> futureTerms = Stream.of(PARTICIPANT_TYPE, PARTICIPANT_ID_DB,
+                        EXPERIMENTAL_ROLE, EXPERIMENTAL_PREPARATION, PARTICIPANT_IDENTIFICATION_METHOD) //TODO: ADD XREF
+                .map(type -> Map.entry(type, data.get(type.name)))
+                .filter(e -> e.getValue() != null)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> CompletableFuture.supplyAsync(() -> utils.fetchTerm(e.getValue()))
+                ));
 
-        CompletableFuture<String> participantTypeMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(participantType));
-        CompletableFuture<String> participantIdDbMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(participantIdDb));
-        CompletableFuture<String> experimentalRoleMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(experimentalRole));
-        CompletableFuture<String> experimentalPreparationMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(experimentalPreparation));
-        CompletableFuture<String> xrefMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(xref));
-        CompletableFuture<String> participantIdentificationMethodMiIdFuture = CompletableFuture.supplyAsync(() -> utils.fetchMiId(participantIdentificationMethod));
+        Map<DataTypeAndColumn, CvTerm> terms = futureTerms
+                .entrySet()
+                .stream()
+                .filter(e -> e.getValue().join() != null)
+                .collect(Collectors
+                        .toMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().join()
+                        ));
 
-        CompletableFuture.allOf(participantTypeMiIdFuture, participantIdDbMiIdFuture, experimentalRoleMiIdFuture, experimentalPreparationMiIdFuture, xrefMiIdFuture, participantIdentificationMethodMiIdFuture).join();
+        CvTerm participantType = terms.get(PARTICIPANT_TYPE);
+        CvTerm participantIdDb = terms.get(PARTICIPANT_ID_DB);
+        CvTerm experimentalRole = terms.get(EXPERIMENTAL_ROLE);
+        CvTerm experimentalPreparation = terms.get(EXPERIMENTAL_PREPARATION);
+//        CvTerm xref= terms.get(PARTICIPANT_XREF);
+        CvTerm participantIdentificationMethod = terms.get(PARTICIPANT_IDENTIFICATION_METHOD);
 
-        String participantTypeMiId = participantTypeMiIdFuture.join();
-        String participantIdDbMiId = participantIdDbMiIdFuture.join();
-        String experimentalRoleMiId = experimentalRoleMiIdFuture.join();
-        String experimentalPreparationMiId = experimentalPreparationMiIdFuture.join();
-        String xrefMiId = xrefMiIdFuture.join();
-        String participantIdentificationMethodMiId = participantIdentificationMethodMiIdFuture.join();
-
-        if (participantTypeMiId == null || participantTypeMiId.trim().isEmpty()) {
-            LOGGER.warning("Missing or invalid MI ID for participant: " + name);
-            return null;
-        }
-        assert participantType != null;
-        CvTerm type = new XmlCvTerm(participantType, participantTypeMiId);
-
-        if (participantIdDbMiId == null || participantId == null) {
-            LOGGER.warning("Missing or invalid participant ID or ID DB for participant: " + name);
-            return null;
-        }
-        assert participantIdDb != null;
-        Xref uniqueId = new XmlXref(new XmlCvTerm(participantIdDb, participantIdDbMiId), participantId);
+        String name = getNonNullValue(data);
+        String participantId = data.get(PARTICIPANT_ID.name);
+        String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
+        Xref uniqueId = new XmlXref(participantIdDb, participantId);
 
         if (participantOrganism == null || participantOrganism.isEmpty()) {
             LOGGER.warning("Missing or invalid participant organism for participant: " + name);
             return null;
         }
-        String taxId = utils.fetchTaxIdForOrganism(Objects.requireNonNull(participantOrganism));
-        Organism organism = new XmlOrganism(Integer.parseInt(taxId));
+        String taxId = utils.fetchTaxIdForOrganism(participantOrganism);
+        Organism organism = new XmlOrganism(Integer.parseInt(Objects.requireNonNull(taxId)));
 
         Interactor participant = new XmlPolymer(name, type, organism, uniqueId);
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
 
         if (experimentalRole != null) {
-            CvTerm experimentalRoleCv = new XmlCvTerm(experimentalRole, experimentalRoleMiId);
-            participantEvidence.setExperimentalRole(experimentalRoleCv);
+            participantEvidence.setExperimentalRole(experimentalRole);
         }
 
         if (numberOfFeature > 0) {
@@ -161,19 +158,16 @@ public class InteractionsCreator {
         }
 
         if (experimentalPreparation != null) {
-            CvTerm experimentalPreparationCv = new XmlCvTerm(experimentalPreparation, experimentalPreparationMiId);
-            participantEvidence.getExperimentalPreparations().add(experimentalPreparationCv);
+            participantEvidence.getExperimentalPreparations().add(experimentalPreparation);
         }
 
-        if (xref != null) {
-            CvTerm xrefCv = new XmlCvTerm(xref, xrefMiId);
-            Xref xmlXref = new XmlXref(xrefCv, xref);
-            participantEvidence.getXrefs().add(xmlXref);
-        }
+//        if (xref != null) {
+//            Xref xmlXref = new XmlXref(xref, xref.getShortName()); // TODO check normality of using name as identifier for xref
+//            participantEvidence.getXrefs().add(xmlXref);
+//        }
 
         if (participantIdentificationMethod != null) {
-            CvTerm participantIdentificationMethodCv = new XmlCvTerm(participantIdentificationMethod, participantIdentificationMethodMiId);
-            participantEvidence.getIdentificationMethods().add(participantIdentificationMethodCv);
+            participantEvidence.getIdentificationMethods().add(participantIdentificationMethod);
         }
 
         return participantEvidence;
@@ -187,8 +181,8 @@ public class InteractionsCreator {
      * @param column The column whose value is to be fetched from the map.
      * @return The value from the map if it is non-null and non-empty, otherwise returns null.
      */
-    private String getNonNullValue(Map<String, String> data, DataTypeAndColumn column) {
-        String value = data.get(column.name);
+    private String getNonNullValue(Map<String, String> data) {
+        String value = data.get(DataTypeAndColumn.PARTICIPANT_NAME.name);
         return (value == null || value.trim().isEmpty()) ? null : value;
     }
 
@@ -198,17 +192,25 @@ public class InteractionsCreator {
      * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
      */
     public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex) {
-        List<List<String>> data = excelFileReader.readFileWithSeparator();
 
-        int expectedNumberOfColumns = data.get(0).size(); // Ensure uniform row size
-        int totalRows = data.size();
-        int currentRow = 0;
+        Iterator<List<String>> data = excelFileReader.readFileWithSeparator();
+        int expectedNumberOfColumns = excelFileReader.fileData.size();
+        int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
+        String currentInteractionNumber = "0"; //TODO: check how to do that without creating a new interaction
 
-        for (int rowIndex = currentRow; rowIndex < totalRows; rowIndex++) {
-            List<String> datum = data.get(rowIndex);
+        while (data.hasNext()) {
+            isFileFinished = false;
+            List<String> datum = data.next();
+
             if (datum.size() < expectedNumberOfColumns) {
                 LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
-                continue;
+                data.next();
+            }
+
+            if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
+                createInteractions();
+                dataList.clear();
+                currentInteractionNumber = datum.get(interactionNumberColumn);
             }
 
             Map<String, String> dataMap = new HashMap<>();
@@ -216,83 +218,83 @@ public class InteractionsCreator {
                 if (column.initial) {
                     dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
                 }
-                if (numberOfFeature > 0) {
-                    for (int i = 0; i < numberOfFeature; i++) {
-                        if (!column.initial) {
-                            String key = column.name + "_" + i;
-                            Integer index = columnAndIndex.get(key);
-                            if (index != null && index < datum.size()) {
-                                dataMap.put(key, datum.get(index));
-                            } else {
-                                LOGGER.warning("Index out of bounds for key: " + key);
-                            }
+                for (int i = 0; i < numberOfFeature; i++) {
+                    if (!column.initial) {
+                        String key = column.name + "_" + i;
+                        Integer index = columnAndIndex.get(key);
+                        if (index != null && index < datum.size()) {
+                            dataMap.put(key, datum.get(index));
+                        } else {
+                            LOGGER.warning("Index out of bounds for key: " + key);
                         }
                     }
                 }
+
             }
             dataList.add(dataMap);
         }
+        isFileFinished = true;
+        createInteractions();
+        dataList.clear();
     }
 
-    /**
-     * Fetches data from a workbook and stores it in a list of maps for further processing.
-     *
-     * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
-     */
     public void fetchDataWithWorkbook(Map<String, Integer> columnAndIndex) {
-        Workbook workbook = excelFileReader.workbook;
+        Iterator<Row> data = excelFileReader.readWorkbookSheet(sheetSelected);
+        int expectedNumberOfColumns = excelFileReader.fileData.size();
+        int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
+        String currentInteractionNumber = "0"; //TODO: check how to do that without creating a new interaction
 
-        if (workbook == null) {
-            throw new IllegalArgumentException("Workbook is null. Cannot fetch data.");
-        }
+        while (data.hasNext()) {
+            isFileFinished = false;
+            Row row = data.next();
+            List<String> datum = new ArrayList<>();
+            int firstCellNum = row.getFirstCellNum();
+            int lastCellNum = row.getLastCellNum();
 
-        Sheet sheet = workbook.getSheet(sheetSelected);
-        if (sheet == null) {
-            sheet = workbook.getSheetAt(0);
-            LOGGER.warning("Invalid sheetSelected: " + sheetSelected + ". Defaulting to the first sheet: " + sheet.getSheetName());
-        }
+            for (int cellNum = firstCellNum; cellNum < lastCellNum; cellNum++) {
+                Cell cell = row.getCell(cellNum, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+                if (cell == null) {
+                    datum.add(""); // Add an empty string for blank or missing cells
+                } else {
+                    datum.add(cell.toString());
+                }
+            }
 
-        int totalRows = sheet.getLastRowNum();
-        int currentRow = 1; // Skip header row
+            if (datum.size() < expectedNumberOfColumns) {
+                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
+                data.next();
+            }
 
-        Map<String, List<Map<String, String>>> interactionChunks = new HashMap<>();
+            if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
+                createInteractions();
+                dataList.clear();
+                currentInteractionNumber = datum.get(interactionNumberColumn);
+            }
 
-            for (int i = currentRow; i <= totalRows; i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) continue;
-
-                Map<String, String> dataMap = new HashMap<>();
-                for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
-                    String columnKey = column.name;
-                    Integer colIndex = columnAndIndex.get(columnKey);
-                    if (colIndex != null) {
-                        Cell cell = row.getCell(colIndex);
-                        dataMap.put(columnKey, getCellValueAsString(cell));
-                    } else {
-                        dataMap.put(columnKey, "N/A");
-                    }
-
-                    if (!column.initial && numberOfFeature > 0) {
-                        for (int j = 0; j < numberOfFeature; j++) {
-                            String featureKey = columnKey + "_" + j;
-                            Integer featureIndex = columnAndIndex.get(featureKey);
-                            if (featureIndex != null) {
-                                Cell featureCell = row.getCell(featureIndex);
-                                dataMap.put(featureKey, getCellValueAsString(featureCell));
-                            } else {
-                                dataMap.put(featureKey, "N/A");
-                            }
+            Map<String, String> dataMap = new HashMap<>();
+            for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
+                if (column.initial) {
+                    dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
+                }
+                for (int i = 0; i < numberOfFeature; i++) {
+                    if (!column.initial) {
+                        String key = column.name + "_" + i;
+                        Integer index = columnAndIndex.get(key);
+                        if (index != null && index < datum.size()) {
+                            dataMap.put(key, datum.get(index));
+                        } else {
+                            LOGGER.warning("Index out of bounds for key: " + key);
                         }
                     }
                 }
 
-                String interactionNumber = dataMap.get(DataTypeAndColumn.INTERACTION_NUMBER.name());
-                if (interactionNumber != null) {
-                    interactionChunks.computeIfAbsent(interactionNumber, k -> new ArrayList<>()).add(dataMap);
-                }
-                dataList.add(dataMap);
             }
+            dataList.add(dataMap);
         }
+        isFileFinished = true;
+        createInteractions();
+        dataList.clear();
+    }
 
     private String getCellValueAsString(Cell cell) {
         if (cell == null) return "N/A";
@@ -316,48 +318,61 @@ public class InteractionsCreator {
      * @param hostOrganism The host organism associated with the interaction, used to fetch the organism's tax ID.
      * @param interactionType The type of the interaction, used to create a CvTerm for interaction type.
      */
-    private void interactionCreator(XmlInteractionEvidence interaction, String interactionDetectionMethod,
-                                    String participantIdentificationMethod,
-                                    String hostOrganism, String interactionType) {
+    private void processInteractionCreation(XmlInteractionEvidence interaction, String interactionDetectionMethod,
+                                            String participantIdentificationMethod,
+                                            String hostOrganism, String interactionType) {
         if (interactionType != null) {
             String interactionTypeMiId = utils.fetchMiId(interactionType);
             CvTerm interactionTypeCv = new XmlCvTerm(interactionType, interactionTypeMiId);
             interaction.setInteractionType(interactionTypeCv);
         }
 
-        Organism organism = null;
-        if (hostOrganism != null) {
-            String hostOrganismTaxId = utils.fetchTaxIdForOrganism(hostOrganism);
-            if (hostOrganismTaxId != null) {
-                try {
-                    int hostOrganismInt = Integer.parseInt(hostOrganismTaxId);
-                    organism = new XmlOrganism(hostOrganismInt);
-                } catch (NumberFormatException e) {
-                    LOGGER.warning("Invalid host organism tax ID: " + hostOrganism);
-                }
-            } else {
-                LOGGER.warning("No Tax ID found for host organism: " + hostOrganism);
-            }
-        } else {
-            LOGGER.warning("Host organism is null. Skipping organism creation.");
-        }
-
         if (interactionDetectionMethod != null) {
-            String interactionDetectionMiId = utils.fetchMiId(interactionDetectionMethod);
-            CvTerm detectionMethod = new XmlCvTerm(interactionDetectionMethod, interactionDetectionMiId);
-            Publication publication = new BibRef(excelFileReader.getPublicationId());
-            XmlExperiment experiment = new XmlExperiment(publication, detectionMethod, organism);
+            Organism organism = createOrganism(hostOrganism);
 
+            CvTerm detectionMethod = utils.fetchTerm(interactionDetectionMethod);
+            Publication publication = new BibRef(excelFileReader.getPublicationId());
+            XmlExperiment experiment;
+
+            if (organism == null || hostOrganism.isBlank()) {
+                experiment = new XmlExperiment(publication, detectionMethod);
+            } else {
+                experiment = new XmlExperiment(publication, detectionMethod, organism);
+            }
             if (participantIdentificationMethod != null) {
-                String identificationMethodMiId = utils.fetchMiId(participantIdentificationMethod);
-                CvTerm identificationMethodCv = new XmlCvTerm(participantIdentificationMethod, identificationMethodMiId);
-                experiment.setParticipantIdentificationMethod(identificationMethodCv);
+                experiment.setParticipantIdentificationMethod(utils.fetchTerm(participantIdentificationMethod));
             }
 
             interaction.setExperiment(experiment);
         }
 
         xmlModelledInteractions.add(interaction);
+        launchWriting();
+    }
+
+    private Organism createOrganism(String hostOrganism) {
+        if (hostOrganism == null) {
+            LOGGER.warning("Host organism is null. Skipping organism creation.");
+            return null;
+        }
+
+        String hostOrganismTaxId = utils.fetchTaxIdForOrganism(hostOrganism);
+
+        if (hostOrganismTaxId == null) {
+            LOGGER.warning("No Tax ID found for host organism: " + hostOrganism);
+            return null;
+        }
+
+        Organism organism = null;
+
+        try {
+            int hostOrganismInt = Integer.parseInt(hostOrganismTaxId);
+            organism = new XmlOrganism(hostOrganismInt);
+        } catch (NumberFormatException e) {
+            LOGGER.warning("Invalid host organism tax ID: " + hostOrganism);
+        }
+
+        return organism;
     }
 
     /**
@@ -373,30 +388,29 @@ public class InteractionsCreator {
     /**
      * Creates interactions by processing grouped participant data and linking them to experiments and publications.
      */
-    public void createInteractions(){
-        Map<String, List<Map<String, String>>> groups = createGroups();
-
-        for (Map.Entry<String, List<Map<String, String>>> group : groups.entrySet()) {
-            XmlInteractionEvidence interaction = new XmlInteractionEvidence();
-
-            String interactionDetectionMethod = "detectionMethod";
-            String participantIdentificationMethod = "participantIdentificationMethod";
-            String hostOrganism = "hostOrganism";
-            String interactionType = "interactionType";
-
-            for (Map<String, String> participant : group.getValue()) {
-                XmlParticipantEvidence newParticipant = createParticipant(participant);
-                interaction.addParticipant(newParticipant);
-
-                interactionDetectionMethod = participant.get(DataTypeAndColumn.INTERACTION_DETECTION_METHOD.name);
-                participantIdentificationMethod = participant.get(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name);
-                hostOrganism = participant.get(DataTypeAndColumn.HOST_ORGANISM.name);
-                interactionType = participant.get(DataTypeAndColumn.INTERACTION_TYPE.name);
-
-            }
-
-            interactionCreator(interaction, interactionDetectionMethod, participantIdentificationMethod, hostOrganism, interactionType);
+    public void createInteractions() {
+        if (dataList.isEmpty() && isFileFinished) {
+            launchWriting();
+            return;
         }
+
+        XmlInteractionEvidence interaction = new XmlInteractionEvidence();
+
+        String interactionDetectionMethod = null;
+        String participantIdentificationMethod = null;
+        String hostOrganism = null;
+        String interactionType = null;
+
+        for (Map<String, String> participant : dataList) {
+            XmlParticipantEvidence newParticipant = createParticipant(participant);
+            interaction.addParticipant(newParticipant);
+
+            interactionDetectionMethod = participant.get(DataTypeAndColumn.INTERACTION_DETECTION_METHOD.name);
+            participantIdentificationMethod = participant.get(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name);
+            hostOrganism = participant.get(DataTypeAndColumn.HOST_ORGANISM.name);
+            interactionType = participant.get(DataTypeAndColumn.INTERACTION_TYPE.name);
+        }
+        processInteractionCreation(interaction, interactionDetectionMethod, participantIdentificationMethod, hostOrganism, interactionType);
     }
 
     /**
@@ -431,5 +445,13 @@ public class InteractionsCreator {
         featureEvidence.getRanges().add(featureRange);
 
         return featureEvidence;
+    }
+
+    private void launchWriting() {
+        if (xmlModelledInteractions.size() >= MAX_INTERACTIONS_PER_FILE || isFileFinished) {
+            LOGGER.info("Processing " + xmlModelledInteractions.size() + " interactions.");
+            interactionWriter.writeInteractions(xmlModelledInteractions);
+            xmlModelledInteractions.clear();
+        }
     }
 }

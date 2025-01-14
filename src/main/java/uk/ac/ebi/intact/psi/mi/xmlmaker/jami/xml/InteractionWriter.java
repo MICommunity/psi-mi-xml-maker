@@ -1,5 +1,7 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import psidev.psi.mi.jami.commons.MIWriterOptionFactory;
@@ -9,13 +11,17 @@ import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.PsiXmlVersion;
 import psidev.psi.mi.jami.xml.cache.InMemoryLightIdentityObjectCache;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -32,75 +38,104 @@ import java.util.*;
  */
 public class InteractionWriter {
 
-    private static final Logger logger = LogManager.getLogger(InteractionWriter.class);
+    private static final Logger LOGGER = LogManager.getLogger(InteractionWriter.class);
 
-    final InteractionsCreator interactionsCreator;
-    final List<XmlInteractionEvidence> xmlModelledInteractions;
     public String publicationId;
     final XmlMakerUtils utils = new XmlMakerUtils();
     private final ExcelFileReader excelFileReader;
 
+    private int fileCounter = 0;
+    @Getter @Setter
+    private String saveLocation;
+    @Getter @Setter
+    private String name;
+
     /**
      * Constructs a InteractionWriter instance with the given dependencies.
      *
-     * @param interactionsCreator an instance of InteractionsCreator
-     * @param excelFileReader     an instance of ExcelFileReader
+     * @param excelFileReader an instance of ExcelFileReader
      */
-    public InteractionWriter(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
-        this.interactionsCreator = interactionsCreator;
-        xmlModelledInteractions = interactionsCreator.xmlModelledInteractions;
+    public InteractionWriter(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
         publicationId = this.excelFileReader.getPublicationId();
     }
 
     /**
      * Writes interaction data to a PSI-MI XML file at the specified location.
-     *
-     * @param saveLocation the directory path where the XML file will be saved
      */
-    public void interactionsWriter(String saveLocation) {
-        publicationId = excelFileReader.getPublicationId();
-        logger.info("Starting interaction writer with publication ID: {}", publicationId);
+    public void writeInteractions(List<XmlInteractionEvidence> interactions) {
+        if (!validateInputs(interactions)) return;
 
-        if (publicationId == null) {
-            logger.error("Publication ID is null. Please enter the publication ID.");
-            return;
+        String filePath = constructFilePath();
+        XmlSource source = initializeSource();
+        XMLGregorianCalendar defaultReleaseDate = createDefaultReleaseDate();
+        Collection<Annotation> defaultEntryAnnotations = initializeDefaultAnnotations();
+        Map<String, Object> writingOptions = prepareWritingOptions(filePath, source, defaultReleaseDate, defaultEntryAnnotations);
+
+        writeInteractionsToFile(interactions, writingOptions);
+    }
+
+    private boolean validateInputs(List<XmlInteractionEvidence> interactions) {
+        if (interactions == null || interactions.isEmpty()) {
+            LOGGER.error("No interactions provided for writing.");
+            return false;
         }
 
+        publicationId = excelFileReader.getPublicationId();
+        if (publicationId == null) {
+            LOGGER.error("Publication ID is null. Please enter the publication ID.");
+            return false;
+        }
+        LOGGER.info("Starting interaction writer with publication ID: {}", publicationId);
+        return true;
+    }
+
+    private String constructFilePath() {
+        String directory = this.saveLocation + "/" + FileUtils.getFileName(name) + "/";
+        return directory + FileUtils.getFileName(name)  + "_" + fileCounter++ + ".xml";
+    }
+
+    private XmlSource initializeSource() {
         Publication intactPubmedRef = new BibRef(publicationId);
         String intactMiId = utils.fetchMiId("intact");
 
         XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "https://www.ebi.ac.uk",
                 "European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge, CB10 1SD, United Kingdom.", intactPubmedRef);
-        source.setUrl("https://www.ebi.ac.uk");
-        source.setFullName("European Bioinformatics Institute");
 
         XmlXref primaryXref = createXref("pubmed", "primary-reference", "pubmed", publicationId);
         XmlXref secondaryXref = createXref("psi-mi", "identity", "psi-mi", intactMiId);
+        secondaryXref.setSecondary("secondary-reference");
 
         CvTermXrefContainer xrefContainer = new CvTermXrefContainer();
         xrefContainer.setJAXBPrimaryRef(primaryXref);
-        secondaryXref.setSecondary("secondary-reference");
         xrefContainer.getJAXBSecondaryRefs().add(secondaryXref);
         source.setJAXBXref(xrefContainer);
 
-        GregorianCalendar calendar = new GregorianCalendar();
-        XMLGregorianCalendar defaultReleaseDate;
+        return source;
+    }
+
+    private XMLGregorianCalendar createDefaultReleaseDate() {
         try {
-            defaultReleaseDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
+            GregorianCalendar calendar = new GregorianCalendar();
+            return DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
         } catch (DatatypeConfigurationException e) {
-            logger.error("Error while creating default release date", e);
+            LOGGER.error("Error while creating default release date", e);
             throw new RuntimeException(e);
         }
+    }
 
+    private Collection<Annotation> initializeDefaultAnnotations() {
         Collection<Annotation> defaultEntryAnnotations = new ArrayList<>();
         XmlAnnotation defaultEntryAnnotation = new XmlAnnotation();
         defaultEntryAnnotations.add(defaultEntryAnnotation);
+        return defaultEntryAnnotations;
+    }
 
+    private Map<String, Object> prepareWritingOptions(String filePath, XmlSource source, XMLGregorianCalendar defaultReleaseDate, Collection<Annotation> defaultEntryAnnotations) {
         PsiJami.initialiseAllFactories();
 
-        Map<String, Object> expandedXmlWritingOptions = MIWriterOptionFactory.getInstance().getExpandedXmlOptions(
-                new File(saveLocation + ".xml"),
+        return MIWriterOptionFactory.getInstance().getExpandedXmlOptions(
+                new File(filePath),
                 InteractionCategory.evidence,
                 ComplexType.n_ary,
                 new InMemoryLightIdentityObjectCache(),
@@ -112,27 +147,43 @@ public class InteractionWriter {
                 true,
                 PsiXmlVersion.v3_0_0
         );
+    }
 
+    private void writeInteractionsToFile(List<XmlInteractionEvidence> interactions, Map<String, Object> writingOptions) {
         InteractionWriterFactory writerFactory = InteractionWriterFactory.getInstance();
-        psidev.psi.mi.jami.datasource.InteractionWriter xmlInteractionWriter = null;
+        psidev.psi.mi.jami.datasource.InteractionWriter<XmlInteractionEvidence> xmlInteractionWriter = null;
 
         try {
-            xmlInteractionWriter = writerFactory.getInteractionWriterWith(expandedXmlWritingOptions);
+            createDirectoryIfNotExists();
+
+            xmlInteractionWriter = writerFactory.getInteractionWriterWith(writingOptions);
             xmlInteractionWriter.start();
-            xmlInteractionWriter.write(xmlModelledInteractions);
+            xmlInteractionWriter.write(interactions);
             xmlInteractionWriter.end();
-            logger.info("PSI-XML writing completed successfully. File saved at: {}", saveLocation);
+
+            LOGGER.info("PSI-XML writing completed successfully. File saved at: {}", saveLocation);
 
         } catch (Exception e) {
-            logger.error("Error during PSI-XML writing", e);
+            LOGGER.error("Error during PSI-XML writing", e);
 
         } finally {
-            if (xmlInteractionWriter != null) {
-                try {
-                    xmlInteractionWriter.close();
-                } catch (Exception e) {
-                    logger.error("Error while closing the PSI-XML writer", e);
-                }
+            closeWriter(xmlInteractionWriter);
+        }
+    }
+
+    private void createDirectoryIfNotExists() throws IOException {
+        Path directory = Path.of(this.saveLocation + "/" + FileUtils.getFileName(name) + "/");
+        if (!Files.exists(directory)) {
+            Files.createDirectories(directory);
+        }
+    }
+
+    private void closeWriter(psidev.psi.mi.jami.datasource.InteractionWriter<XmlInteractionEvidence> writer) {
+        if (writer != null) {
+            try {
+                writer.close();
+            } catch (Exception e) {
+                LOGGER.error("Error while closing the PSI-XML writer", e);
             }
         }
     }

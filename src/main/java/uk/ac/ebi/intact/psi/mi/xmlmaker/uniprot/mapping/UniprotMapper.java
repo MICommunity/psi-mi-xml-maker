@@ -13,7 +13,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
 
-import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 public class UniprotMapper {
     private static final Logger LOGGER = LogManager.getLogger(UniprotMapper.class);
@@ -28,12 +28,15 @@ public class UniprotMapper {
 
         String urlString = uniprotQueryConstructor(protein, organismId, database);
         if (alreadyParsed.containsKey(protein)) {
-            LOGGER.debug("Protein '{}' already parsed. Returning cached result.", protein);
+            LOGGER.debug("Protein '{}' already parsed. Returning cached result.", protein); //todo: is it necessary here?
             return alreadyParsed.get(protein);
         }
 
         try {
             HttpURLConnection connection = createConnection(urlString);
+            if (connection.getResponseCode() == HttpURLConnection.HTTP_BAD_REQUEST) {
+                return protein;
+            }
             return parseResponse(connection, protein);
         } catch (Exception e) {
             LOGGER.error("Error fetching UniProt results for protein '{}': {}", protein, e.getMessage(), e);
@@ -75,7 +78,7 @@ public class UniprotMapper {
             String uniprotAccession = getUniprotAC(jsonResponse);
 
             if (uniprotAccession != null) {
-                LOGGER.info("UniProt accession '{}' found for protein '{}'.", uniprotAccession, protein);
+                LOGGER.info("UniProt accession '{}' found for protein '{}'.", uniprotAccession, protein); //todo: necessary?
                 alreadyParsed.put(protein, uniprotAccession);
                 return uniprotAccession;
             } else {

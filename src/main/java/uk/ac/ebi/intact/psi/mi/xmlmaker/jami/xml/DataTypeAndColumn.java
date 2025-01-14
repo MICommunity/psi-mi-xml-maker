@@ -1,5 +1,7 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.poi.ss.usermodel.Cell;
 
 import java.util.function.Function;
@@ -29,6 +31,8 @@ public enum DataTypeAndColumn {
     public final String name;
     public final Function<Cell, String> extractString;
     public final boolean initial;
+    @Getter @Setter
+    private int index;
 
     DataTypeAndColumn(String name) {
         this(name, Cell::getStringCellValue);

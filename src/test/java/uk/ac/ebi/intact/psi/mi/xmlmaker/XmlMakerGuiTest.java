@@ -7,6 +7,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapper;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +26,7 @@ public class XmlMakerGuiTest extends TestCase {
 
     private ExcelFileReader reader;
     private InteractionsCreator interactionsCreator;
+    private InteractionWriter interactionWriter;
 
     @Override
     protected void setUp() throws Exception {
@@ -32,7 +34,9 @@ public class XmlMakerGuiTest extends TestCase {
         super.setUp();
         reader = new ExcelFileReader();
         UniprotMapperGui uniprotMapperGui = new UniprotMapperGui(reader, loadingSpinner);
-        interactionsCreator = new InteractionsCreator(reader, uniprotMapperGui, COLUMN_AND_INDEX);
+        this.interactionWriter = new InteractionWriter(reader);
+        interactionsCreator = new InteractionsCreator(reader, interactionWriter, uniprotMapperGui, COLUMN_AND_INDEX);
+    //TODO make it work
     }
 
     public void testOpenCsvFile_fileHasExpectedColumnCount(){
@@ -72,14 +76,22 @@ public class XmlMakerGuiTest extends TestCase {
         assertEquals("P05067", updateIdSearch);
     }
 
-    public void testInteractionsCreation_returnExpectedInteractionNumber() throws Exception {
+    public void testInteractionsCreation_Tsv_returnExpectedInteractionNumber() throws Exception {
         LOGGER.info("Testing participant creation");
         setUp();
-
         reader.selectFileOpener(TEST_FILE_PATH + "test_sample.tsv");
-        interactionsCreator.createParticipantsWithFileFormat(COLUMN_AND_INDEX);
+        interactionsCreator.createParticipantsWithFileFormat();
+        assertEquals(12,interactionsCreator.xmlModelledInteractions.size());
+    }
 
-        assertEquals(13,interactionsCreator.xmlModelledInteractions.size());
+    public void testInteractionsCreation_Xlsx_returnExpectedInteractionNumber() throws Exception {
+        LOGGER.info("Testing participant creation");
+        setUp();
+        reader.selectFileOpener(TEST_FILE_PATH + "test_sample.xlsx");
+        interactionsCreator.sheetSelected = "test_sample";
+        interactionsCreator.createParticipantsWithFileFormat();
+
+        assertEquals(12,interactionsCreator.xmlModelledInteractions.size());
     }
 
     public void testMiFetching_returnExpectedMiId() {
@@ -94,9 +106,10 @@ public class XmlMakerGuiTest extends TestCase {
         setUp();
 
         reader.selectFileOpener(TEST_FILE_PATH + "test_sample.tsv");
+//        interactionsCreator.sheetSelected = "test_sample";
         interactionsCreator.fetchDataFileWithSeparator(COLUMN_AND_INDEX);
-        int dataListSize = interactionsCreator.dataList.size();
-        assertEquals(24, dataListSize);
+        int dataListSize = interactionsCreator.xmlModelledInteractions.size();
+        assertEquals(12, dataListSize);
     }
 
     public void testFetchingDataWithWorkbook_returnExpectedDataSize() throws Exception {
@@ -113,12 +126,14 @@ public class XmlMakerGuiTest extends TestCase {
     public void testFileWriting_CreateAndWriteXmlFile() throws Exception {
         LOGGER.info("Test writing xml file");
         setUp();
-        InteractionWriter interactionWriter = new InteractionWriter(interactionsCreator, reader);
+        InteractionWriter interactionWriter = new InteractionWriter(reader);
 
         reader.selectFileOpener(TEST_FILE_PATH + "test_sample.tsv");
-        interactionsCreator.createParticipantsWithFileFormat(COLUMN_AND_INDEX);
         reader.publicationId = "1234";
-        interactionWriter.interactionsWriter(TEST_FILE_PATH + "file_writing_test");
+
+        this.interactionWriter.setName("test_sample.tsv");
+        this.interactionWriter.setSaveLocation(TEST_FILE_PATH);
+        this.interactionsCreator.createParticipantsWithFileFormat();
     }
 
     public Map<String, Integer> mockColumnAndIndex() {

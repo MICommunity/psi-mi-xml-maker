@@ -1,6 +1,9 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
+import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GUIUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,17 +22,21 @@ import java.io.File;
  * the panel returned by `createPsiMiXmlMakerPanel` into a JFrame or other container.
  */
 public class InteractionWriterGui {
-    private final InteractionWriter xmlMaker;
+    @Getter
+    private final InteractionWriter interactionWriter;
+    private JTextField filenameField;
     private JTextField saveLocationField;
+    private final ExcelFileReader excelFileReader;
+    private JFileChooser directoryChooser;
 
     /**
      * Constructs a InteractionWriterGui instance with the given dependencies.
      *
-     * @param interactionsCreator an instance of InteractionsCreator for creating interaction data
-     * @param excelFileReader     an instance of ExcelFileReader for reading publication-related data
+     * @param excelFileReader an instance of ExcelFileReader for reading publication-related data
      */
-    public InteractionWriterGui(InteractionsCreator interactionsCreator, ExcelFileReader excelFileReader) {
-        this.xmlMaker = new InteractionWriter(interactionsCreator, excelFileReader);
+    public InteractionWriterGui(ExcelFileReader excelFileReader) {
+        this.interactionWriter = new InteractionWriter(excelFileReader);
+        this.excelFileReader = excelFileReader;
     }
 
     /**
@@ -47,23 +54,6 @@ public class InteractionWriterGui {
         JPanel saveLocationPanel = createSaveLocationPanel();
         xmlPanel.add(saveLocationPanel);
 
-        JButton processButton = new JButton("Create XML File");
-        processButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        processButton.setToolTipText("Click to generate the XML file based on input data.");
-
-        processButton.addActionListener(e -> {
-                String saveLocation = getSaveLocation();
-                try {
-                    xmlMaker.interactionsWriter(saveLocation);
-                    JOptionPane.showMessageDialog(null, "XML file created successfully!",
-                            "Success", JOptionPane.INFORMATION_MESSAGE);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Error creating XML file: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            });
-
-        xmlPanel.add(processButton);
         return xmlPanel;
     }
 
@@ -98,10 +88,23 @@ public class InteractionWriterGui {
         saveLocationPanel.setLayout(new FlowLayout());
         saveLocationPanel.setBorder(BorderFactory.createTitledBorder("4.2 Select the saving location"));
 
-        JLabel saveLocationLabel = new JLabel("Save to:");
-        saveLocationField = new JTextField(20);
-        JButton browseButton = getJButton();
 
+        JLabel nameLabel = new JLabel("Name: ");
+        filenameField = new JTextField(20);
+        JLabel saveLocationLabel = new JLabel("Directory:");
+        saveLocationField = new JTextField(20);
+        GUIUtils.addChangeListener(saveLocationField, change -> interactionWriter.setSaveLocation(saveLocationField.getText()));
+        GUIUtils.addChangeListener(filenameField, change -> interactionWriter.setName(filenameField.getText()));
+        JButton browseButton = getBrowseButton();
+
+        excelFileReader.registerInputSelectedEventHandler(event -> {
+            filenameField.setText(FileUtils.getFileName(event.getSelectedFile().getName()));
+            saveLocationField.setText(event.getSelectedFile().getParent());
+            directoryChooser.setSelectedFile(event.getSelectedFile().getParentFile());
+        });
+
+        saveLocationPanel.add(nameLabel);
+        saveLocationPanel.add(filenameField);
         saveLocationPanel.add(saveLocationLabel);
         saveLocationPanel.add(saveLocationField);
         saveLocationPanel.add(browseButton);
@@ -114,27 +117,20 @@ public class InteractionWriterGui {
      *
      * @return a JButton for opening a file chooser dialog
      */
-    private JButton getJButton() {
+    private JButton getBrowseButton() {
         JButton browseButton = new JButton("Browse...");
+        directoryChooser = new JFileChooser();
+        directoryChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         browseButton.addActionListener(e -> {
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                int returnValue = fileChooser.showSaveDialog(null);
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    File selectedFile = fileChooser.getSelectedFile();
-                    saveLocationField.setText(selectedFile.getAbsolutePath());
-                }
+
+            int returnValue = directoryChooser.showSaveDialog(null);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = directoryChooser.getSelectedFile();
+                saveLocationField.setText(selectedFile.getAbsolutePath());
+            }
         });
         return browseButton;
     }
 
-    /**
-     * Retrieves the save location entered by the user.
-     *
-     * @return a String representing the save location directory
-     */
-    public String getSaveLocation() {
-        return saveLocationField.getText();
-    }
 }

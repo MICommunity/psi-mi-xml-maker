@@ -1,7 +1,9 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import psidev.psi.mi.jami.model.CvTerm;
+import psidev.psi.mi.jami.xml.model.extension.xml300.XmlCvTerm;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
 import uk.ac.ebi.pride.utilities.ols.web.service.model.Term;
@@ -11,6 +13,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.*;
 
 /**
@@ -21,7 +24,8 @@ import java.util.logging.*;
 public class XmlMakerUtils {
 
     private static final Logger LOGGER = Logger.getLogger(XmlMakerUtils.class.getName());
-    private final Map<String, String> miIds = new HashMap<>();
+    private final Map<String, CvTerm> nameToCvTerm = new ConcurrentHashMap<>();
+    private final Map<String, String> nameToTaxIdCache = new ConcurrentHashMap<>();
     static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
 
     static {
@@ -95,13 +99,17 @@ public class XmlMakerUtils {
      * Fetches the Taxonomy ID for a given organism name by processing the API response.
      */
     public String fetchTaxIdForOrganism(String organismName) {
-        if (organismName.matches("\\d+")) {
-            return organismName; //already a taxId
-        } else {
-            String apiResponse = fetchTaxIdWithApi(organismName);
-            return apiResponse != null ? extractOboId(apiResponse) : organismName;
-        }
+        String taxId = nameToTaxIdCache.get(organismName);
+        if (taxId != null) return taxId;
+        if (organismName.matches("\\d+")) return organismName; // already a taxId
+
+        String apiResponse = fetchTaxIdWithApi(organismName);
+        String oboId = apiResponse != null ? extractOboId(apiResponse) : null;
+        taxId = oboId != null ? oboId : organismName;
+        nameToTaxIdCache.put(organismName, taxId);
+        return taxId;
     }
+
 
     /**
      * Encodes a string for safe use in a URL.
@@ -110,23 +118,31 @@ public class XmlMakerUtils {
         return URLEncoder.encode(input, StandardCharsets.UTF_8);
     }
 
+    public CvTerm fetchTerm(String input) {
+        if (input == null || input.isBlank() || input.contains("null")) return null;
+        CvTerm term = nameToCvTerm.get(input);
+        if (term != null) return term;
+
+        try {
+            Term complexTerm = olsClient.getExactTermByName(input, "mi");
+            if (complexTerm != null) {
+                term = new XmlCvTerm(complexTerm.getLabel(), complexTerm.getOboId().getIdentifier());
+                nameToCvTerm.put(input, term);
+            }
+        } catch (Exception e) {
+            LOGGER.warning("Error while fetching term: " + input + e.getMessage());
+        }
+        return term;
+    }
+
     /**
      * Fetches the MI (Molecular Interaction) ID for a given term using the OLS client.
      */
     public String fetchMiId(String input) {
-        String miId = miIds.get(input);
-        if (miId == null) {
-            try {
-                Term term = olsClient.getExactTermByName(input, "mi");
-                miId = (term != null && term.getOboId() != null) ? term.getOboId().getIdentifier() : null;
-                miIds.put(input, miId);
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Failed to retrieve MI ID for input: " + input, e);
-                showErrorDialog("Failed to retrieve MI ID for " + input);
-            }
-        }
-        return miId;
+        CvTerm cvTerm = fetchTerm(input);
+        return cvTerm == null ? null : cvTerm.getMIIdentifier();
     }
+
 
     /**
      * Extracts the OBO (Open Biomedical Ontologies) ID from a JSON response.

@@ -1,38 +1,39 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
-import com.opencsv.exceptions.CsvValidationException;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.events.InputSelectedEvent;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.MoleculeSetChecker;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapper;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 
 import javax.swing.*;
 import java.awt.Font;
 import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * The {@code ExcelFileReader} class provides functionality for reading, processing,
  * and modifying Excel (XLS, XLSX) and delimited text files (CSV, TSV).
  * It integrates with UniprotMapper and MoleculeSetChecker to validate and update data.
  */
-public class ExcelFileReader {
+public class ExcelFileReader  {
 
     private static final Logger LOGGER = Logger.getLogger(ExcelFileReader.class.getName());
     private final MoleculeSetChecker moleculeSetChecker = new MoleculeSetChecker();
@@ -43,6 +44,8 @@ public class ExcelFileReader {
     public Workbook workbook;
     public List<String> fileData;
 
+    private final List<InputSelectedEvent.Listener> listeners = new ArrayList<>();
+
     @Getter
     @Setter
     public String publicationId;
@@ -50,13 +53,10 @@ public class ExcelFileReader {
     private String fileName;
     private String fileType;
     private char separator;
-    public String outputDirName;
-
     private final JLabel currentFileLabel;
     public final List<String> sheets = new ArrayList<>();
     private final List<String> columns = new ArrayList<>();
     public final List<String> proteinsPartOfMoleculeSet = new ArrayList<>();
-    private int lastChunkIndex = 0;
 
     /**
      * Default constructor initializes the reader with no file selected.
@@ -74,8 +74,9 @@ public class ExcelFileReader {
      * @param filePath The path to the file to be read.
      */
     public void selectFileOpener(String filePath) {
-        fileName = new File(filePath).getName();
-        fileType = getFileExtension(filePath);
+        File file = new File(filePath);
+        fileName = file.getName();
+        fileType = FileUtils.getFileExtension(filePath);
         currentFileLabel.setText(getFileName());
         currentFilePath = filePath;
         fileData = new ArrayList<>();
@@ -106,6 +107,7 @@ public class ExcelFileReader {
                     LOGGER.warning("Unsupported file format: " + fileType);
                     xmlMakerutils.showErrorDialog("Unsupported file format! Supported formats: .csv, .tsv, .xls, .xlsx");
             }
+            fireInputSelectedEvent(new InputSelectedEvent(file));
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error reading file: " + fileName, e);
             xmlMakerutils.showErrorDialog("Unable to read file: " + e.getMessage());
@@ -138,44 +140,57 @@ public class ExcelFileReader {
         }
     }
 
-    /**
-     * Reads the CSV/TSV file and store its content.
-     *
-     * @return the file data
-     */
-    public List<List<String>> readFileWithSeparator() {
-        List<String> header = null;
-        List<List<String>> chunk = new ArrayList<>();
+    public Iterator<Row> readWorkbookSheet(String sheetSelected) {
+        Iterator<Row> iterator = null;
+        Sheet sheet = workbook.getSheet(sheetSelected);
+        iterator = StreamSupport.stream(
+                        Spliterators.spliteratorUnknownSize(sheet.iterator(), Spliterator.ORDERED), false)
+                .collect(Collectors.toList()).iterator();
+
+        if (iterator.hasNext()) {
+            Row row = iterator.next();
+            List<String> rowData = new ArrayList<>();
+            for (Cell cell : row) {
+                rowData.add(cell.toString());
+            }
+            fileData = rowData;
+        }
+
+        return iterator;
+    }
+
+        /**
+         * Reads the CSV/TSV file and store its content.
+         *
+         * @return the file data
+         */
+    public Iterator<List<String>> readFileWithSeparator() {
+        Iterator<List<String>> iterator = null;
 
         try (InputStream fileStream = new FileInputStream(currentFilePath);
              BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileStream));
              CSVReader csvReader = new CSVReaderBuilder(bufferedReader)
-                     .withCSVParser(new com.opencsv.CSVParserBuilder()
+                     .withCSVParser(new CSVParserBuilder()
                              .withSeparator(separator)
                              .withIgnoreQuotations(false)
                              .build())
                      .build()) {
-            String[] nextLine;
-            if ((nextLine = csvReader.readNext()) != null) {
-                header = Arrays.stream(nextLine)
-                        .map(cell -> cell == null ? "" : cell.trim())
-                        .collect(Collectors.toList());
-            }
 
-            while ((nextLine = csvReader.readNext()) != null) {
-                chunk.add(Arrays.stream(nextLine)
-                        .map(cell -> cell == null ? "" : cell.trim())
-                        .collect(Collectors.toList()));
+            iterator = StreamSupport.stream(
+                            Spliterators.spliteratorUnknownSize(csvReader.iterator(), Spliterator.ORDERED), false)
+                    .map(row -> Arrays.stream(row).map(String::trim).collect(Collectors.toList()))
+                    .collect(Collectors.toList()).iterator();
+
+            if (iterator.hasNext()) {
+                fileData = iterator.next();
             }
-        } catch (IOException | CsvValidationException e) {
+            return iterator;
+
+        } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Unable to read file with separator", e);
             xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
         }
-
-        if (header != null) {
-            fileData = header;
-        }
-        return chunk;
+        return iterator;
     }
 
     // GUI
@@ -244,249 +259,128 @@ public class ExcelFileReader {
         return fileName != null ? "Current file: " + fileName : "No file selected";
     }
 
-    /**
-     * Extracts the file extension from a file name.
-     *
-     * @param fileName The file name.
-     * @return The file extension.
-     */
-    private String getFileExtension(String fileName) {
-        return fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-    }
-
     //MODIFY AND WRITE FILES
-
-    /**
-     * Checks the selected Excel sheet and inserts Uniprot results into the specified column.
-     * If the column or sheet is not found, displays an error dialog.
-     *
-     * @param sheetSelected      The name of the selected sheet.
-     * @param selectedColumn     The column name to find and update.
-     * @param organismColumnIndex The index of the organism column.
-     * @param idDbColumnIndex    The index of the database ID column.
-     */
-    public void checkAndInsertUniprotResultsExcel(String sheetSelected, String selectedColumn,
-                                                  int organismColumnIndex, int idDbColumnIndex) {
-        Sheet sheet = workbook.getSheet(sheetSelected);
-        if (sheet == null) {
-            xmlMakerutils.showErrorDialog("Sheet not found");
-            LOGGER.warning("Sheet not found: " + sheetSelected);
-            return;
-        }
-        int idColumnIndex = findColumnIndex(sheet, selectedColumn);
-        if (idColumnIndex != -1) {
-            insertColumnWithUniprotResults(sheet, idColumnIndex, organismColumnIndex, idDbColumnIndex);
-        } else {
-            xmlMakerutils.showErrorDialog("Column not found");
-            LOGGER.warning("Column not found at" + idColumnIndex);
-        }
-        writeWorkbookToFile();
-    }
-    /**
-     * Processes a file with a separated format to insert Uniprot results into the specified column.
-     * Updates the ID column with Uniprot results and highlights proteins part of the molecule set.
-     *
-     * @param idColumnName       The name of the column containing IDs.
-     * @param organismColumnIndex The index of the organism column.
-     * @param idDbColumnIndex    The index of the database ID column.
-     */
-    public void checkAndInsertUniprotResultsFileSeparatedFormat(String idColumnName, int organismColumnIndex,
-                                                                int idDbColumnIndex) {
-        try {
-            List<List<String>> data = readFileWithSeparator();
-            if (data.isEmpty()) {
-                LOGGER.warning("No data to process in the file.");
-                xmlMakerutils.showErrorDialog("The file contains no data to process.");
-                return;
-            }
-            int idColumnIndex = -1;
-            for (int i = 0; i < fileData.size(); i++) {
-                if (fileData.get(i).equals(idColumnName)) {
-                    idColumnIndex = i;
-                    break;
-                }
-            }
-
-            if (idColumnIndex == -1) {
-                LOGGER.warning("Specified ID column not found in the header: " + idColumnName);
-                xmlMakerutils.showErrorDialog("Specified ID column not found in the file.");
-                return;
-            }
-
-            for (List<String> row : data) {
-                String idValue = row.get(idColumnIndex).trim();
-                String organism = row.get(organismColumnIndex).trim();
-                String idDb = row.get(idDbColumnIndex).trim();
-
-                if (!idValue.isEmpty()) {
-                    String uniprotResult = uniprotMapper.fetchUniprotResults(idValue, organism, idDb);
-                    if (uniprotResult != null && !uniprotResult.isEmpty()) {
-                        row.set(idColumnIndex, uniprotResult); // Update ID column with Uniprot result
-                        if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
-                            proteinsPartOfMoleculeSet.add(uniprotResult);
-                        }
-                    }
-                }
-            }
-            writeFileWithSeparator(data);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error processing file: " + currentFilePath, e);
-            xmlMakerutils.showErrorDialog("Error processing file: " + e.getMessage());
-        }
-        uniprotMapper.clearAlreadyParsed();
-    }
-    /**
-     * Writes the current workbook to a file. If an error occurs, displays an error dialog.
-     */
-    private void writeWorkbookToFile() {
-        try {
-            File inputFile = Paths.get(currentFilePath).toFile();
-            try (FileOutputStream fileOut = new FileOutputStream(inputFile)) {
-                workbook.write(fileOut);
-                xmlMakerutils.showInfoDialog("File modified successfully.");
-                LOGGER.log(Level.INFO, "File modified successfully.");
-                selectFileOpener(currentFilePath);
-            }
-        } catch (Exception e) {
-            xmlMakerutils.showErrorDialog("Error writing Excel file");
-            LOGGER.log(Level.SEVERE, "Error writing Excel file", e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Inserts a new column with Uniprot results into the given Excel sheet.
-     * Highlights cells if the result is part of the molecule set.
-     *
-     * @param sheet              The Excel sheet to process.
-     * @param idColumnIndex      The index of the ID column.
-     * @param organismColumnIndex The index of the organism column.
-     * @param idDbColumnIndex    The index of the database ID column.
-     */
-    public void insertColumnWithUniprotResults(Sheet sheet, int idColumnIndex,
-                                               int organismColumnIndex, int idDbColumnIndex) {
-        for (int rowIndex = 0; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
-            Row row = sheet.getRow(rowIndex);
-            if (row == null) {
-                row = sheet.createRow(rowIndex);
-            }
-
-            Cell previousCell = row.getCell(idColumnIndex);
-            Cell previousDbCell = row.getCell(idDbColumnIndex);
-
-            if (previousCell == null) {
-                previousCell = row.createCell(idColumnIndex);
-            }
-            if (previousDbCell == null) {
-                previousDbCell = row.createCell(idDbColumnIndex);
-            }
-
-            String organismValue = row.getCell(organismColumnIndex) != null ?
-                    row.getCell(organismColumnIndex).getStringCellValue() : "";
-            String organism = xmlMakerutils.fetchTaxIdForOrganism(organismValue);
-            String idDb = previousDbCell.getStringCellValue();
-            String previousId = formatter.formatCellValue(previousCell);
-            String uniprotResult = "";
-
-            if (rowIndex == 0) {
-                uniprotResult = "Updated " + previousId;
-                previousDbCell.setCellValue("Database updated");
-            } else if (!previousId.isEmpty() && !organismValue.isEmpty()) {
-                uniprotResult = uniprotMapper.fetchUniprotResults(previousId, organism, idDb);
-            }
-
-            if (uniprotResult != null && !uniprotResult.isEmpty() && !uniprotResult.equals(previousId)) {
-                // Update the cell value and set the database value
-                previousCell.setCellValue(uniprotResult);
-                previousDbCell.setCellValue("UniprotKB");
-
-                // Highlight if part of the molecule set
-                if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
-                    highlightCells(previousCell);
-                    proteinsPartOfMoleculeSet.add(uniprotResult);
-                }
-            } else {
-                // Retain previous values if no update occurs
-                previousCell.setCellValue(previousId);
-                previousDbCell.setCellValue(idDb);
-            }
-        }
-        uniprotMapper.clearAlreadyParsed();
-    }
-
-
-    /**
-     * Highlights a cell by setting its background color to red if it contains
-     * a protein that is part of the molecule set.
-     *
-     * @param cell The cell to highlight.
-     */
-    public void highlightCells(Cell cell) {
-        if (moleculeSetChecker.isProteinPartOfMoleculeSet(cell.getStringCellValue())) {
-            CellStyle cellStyle = cell.getSheet().getWorkbook().createCellStyle();
-            cellStyle.setFillForegroundColor(IndexedColors.RED.getIndex());
-            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            cell.setCellStyle(cellStyle);
-        }
-    }
-
-    /**
-     * Finds the index of a column in the Excel sheet based on the given column name.
-     *
-     * @param sheet          The sheet to search for the column.
-     * @param selectedColumn The name of the column to find.
-     * @return The column index if found; -1 otherwise.
-     */
-    private int findColumnIndex(Sheet sheet, String selectedColumn) {
-        Row headerRow = sheet.getRow(0);
-        for (Cell cell : headerRow) {
-            if (formatter.formatCellValue(cell).contains(selectedColumn)) {
-                return cell.getColumnIndex();
-            }
-        }
-        return -1;
-    }
-
-    /**
-     * Writes the modified data to a file with a specific separator format.
-     * If an error occurs, displays an error dialog.
-     *
-     * @param data The modified data to write to the file.
-     */
-    private void writeFileWithSeparator(List<List<String>> data) {
-        try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(
-                new FileOutputStream(currentFilePath), StandardCharsets.UTF_8),
-                separator, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\n")) {
-
-            csvWriter.writeNext(fileData.stream()
-                    .map(value -> value == null ? "" : value.trim()).toArray(String[]::new));
-
-            for (List<String> row : data) {
-                csvWriter.writeNext(row.stream()
-                        .map(value -> value == null ? "" : value.trim()).toArray(String[]::new));
-            }
-
-            xmlMakerutils.showInfoDialog("File modified successfully.");
-            LOGGER.log(Level.INFO, "File modified successfully.");
-            selectFileOpener(currentFilePath);
-        } catch (IOException e) {
-            xmlMakerutils.showErrorDialog("Error modifying file: " + e.getMessage());
-            LOGGER.log(Level.SEVERE, "Error modifying file", e.getMessage());
-        }
-    }
 
     /**
      * Retrieves the number of features based on columns containing "FeatureShortLabel".
      *
      * @return The number of features found.
      */
-    public int getNumberOfFeatures(){
+    public int getNumberOfFeatures() {
         int numberOfFeatures = 0;
-        for (String column: columns){
-            if (column.toLowerCase().contains("featureshortlabel")){
+        for (String column : columns) {
+            if (column.toLowerCase().contains("featureshortlabel")) {
                 numberOfFeatures++;
             }
         }
         return numberOfFeatures;
     }
+
+    public void registerInputSelectedEventHandler(InputSelectedEvent.Listener listener) {
+        listeners.add(listener);
+    }
+
+    private void fireInputSelectedEvent(InputSelectedEvent event) {
+        listeners.forEach(listener -> listener.handle(event));
+    }
+
+    public void checkAndInsertUniprotResultsSeparatedFormat(String idColumnName, int organismColumnIndex,
+                                                            int idDbColumnIndex) {
+        Iterator<List<String>> iterator = readFileWithSeparator();
+
+        int idColumnIndex = fileData.indexOf(idColumnName);
+        if (idColumnIndex == -1) {
+            LOGGER.severe("Invalid column name: " + idColumnName);
+            return;
+        }
+
+        String tmpFilePath = "tmp." + FileUtils.getFileExtension(fileName);
+        try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(
+                new FileOutputStream(tmpFilePath), StandardCharsets.UTF_8),
+                separator, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\n")) {
+
+            csvWriter.writeNext(fileData.toArray(new String[0]));
+
+            while (iterator.hasNext()) {
+                List<String> row = iterator.next();
+
+                String previousId = row.get(idColumnIndex);
+                String organismValue = row.get(organismColumnIndex);
+                String previousIdDbValue = row.get(idDbColumnIndex);
+
+                String uniprotResult = uniprotMapper.fetchUniprotResults(previousId, organismValue, previousIdDbValue);
+
+                if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
+                    proteinsPartOfMoleculeSet.add(uniprotResult);
+                }
+
+                List<String> data = new ArrayList<>();
+                for (int cell = 0; cell < row.size(); cell++) {
+                    boolean arePreviousAndFetchedIdEquals = !Objects.equals(uniprotResult, previousId) && !uniprotResult.isEmpty();
+                    if (cell == idColumnIndex) {
+                        data.add(arePreviousAndFetchedIdEquals ? uniprotResult : row.get(cell));
+                    } else if (cell == idDbColumnIndex) {
+                        data.add(arePreviousAndFetchedIdEquals ? "UniprotKB" : row.get(cell));
+                    } else {
+                        data.add(row.get(cell));
+                    }
+                }
+
+                csvWriter.writeNext(data.toArray(new String[0]));
+            }
+
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error writing file", e);
+        }
+    }
+    public void checkAndInsertUniprotResultsIterator(String sheetSelected, String idColumnName,
+                                                     int organismColumnIndex, int idDbColumnIndex) {
+        try (FileOutputStream fileOut = new FileOutputStream("tmp." + FileUtils.getFileExtension(fileName))) {
+            Iterator<Row> iterator = readWorkbookSheet(sheetSelected);
+
+            if (fileData == null || fileData.isEmpty()) {
+                LOGGER.severe("Header row is missing or invalid.");
+                return;
+            }
+
+            int idColumnIndex = fileData.indexOf(idColumnName);
+            if (idColumnIndex == -1) {
+                LOGGER.severe("Invalid column name: " + idColumnName);
+                return;
+            }
+
+            Workbook workbook = WorkbookFactory.create(new FileInputStream(currentFilePath));
+
+            while (iterator.hasNext()) {
+                Row row = iterator.next();
+                if (row == null) continue;
+
+                Cell previousIdCell = row.getCell(idColumnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                Cell organismCell = row.getCell(organismColumnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                Cell previousIdDbCell = row.getCell(idDbColumnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+
+                String previousId = previousIdCell.getStringCellValue();
+                String organismValue = organismCell.getStringCellValue();
+                String previousIdDbValue = previousIdDbCell.getStringCellValue();
+
+                String uniprotResult = uniprotMapper.fetchUniprotResults(previousId, organismValue, previousIdDbValue);
+
+                if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
+                    proteinsPartOfMoleculeSet.add(uniprotResult);
+                }
+
+                if (!uniprotResult.isEmpty() && !uniprotResult.equals(previousId)) {
+                    previousIdCell.setCellValue(uniprotResult);
+                    previousIdDbCell.setCellValue("UniprotKB");
+                }
+            }
+
+            workbook.write(fileOut);
+            workbook.close();
+
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error processing workbook", e);
+        }
+    }
+
 }

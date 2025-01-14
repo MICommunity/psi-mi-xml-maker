@@ -5,6 +5,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.events.ColumnAndIndexesEvent;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.events.InputSelectedEvent;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 
@@ -36,6 +38,7 @@ public class InteractionsCreatorGui extends JPanel {
     private final ExcelFileReader excelFileReader;
     public final InteractionsCreator interactionsCreator;
 
+
     @Getter
     public JPanel participantCreatorPanel ;
     public final Map<String, Integer> dataAndIndexes = new HashMap<>();
@@ -52,12 +55,13 @@ public class InteractionsCreatorGui extends JPanel {
      * Constructs an instance of {@code InteractionsCreatorGui}.
      *
      * @param excelFileReader  The Excel file reader used to read data.
+     * @param writer
      * @param uniprotMapperGui The Uniprot mapper GUI for integrating with Uniprot.
      */
-    public InteractionsCreatorGui(ExcelFileReader excelFileReader, UniprotMapperGui uniprotMapperGui, LoadingSpinner loadingSpinner) {
+    public InteractionsCreatorGui(ExcelFileReader excelFileReader, InteractionWriter writer, UniprotMapperGui uniprotMapperGui, LoadingSpinner loadingSpinner) {
         this.excelFileReader = excelFileReader;
         this.participantCreatorPanel = new JPanel(new BorderLayout());
-        this.interactionsCreator = new InteractionsCreator(excelFileReader, uniprotMapperGui, dataAndIndexes);
+        this.interactionsCreator = new InteractionsCreator(excelFileReader, writer, uniprotMapperGui, getDataAndIndexes());
         this.loadingSpinner = loadingSpinner;
     }
 
@@ -82,10 +86,7 @@ public class InteractionsCreatorGui extends JPanel {
         scrollPane.setPreferredSize(new Dimension(scrollPane.getPreferredSize().width, 200)); // Set the height to 200 pixels
         sheetSelectorPanel.add(scrollPane);
 
-        JButton processFileButton = createProcessFileButton();
         participantCreatorPanel.add(sheetSelectorPanel, BorderLayout.NORTH);
-        participantCreatorPanel.add(processFileButton, BorderLayout.SOUTH);
-
         return participantCreatorPanel;
     }
 
@@ -121,79 +122,6 @@ public class InteractionsCreatorGui extends JPanel {
         } else {
             columnNames.addAll(excelFileReader.getColumns(""));
         }
-    }
-
-    /**
-     * Creates a button for processing files and attaches an event listener.
-     *
-     * @return A {@link JButton} configured for processing files.
-     */
-    private JButton createProcessFileButton() {
-        JButton processFileButton = new JButton("Create participants");
-        processFileButton.addActionListener(e -> {
-            // Show the loading spinner
-            loadingSpinner.showSpinner();
-
-            // Use SwingWorker for background processing
-            SwingWorker<Void, Void> worker = new SwingWorker<>() {
-                @Override
-                protected Void doInBackground() {
-                    String sheetSelected = (String) sheets.getSelectedItem();
-                    List<String> selectedColumns = getComboBoxSelectedValues();
-
-                    if (sheets.isEnabled() && (sheetSelected == null || sheetSelected.equals("Select sheet"))) {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                                null,
-                                "Please select a valid sheet!",
-                                "ERROR",
-                                JOptionPane.ERROR_MESSAGE
-                        ));
-                        return null;
-                    }
-
-                    if (selectedColumns.stream().anyMatch(selected -> selected.equals("Select column to process"))) {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                                null,
-                                "Please select a valid column for processing!",
-                                "ERROR",
-                                JOptionPane.ERROR_MESSAGE
-                        ));
-                        return null;
-                    }
-
-                    try {
-                        // Perform the processing in the background
-                        interactionsCreator.createParticipantsWithFileFormat(getDataAndIndexes());
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                                null,
-                                "Participants created successfully",
-                                "SUCCESS",
-                                JOptionPane.INFORMATION_MESSAGE
-                        ));
-                    } catch (Exception ex) {
-                        LOGGER.warning(ex.getMessage());
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                                null,
-                                "An error occurred during file processing: " + ex.getMessage(),
-                                "ERROR",
-                                JOptionPane.ERROR_MESSAGE
-                        ));
-                    }
-
-                    return null;
-                }
-
-                @Override
-                protected void done() {
-                    // Hide the spinner when the task is complete
-                    loadingSpinner.hideSpinner();
-                }
-            };
-
-            // Execute the background worker
-            worker.execute();
-        });
-        return processFileButton;
     }
 
     /**
@@ -287,30 +215,30 @@ public class InteractionsCreatorGui extends JPanel {
         }
     }
 
-    /**
-     * Retrieves the selected values from the ComboBoxes in the table.
-     *
-     * @return A {@link List} of selected column names.
-     */
-    public List<String> getComboBoxSelectedValues() {
-        List<String> selectedValues = new ArrayList<>();
-
-        for (int columnIndex = 0; columnIndex < table.getColumnCount(); columnIndex++) {
-            TableColumn column = table.getColumnModel().getColumn(columnIndex);
-            DefaultCellEditor cellEditor = (DefaultCellEditor) column.getCellEditor();
-
-            if (cellEditor != null) {
-                JComboBox<?> comboBox = (JComboBox<?>) cellEditor.getComponent();
-                Object selectedItem = comboBox.getSelectedItem();
-                selectedValues.add(selectedItem != null ? selectedItem.toString() : "Select from file");
-            } else {
-                Object cellValue = table.getValueAt(0, columnIndex);
-                selectedValues.add(cellValue != null ? cellValue.toString() : "Select from file");
-            }
-        }
-
-        return selectedValues;
-    }
+//    /**
+//     * Retrieves the selected values from the ComboBoxes in the table.
+//     *
+//     * @return A {@link List} of selected column names.
+//     */
+//    public List<String> getComboBoxSelectedValues() {
+//        List<String> selectedValues = new ArrayList<>();
+//
+//        for (int columnIndex = 0; columnIndex < table.getColumnCount(); columnIndex++) {
+//            TableColumn column = table.getColumnModel().getColumn(columnIndex);
+//            DefaultCellEditor cellEditor = (DefaultCellEditor) column.getCellEditor();
+//
+//            if (cellEditor != null) {
+//                JComboBox<?> comboBox = (JComboBox<?>) cellEditor.getComponent();
+//                Object selectedItem = comboBox.getSelectedItem();
+//                selectedValues.add(selectedItem != null ? selectedItem.toString() : "Select from file");
+//            } else {
+//                Object cellValue = table.getValueAt(0, columnIndex);
+//                selectedValues.add(cellValue != null ? cellValue.toString() : "Select from file");
+//            }
+//        }
+//
+//        return selectedValues;
+//    }
 
     /**
      * Retrieves the names of the columns in the data table.
