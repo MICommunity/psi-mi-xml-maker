@@ -60,12 +60,12 @@ public class MoleculeSetChecker {
                 String proteins = formatter.formatCellValue(row.getCell(PROTEINS_CELL_INDEX));
                 String moleculeSetAc = formatter.formatCellValue(row.getCell(MOLECULE_SET_AC_COLUMN_INDEX));
 
-                if (!proteins.isEmpty() && !moleculeSetAc.isEmpty()) {
-                    for (String protein : proteins.split(",")) {
-                        protein = protein.trim();
-                        proteinAndMoleculeSet.putIfAbsent(protein, moleculeSetAc);
-                        LOGGER.debug("Mapped protein '{}' to molecule set '{}'.", protein, moleculeSetAc);
-                    }
+                if (proteins.isEmpty() || moleculeSetAc.isEmpty()) continue;
+
+                for (String protein : proteins.split(",")) {
+                    protein = protein.trim();
+                    proteinAndMoleculeSet.putIfAbsent(protein, moleculeSetAc);
+                    LOGGER.debug("Mapped protein '{}' to molecule set '{}'.", protein, moleculeSetAc);
                 }
             }
             LOGGER.info("Finished parsing molecule set file.");

@@ -2,17 +2,21 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
-import java.util.*;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerUtils;
 
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn.*;
 
 /**
  * The InteractionsCreator class is responsible for processing Excel files or directory-based input files
@@ -35,7 +39,8 @@ public class InteractionsCreator {
 
     private boolean isFileFinished;
 
-    @Setter @Getter
+    @Setter
+    @Getter
     public String publicationId;
     public int numberOfFeature = 0;
 
@@ -44,7 +49,8 @@ public class InteractionsCreator {
     /**
      * Constructs an InteractionsCreator with the specified Excel reader, Uniprot mapper GUI, and column-to-index mapping.
      *
-     * @param reader          the Excel file reader for fetching data from Excel files.
+     * @param reader           the Excel file reader for fetching data from Excel files.
+     * @param writer           the InteractionWriter
      * @param uniprotMapperGui the Uniprot mapper GUI for mapping protein data.
      * @param columnAndIndex   the mapping of column names to their corresponding indices in the dataset.
      */
@@ -92,7 +98,6 @@ public class InteractionsCreator {
      * <p>Optional attributes include type, experimental role, preparations, cross-references,
      * and identification methods, which are resolved if provided. Features can also be added
      * via {@link #createFeature(int, Map)}.
-     *
      * @throws NumberFormatException if the organism's taxonomy ID is invalid.
      */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
@@ -143,7 +148,7 @@ public class InteractionsCreator {
         String taxId = utils.fetchTaxIdForOrganism(participantOrganism);
         Organism organism = new XmlOrganism(Integer.parseInt(Objects.requireNonNull(taxId)));
 
-        Interactor participant = new XmlPolymer(name, type, organism, uniqueId);
+        Interactor participant = new XmlPolymer(name, participantType, organism, uniqueId);
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
 
         if (experimentalRole != null) {
@@ -173,12 +178,13 @@ public class InteractionsCreator {
         return participantEvidence;
     }
 
+    // TODO Either rename or thow a runtime error if null
+
     /**
      * Retrieves the value from the provided data map for the given column name, ensuring the value is neither null nor empty.
      * If the value is null or empty (after trimming whitespace), the method returns null.
      *
      * @param data A map containing column names as keys and their corresponding values.
-     * @param column The column whose value is to be fetched from the map.
      * @return The value from the map if it is non-null and non-empty, otherwise returns null.
      */
     private String getNonNullValue(Map<String, String> data) {
@@ -299,11 +305,16 @@ public class InteractionsCreator {
     private String getCellValueAsString(Cell cell) {
         if (cell == null) return "N/A";
         switch (cell.getCellType()) {
-            case STRING: return cell.getStringCellValue();
-            case NUMERIC: return String.valueOf(cell.getNumericCellValue());
-            case BOOLEAN: return String.valueOf(cell.getBooleanCellValue());
-            case FORMULA: return cell.getCellFormula();
-            default: return "N/A";
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                return String.valueOf(cell.getNumericCellValue());
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            case FORMULA:
+                return cell.getCellFormula();
+            default:
+                return "N/A";
         }
     }
 
@@ -312,11 +323,11 @@ public class InteractionsCreator {
      * detection method, participant identification method, and host organism. This method also links the interaction
      * to an experiment and a publication if relevant details are provided.
      *
-     * @param interaction The interaction object to be populated with details.
-     * @param interactionDetectionMethod The method used to detect the interaction, used to create a CvTerm for detection method.
+     * @param interaction                     The interaction object to be populated with details.
+     * @param interactionDetectionMethod      The method used to detect the interaction, used to create a CvTerm for detection method.
      * @param participantIdentificationMethod The method used to identify the participant, used to create a CvTerm for identification method.
-     * @param hostOrganism The host organism associated with the interaction, used to fetch the organism's tax ID.
-     * @param interactionType The type of the interaction, used to create a CvTerm for interaction type.
+     * @param hostOrganism                    The host organism associated with the interaction, used to fetch the organism's tax ID.
+     * @param interactionType                 The type of the interaction, used to create a CvTerm for interaction type.
      */
     private void processInteractionCreation(XmlInteractionEvidence interaction, String interactionDetectionMethod,
                                             String participantIdentificationMethod,
@@ -373,16 +384,6 @@ public class InteractionsCreator {
         }
 
         return organism;
-    }
-
-    /**
-     * Groups the dataset into interactions by grouping participant data based on the interaction number.
-     *
-     * @return a map where keys are interaction numbers, and values are lists of participant data maps.
-     */
-    public Map<String, List<Map<String, String>>> createGroups(){
-        return dataList.stream().collect(Collectors.groupingBy(participant ->
-                participant.get(DataTypeAndColumn.INTERACTION_NUMBER.name)));
     }
 
     /**

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionWriterGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
@@ -44,8 +45,8 @@ public class XmlMakerGui {
         this.loadingSpinner = new LoadingSpinner();
         this.excelFileReader = new ExcelFileReader();
         this.uniprotMapperGui = new UniprotMapperGui(excelFileReader, loadingSpinner);
-        this.interactionsCreatorGui =  new InteractionsCreatorGui(excelFileReader, uniprotMapperGui, loadingSpinner);
-        this.interactionWriterGui = new InteractionWriterGui(interactionsCreatorGui.interactionsCreator, excelFileReader);
+        this.interactionWriterGui = new InteractionWriterGui(excelFileReader);
+        this.interactionsCreatorGui = new InteractionsCreatorGui(excelFileReader, interactionWriterGui.getInteractionWriter(), uniprotMapperGui, loadingSpinner);
     }
 
     /**
@@ -189,14 +190,13 @@ public class XmlMakerGui {
      */
     public void processFile(File file) {
         String filePath = file.getAbsolutePath();
-        if (isValidFileType(filePath)) {
-            excelFileReader.selectFileOpener(filePath);
-            uniprotMapperGui.setUpSheets();
-            interactionsCreatorGui.setUpSheets();
-
-        } else {
+        if (!isValidFileType(filePath)) {
             JOptionPane.showMessageDialog(null, "Unsupported file type. Please provide a valid file (.xls, .xlsx, .csv, or .tsv).", "Invalid File", JOptionPane.WARNING_MESSAGE);
+            return;
         }
+        excelFileReader.selectFileOpener(filePath);
+        uniprotMapperGui.setUpSheets();
+        interactionsCreatorGui.setUpSheets();
     }
 
     /**
@@ -292,18 +292,14 @@ public class XmlMakerGui {
     private void fetchFile() {
         JFileChooser chooser = new JFileChooser();
         int result = chooser.showOpenDialog(null);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = chooser.getSelectedFile();
-            if (selectedFile != null) {
-                try {
-                    processFile(selectedFile);
-                } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "Error processing file: " + selectedFile.getAbsolutePath(), e);
-                }
-            } else {
-                LOGGER.warning("No file was selected.");
-            }
+        if (result != JFileChooser.APPROVE_OPTION) return;
+        File selectedFile = chooser.getSelectedFile();
+        if (selectedFile == null) {
+            xmlMakerUtils.showErrorDialog("No file was selected.");
+            return;
         }
+
+        processFile(selectedFile);
     }
 
     /**

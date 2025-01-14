@@ -39,13 +39,14 @@ public enum DataTypeAndColumn {
     }
 
     DataTypeAndColumn(String name, boolean initial) {
-        this(name, Cell::getStringCellValue, initial);
+        this(name, Cell::getStringCellValue, initial, false);
     }
 
     DataTypeAndColumn(String name, Function<Cell, String> extractString) {
-        this(name, extractString, true);
+        this(name, extractString, true, false);
     }
-    DataTypeAndColumn(String name, Function<Cell, String> extractString, boolean initial) {
+
+    DataTypeAndColumn(String name, Function<Cell, String> extractString, boolean initial, boolean required) {
         this.name = name;
         this.extractString = extractString;
         this.initial = initial;
