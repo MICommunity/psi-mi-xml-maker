@@ -26,6 +26,7 @@ public class InteractionWriterGui {
     private final InteractionWriter interactionWriter;
     private JTextField filenameField;
     private JTextField saveLocationField;
+    private JTextField numberOfInteractionsField;
     private final ExcelFileReader excelFileReader;
     private JFileChooser directoryChooser;
 
@@ -103,6 +104,13 @@ public class InteractionWriterGui {
             directoryChooser.setSelectedFile(event.getSelectedFile().getParentFile());
         });
 
+        JLabel numberOfInteractionsLabel = new JLabel("Number of Interactions per file:");
+        numberOfInteractionsField = new JTextField("1000",20);
+        GUIUtils.addChangeListener(numberOfInteractionsField, change ->
+                InteractionsCreator.setMAX_INTERACTIONS_PER_FILE(Integer.parseInt(numberOfInteractionsField.getText())));
+
+        saveLocationPanel.add(numberOfInteractionsLabel);
+        saveLocationPanel.add(numberOfInteractionsField);
         saveLocationPanel.add(nameLabel);
         saveLocationPanel.add(filenameField);
         saveLocationPanel.add(saveLocationLabel);

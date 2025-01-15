@@ -59,12 +59,8 @@ public class XmlMakerGui {
         frame.add(createUniprotMapperPanel());
         frame.add(createFileProcessingPanel());
         frame.add(createSaveOptionsPanel());
-        JButton saveButton = new JButton("Create XML file(s)");
-        saveButton.addActionListener(e -> {
-            this.interactionsCreatorGui.interactionsCreator.setColumnAndIndex(this.interactionsCreatorGui.getDataAndIndexes());
-            this.interactionsCreatorGui.interactionsCreator.createParticipantsWithFileFormat();
-        });
-        frame.add(saveButton);
+        JButton saveButton = createSaveButtonWithSpinner();
+        frame.add(saveButton); //TODO: CHECK FOR CENTERING
         makeFrameDnD(frame);
         frame.setGlassPane(loadingSpinner.createLoadingGlassPane(frame));
         frame.setVisible(true);
@@ -178,7 +174,7 @@ public class XmlMakerGui {
             return true;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed to import file", e);
-            JOptionPane.showMessageDialog(null, "Failed to import file. Ensure it is a valid format.", "Error", JOptionPane.ERROR_MESSAGE);
+            xmlMakerUtils.showErrorDialog("Failed to import file. Ensure it is a valid format.");
         }
         return false;
     }
@@ -191,7 +187,7 @@ public class XmlMakerGui {
     public void processFile(File file) {
         String filePath = file.getAbsolutePath();
         if (!isValidFileType(filePath)) {
-            JOptionPane.showMessageDialog(null, "Unsupported file type. Please provide a valid file (.xls, .xlsx, .csv, or .tsv).", "Invalid File", JOptionPane.WARNING_MESSAGE);
+            xmlMakerUtils.showErrorDialog("Unsupported file type. Please provide a valid file (.xls, .xlsx, .csv, or .tsv).");
             return;
         }
         excelFileReader.selectFileOpener(filePath);
@@ -298,8 +294,44 @@ public class XmlMakerGui {
             xmlMakerUtils.showErrorDialog("No file was selected.");
             return;
         }
-
         processFile(selectedFile);
+    }
+
+    /**
+     * Creates a save button with a loading spinner.
+     *
+     * @return A JButton configured to start the save operation with a loading spinner.
+     */
+    private JButton createSaveButtonWithSpinner() {
+        JButton saveButton = new JButton("Create XML file(s)");
+
+        saveButton.addActionListener(e -> {
+            loadingSpinner.showSpinner();
+
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                @Override
+                protected Void doInBackground() {
+                    try {
+                        interactionsCreatorGui.interactionsCreator.setColumnAndIndex(interactionsCreatorGui.getDataAndIndexes());
+                        interactionsCreatorGui.interactionsCreator.createParticipantsWithFileFormat();
+                    } catch (Exception ex) {
+                        LOGGER.log(Level.SEVERE, "Error during save operation", ex);
+                        SwingUtilities.invokeLater(() ->
+                                xmlMakerUtils.showErrorDialog("An error occurred while saving the file.")
+                        );
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    loadingSpinner.hideSpinner();
+                }
+            };
+            worker.execute();
+        });
+
+        return saveButton;
     }
 
     /**

@@ -77,13 +77,15 @@ public class InteractionWriter {
 
     private boolean validateInputs(List<XmlInteractionEvidence> interactions) {
         if (interactions == null || interactions.isEmpty()) {
+            utils.showErrorDialog("No interactions provided for writing.");
             LOGGER.error("No interactions provided for writing.");
             return false;
         }
 
         publicationId = excelFileReader.getPublicationId();
         if (publicationId == null) {
-            LOGGER.error("Publication ID is null. Please enter the publication ID.");
+            utils.showErrorDialog("Publication ID is null. Please enter the publication ID.");
+            LOGGER.error("Impossible to find publication ID.");
             return false;
         }
         LOGGER.info("Starting interaction writer with publication ID: {}", publicationId);
@@ -164,10 +166,11 @@ public class InteractionWriter {
             LOGGER.info("PSI-XML writing completed successfully. File saved at: {}", saveLocation);
 
         } catch (Exception e) {
+            utils.showErrorDialog("Error during PSI-XML writing: " + e.getMessage());
             LOGGER.error("Error during PSI-XML writing", e);
-
         } finally {
             closeWriter(xmlInteractionWriter);
+            utils.showInfoDialog("PSI-XML writing completed successfully. File saved at: " + saveLocation);
         }
     }
 

@@ -141,19 +141,27 @@ public class ExcelFileReader  {
     }
 
     public Iterator<Row> readWorkbookSheet(String sheetSelected) {
-        Iterator<Row> iterator = null;
         Sheet sheet = workbook.getSheet(sheetSelected);
-        iterator = StreamSupport.stream(
-                        Spliterators.spliteratorUnknownSize(sheet.iterator(), Spliterator.ORDERED), false)
-                .collect(Collectors.toList()).iterator();
+        if (sheet == null) {
+            LOGGER.severe("Sheet " + sheetSelected + " does not exist.");
+            return Collections.emptyIterator();
+        }
+
+        Iterator<Row> iterator = sheet.iterator();
+
+        Boolean isFirstRow = true;
 
         if (iterator.hasNext()) {
             Row row = iterator.next();
             List<String> rowData = new ArrayList<>();
             for (Cell cell : row) {
-                rowData.add(cell.toString());
+                rowData.add(formatter.formatCellValue(cell));
             }
-            fileData = rowData;
+
+            if (isFirstRow) {
+                fileData = rowData;
+                isFirstRow = false;
+            }
         }
 
         return iterator;
@@ -328,11 +336,14 @@ public class ExcelFileReader  {
 
                 csvWriter.writeNext(data.toArray(new String[0]));
             }
-
+            uniprotMapper.clearAlreadyParsed();
+            xmlMakerutils.showInfoDialog("Participants identifier updated successfully.");
         } catch (IOException e) {
+            xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error writing file", e);
         }
     }
+
     public void checkAndInsertUniprotResultsIterator(String sheetSelected, String idColumnName,
                                                      int organismColumnIndex, int idDbColumnIndex) {
         try (FileOutputStream fileOut = new FileOutputStream("tmp." + FileUtils.getFileExtension(fileName))) {
@@ -376,9 +387,12 @@ public class ExcelFileReader  {
             }
 
             workbook.write(fileOut);
+            uniprotMapper.clearAlreadyParsed();
+            xmlMakerutils.showInfoDialog("Participants identifier updated successfully.");
             workbook.close();
 
         } catch (IOException e) {
+            xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error processing workbook", e);
         }
     }

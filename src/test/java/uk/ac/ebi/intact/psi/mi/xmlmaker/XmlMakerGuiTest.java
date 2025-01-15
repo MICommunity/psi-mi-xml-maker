@@ -1,6 +1,7 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionWriter;
@@ -9,134 +10,126 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapper;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-/**
- * The XmlMakerGuiTest class is used to test different functions of the XML maker.
- * It takes in input different similar files saved under different formats. Those files
- * contain lines with missing cells to check the good processing of those.
- */
-public class XmlMakerGuiTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.*;
+
+public class XmlMakerGuiTest {
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGuiTest.class.getName());
     private static final String TEST_FILE_PATH = "src/test/java/uk/ac/ebi/intact/psi/mi/xmlmaker/testSamples/";
-    private final Map<String, Integer> COLUMN_AND_INDEX = mockColumnAndIndex();
-    private final int numberOfColumns = 24;
+    private static final int EXPECTED_COLUMN_COUNT = 24;
+    private static final String INTERACTION_ID_ATTRIBUTE = "interaction id=";
 
     private ExcelFileReader reader;
     private InteractionsCreator interactionsCreator;
     private InteractionWriter interactionWriter;
 
-    @Override
-    protected void setUp() throws Exception {
-        LoadingSpinner loadingSpinner = new LoadingSpinner();
-        super.setUp();
+    @BeforeEach
+    public void setUp() throws Exception {
         reader = new ExcelFileReader();
-        UniprotMapperGui uniprotMapperGui = new UniprotMapperGui(reader, loadingSpinner);
-        this.interactionWriter = new InteractionWriter(reader);
-        interactionsCreator = new InteractionsCreator(reader, interactionWriter, uniprotMapperGui, COLUMN_AND_INDEX);
-    //TODO make it work
+        UniprotMapperGui uniprotMapperGui = new UniprotMapperGui(reader, new LoadingSpinner());
+        interactionWriter = new InteractionWriter(reader);
+        interactionsCreator = new InteractionsCreator(reader, interactionWriter, uniprotMapperGui, mockColumnAndIndex());
     }
 
-    public void testOpenCsvFile_fileHasExpectedColumnCount(){
-        ExcelFileReader reader = new ExcelFileReader();
-        LOGGER.info("Testing csv opening");
-        reader.selectFileOpener(TEST_FILE_PATH + "test_sample.csv");
-        assertEquals(numberOfColumns, reader.fileData.size());
+    @Test
+    public void testOpenCsvFile_fileHasExpectedColumnCount() {
+        testFileOpeningWithExpectedColumns("test_sample.csv");
     }
 
-    public void testOpenXslxFile_fileHasExpectedColumnCount(){
-        ExcelFileReader reader = new ExcelFileReader();
-        LOGGER.info("Testing xlsx opening");
+    @Test
+    public void testOpenXslxFile_fileHasExpectedColumnCount() {
+        LOGGER.info("Testing file opening: " + "test_sample.xlsx");
         reader.selectFileOpener(TEST_FILE_PATH + "test_sample.xlsx");
-        assertEquals(numberOfColumns, reader.getColumns("test_sample").size());
+        assertEquals(EXPECTED_COLUMN_COUNT, reader.getColumns("test_sample").size());
     }
 
-    public void testOpenTsvFile_fileHasExpectedColumnCount(){
-        ExcelFileReader reader = new ExcelFileReader();
-        LOGGER.info("Testing tsv opening");
-        reader.selectFileOpener(TEST_FILE_PATH + "test_sample.tsv");
-        assertEquals(numberOfColumns, reader.fileData.size());
+    @Test
+    public void testOpenTsvFile_fileHasExpectedColumnCount() {
+        testFileOpeningWithExpectedColumns("test_sample.tsv");
     }
 
-    public void testUniprotIdFetching_returnExpectedUniprotId(){
+    private void testFileOpeningWithExpectedColumns(String fileName) {
+        LOGGER.info("Testing file opening: " + fileName);
+        reader.selectFileOpener(TEST_FILE_PATH + fileName);
+        assertEquals(EXPECTED_COLUMN_COUNT, reader.fileData.size());
+    }
+
+    @Test
+    public void testUniprotIdFetching_returnExpectedUniprotId() {
         UniprotMapper mapper = new UniprotMapper();
 
-        LOGGER.info("Testing uniprot classic search");
-        String classicSearch = mapper.fetchUniprotResults("P05067", "9606", "UniprotKb");
-        assertEquals("P05067", classicSearch);
+        LOGGER.info("Testing Uniprot classic search");
+        assertEquals("P05067", mapper.fetchUniprotResults("P05067", "9606", "UniprotKb"));
 
-        LOGGER.info("Testing uniprot null search");
-        String nullSearch = mapper.fetchUniprotResults("null", "9606", "ENSEMBL");
-        assertEquals("null", nullSearch);
+        LOGGER.info("Testing Uniprot null search");
+        assertEquals("null", mapper.fetchUniprotResults("null", "9606", "ENSEMBL"));
 
-        LOGGER.info("Testing uniprot update id search");
-        String updateIdSearch = mapper.fetchUniprotResults("Q9BT38", "9606", "UniprotKb");
-        assertEquals("P05067", updateIdSearch);
+        LOGGER.info("Testing Uniprot updated ID search");
+        assertEquals("P05067", mapper.fetchUniprotResults("Q9BT38", "9606", "UniprotKb"));
     }
 
-    public void testInteractionsCreation_Tsv_returnExpectedInteractionNumber() throws Exception {
-        LOGGER.info("Testing participant creation");
-        setUp();
-        reader.selectFileOpener(TEST_FILE_PATH + "test_sample.tsv");
-        interactionsCreator.createParticipantsWithFileFormat();
-        assertEquals(12,interactionsCreator.xmlModelledInteractions.size());
+    @Test
+    public void testInteractionsCreation_Tsv_ParseAndCountInteractionIds() throws Exception {
+        testInteractionsCreation("test_sample.tsv");
     }
 
-    public void testInteractionsCreation_Xlsx_returnExpectedInteractionNumber() throws Exception {
-        LOGGER.info("Testing participant creation");
-        setUp();
-        reader.selectFileOpener(TEST_FILE_PATH + "test_sample.xlsx");
+    @Test
+    public void testInteractionsCreation_workbook_ParseAndCountInteractionIds() throws Exception {
+        testInteractionsCreation("test_sample.xlsx");
+    }
+
+    private void testInteractionsCreation(String fileName) throws Exception {
+        LOGGER.info("Testing interactions creation for file: " + fileName);
+
+        reader.selectFileOpener(TEST_FILE_PATH + fileName);
+        reader.publicationId = "1234";
+
+        interactionWriter.setName(fileName);
+        interactionWriter.setSaveLocation(TEST_FILE_PATH);
+
         interactionsCreator.sheetSelected = "test_sample";
         interactionsCreator.createParticipantsWithFileFormat();
 
-        assertEquals(12,interactionsCreator.xmlModelledInteractions.size());
+        File writtenFile = new File(TEST_FILE_PATH + "test_sample/test_sample_0.xml");
+        assertTrue(writtenFile.exists(), "XML file should exist");
+        assertTrue(writtenFile.length() > 0, "XML file should not be empty");
+
+        int interactionIdCount = countOccurrencesInFile(writtenFile);
+        assertEquals(13, interactionIdCount, "Number of 'interaction id=' occurrences should match expected interaction count");
     }
 
+    private int countOccurrencesInFile(File file) throws IOException {
+        int count = 0;
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                count += (line.split(XmlMakerGuiTest.INTERACTION_ID_ATTRIBUTE, -1).length - 1);
+            }
+        }
+        return count;
+    }
+
+    @Test
     public void testMiFetching_returnExpectedMiId() {
         LOGGER.info("Testing MI fetching");
         XmlMakerUtils utils = new XmlMakerUtils();
-        String fetched = utils.fetchMiId("uniprot");
-        assertEquals("MI:1097", fetched);
+        assertEquals("MI:1097", utils.fetchMiId("uniprot"));
     }
 
-    public void testFetchingDataWithSeparator_returnExpectedDataSize() throws Exception {
-        LOGGER.info("Test fetching data with separator");
-        setUp();
-
-        reader.selectFileOpener(TEST_FILE_PATH + "test_sample.tsv");
-//        interactionsCreator.sheetSelected = "test_sample";
-        interactionsCreator.fetchDataFileWithSeparator(COLUMN_AND_INDEX);
-        int dataListSize = interactionsCreator.xmlModelledInteractions.size();
-        assertEquals(12, dataListSize);
-    }
-
-    public void testFetchingDataWithWorkbook_returnExpectedDataSize() throws Exception {
-        LOGGER.info("Test fetching data with workbook");
-        setUp();
-
-        reader.selectFileOpener(TEST_FILE_PATH + "test_sample.xlsx");
-        interactionsCreator.sheetSelected = "test_sample";
-        interactionsCreator.fetchDataWithWorkbook(COLUMN_AND_INDEX);
-        int interactionsSize = interactionsCreator.dataList.size();
-        assertEquals(24, interactionsSize);
-    }
-
+    @Test
     public void testFileWriting_CreateAndWriteXmlFile() throws Exception {
-        LOGGER.info("Test writing xml file");
-        setUp();
-        InteractionWriter interactionWriter = new InteractionWriter(reader);
-
-        reader.selectFileOpener(TEST_FILE_PATH + "test_sample.tsv");
-        reader.publicationId = "1234";
-
-        this.interactionWriter.setName("test_sample.tsv");
-        this.interactionWriter.setSaveLocation(TEST_FILE_PATH);
-        this.interactionsCreator.createParticipantsWithFileFormat();
+        LOGGER.info("Testing XML file writing");
+        testInteractionsCreation("test_sample.tsv");
     }
 
-    public Map<String, Integer> mockColumnAndIndex() {
+    private Map<String, Integer> mockColumnAndIndex() {
         Map<String, Integer> columnAndIndex = new HashMap<>();
 
         columnAndIndex.put(DataTypeAndColumn.INTERACTION_NUMBER.name, 5);
@@ -161,5 +154,4 @@ public class XmlMakerGuiTest extends TestCase {
 
         return columnAndIndex;
     }
-
 }

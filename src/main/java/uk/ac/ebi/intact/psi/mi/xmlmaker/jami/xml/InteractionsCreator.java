@@ -24,8 +24,8 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn.*;
  * It processes participants, interactions, and related data, and generates XML objects for interaction modeling.
  */
 public class InteractionsCreator {
-    // TODO add customisable option
-    private static final int MAX_INTERACTIONS_PER_FILE = 1_000;
+    @Setter
+    private static int MAX_INTERACTIONS_PER_FILE = 1_000;
     final ExcelFileReader excelFileReader;
     final InteractionWriter interactionWriter;
     final UniprotMapperGui uniprotMapperGui;
@@ -202,7 +202,34 @@ public class InteractionsCreator {
         Iterator<List<String>> data = excelFileReader.readFileWithSeparator();
         int expectedNumberOfColumns = excelFileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
-        String currentInteractionNumber = "0"; //TODO: check how to do that without creating a new interaction
+        String currentInteractionNumber = "0"; // Will be set based on the first row
+
+        // Check if there's data available first
+        if (data.hasNext()) {
+            List<String> firstRow = data.next();
+            // Initialize currentInteractionNumber based on the first row
+            currentInteractionNumber = firstRow.get(interactionNumberColumn);
+            // Put the first row back into the iterator to process in the loop
+            Iterator<List<String>> finalData = data;
+            data = new Iterator<List<String>>() {
+                boolean firstRowProcessed = false;
+
+                @Override
+                public boolean hasNext() {
+                    return !firstRowProcessed || finalData.hasNext();
+                }
+
+                @Override
+                public List<String> next() {
+                    if (!firstRowProcessed) {
+                        firstRowProcessed = true;
+                        return firstRow; // Return the first row initially
+                    } else {
+                        return finalData.next(); // Continue with the iterator
+                    }
+                }
+            };
+        }
 
         while (data.hasNext()) {
             isFileFinished = false;
@@ -210,7 +237,7 @@ public class InteractionsCreator {
 
             if (datum.size() < expectedNumberOfColumns) {
                 LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
-                data.next();
+                continue;
             }
 
             if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
@@ -235,10 +262,10 @@ public class InteractionsCreator {
                         }
                     }
                 }
-
             }
             dataList.add(dataMap);
         }
+
         isFileFinished = true;
         createInteractions();
         dataList.clear();
@@ -248,7 +275,48 @@ public class InteractionsCreator {
         Iterator<Row> data = excelFileReader.readWorkbookSheet(sheetSelected);
         int expectedNumberOfColumns = excelFileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
-        String currentInteractionNumber = "0"; //TODO: check how to do that without creating a new interaction
+        String currentInteractionNumber = "0"; // Will be set based on the first row
+
+        // Check if there's data available first
+        if (data.hasNext()) {
+            Row firstRow = data.next();
+            List<String> firstRowData = new ArrayList<>();
+            int firstCellNum = firstRow.getFirstCellNum();
+            int lastCellNum = firstRow.getLastCellNum();
+
+            for (int cellNum = firstCellNum; cellNum < lastCellNum; cellNum++) {
+                Cell cell = firstRow.getCell(cellNum, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+                if (cell == null) {
+                    firstRowData.add(""); // Add an empty string for blank or missing cells
+                } else {
+                    firstRowData.add(cell.toString());
+                }
+            }
+
+            // Initialize currentInteractionNumber based on the first row
+            currentInteractionNumber = firstRowData.get(interactionNumberColumn);
+
+            // Put the first row back into the iterator to process in the loop
+            Iterator<Row> finalData = data;
+            data = new Iterator<Row>() {
+                boolean firstRowProcessed = false;
+
+                @Override
+                public boolean hasNext() {
+                    return !firstRowProcessed || finalData.hasNext();
+                }
+
+                @Override
+                public Row next() {
+                    if (!firstRowProcessed) {
+                        firstRowProcessed = true;
+                        return firstRow; // Return the first row initially
+                    } else {
+                        return finalData.next(); // Continue with the iterator
+                    }
+                }
+            };
+        }
 
         while (data.hasNext()) {
             isFileFinished = false;
@@ -268,7 +336,7 @@ public class InteractionsCreator {
 
             if (datum.size() < expectedNumberOfColumns) {
                 LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
-                data.next();
+                continue; // Skip this row if it has fewer cells than expected
             }
 
             if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
@@ -293,10 +361,10 @@ public class InteractionsCreator {
                         }
                     }
                 }
-
             }
             dataList.add(dataMap);
         }
+
         isFileFinished = true;
         createInteractions();
         dataList.clear();

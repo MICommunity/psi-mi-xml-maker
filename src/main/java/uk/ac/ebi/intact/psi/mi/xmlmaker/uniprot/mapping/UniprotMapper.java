@@ -28,7 +28,7 @@ public class UniprotMapper {
 
         String urlString = uniprotQueryConstructor(protein, organismId, database);
         if (alreadyParsed.containsKey(protein)) {
-            LOGGER.debug("Protein '{}' already parsed. Returning cached result.", protein); //todo: is it necessary here?
+            LOGGER.debug("Protein '{}' already parsed. Returning cached result.", protein);
             return alreadyParsed.get(protein);
         }
 
@@ -39,6 +39,7 @@ public class UniprotMapper {
             }
             return parseResponse(connection, protein);
         } catch (Exception e) {
+            utils.showErrorDialog("Error fetching UniProt results, please check your internet connection");
             LOGGER.error("Error fetching UniProt results for protein '{}': {}", protein, e.getMessage(), e);
             return protein;
         }
@@ -78,7 +79,7 @@ public class UniprotMapper {
             String uniprotAccession = getUniprotAC(jsonResponse);
 
             if (uniprotAccession != null) {
-                LOGGER.info("UniProt accession '{}' found for protein '{}'.", uniprotAccession, protein); //todo: necessary?
+                LOGGER.info("UniProt accession '{}' found for protein '{}'.", uniprotAccession, protein);
                 alreadyParsed.put(protein, uniprotAccession);
                 return uniprotAccession;
             } else {
