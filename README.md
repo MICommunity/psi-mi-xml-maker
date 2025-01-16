@@ -44,12 +44,13 @@ Once the setup is complete, you can launch the PSI-MI XML-maker and start genera
 ### 3. Create the participants
     Before creating the interactions, the user has to create the participants. 
     The same way as the Uniprot update, the user has to select the sheet for the XLSX or XLSX file. 
-    Then the user has to associate the participant's elements to the columns in the file. 
-    Once done, a click on the "Create participant" button will launch the process. 
-    The participants will be created and associated depending on their interactions.
+    Then the user has to associate the participant's elements to the columns in the file.
 
 ### 4. Create the PSI-MI 3.0 XML file
-    Finally, the user has to select the date of the publication. 
-    Then, the saving location has to be saved. 
-    Clicking on the "Browse..." button will open the saving file browser. 
-    Once those requirements filed, clicking on the "Create XML file" button will write and save the XML file.
+        The user has to select the publication date in the dedicated section.
+        Finally, the user has to select the number of interactions per XML file. By default, this value is set at 1000.
+        If there is more than this number of interactions, multiple files will be generated.
+        The user can choose the name and the saving location of the XML file(s).
+        By default, the name will be the same as the input file with "_[n of file]" and the saving directory will be also named like the input file.
+        Clicking on the "Browse..." button will open the saving file browser.
+        Once those requirements filed, clicking on the "Create XML file" button will write and save the XML file.
