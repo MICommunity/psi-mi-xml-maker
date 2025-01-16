@@ -138,7 +138,7 @@ public class InteractionsCreator {
         CvTerm xrefDb = terms.get(PARTICIPANT_XREF_DB);
         CvTerm participantIdentificationMethod = terms.get(PARTICIPANT_IDENTIFICATION_METHOD);
 
-        String name = Objects.requireNonNull(data, "The participant name cannot be null").toString();
+        String name = Objects.requireNonNull(data.get(PARTICIPANT_NAME.name), "The participant name cannot be null").toString();
         String participantId = data.get(PARTICIPANT_ID.name);
         String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
         Xref uniqueId = new XmlXref(participantIdDb, participantId);
