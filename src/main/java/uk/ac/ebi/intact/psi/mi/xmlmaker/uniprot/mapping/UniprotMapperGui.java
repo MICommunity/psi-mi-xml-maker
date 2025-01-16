@@ -202,7 +202,7 @@ public class UniprotMapperGui extends JPanel {
      */
     private void processSheet(String sheetSelected, String idColumn, int organismColumnIndex, int idDbColumnIndex) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsIterator(sheetSelected, idColumn, organismColumnIndex, idDbColumnIndex);
+            excelFileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, organismColumnIndex, idDbColumnIndex);
             showMoleculeSetDialog();
         } catch (Exception ex) {
             handleProcessingError(ex);

@@ -46,7 +46,7 @@ public class XmlMakerGui {
         this.excelFileReader = new ExcelFileReader();
         this.uniprotMapperGui = new UniprotMapperGui(excelFileReader, loadingSpinner);
         this.interactionWriterGui = new InteractionWriterGui(excelFileReader);
-        this.interactionsCreatorGui = new InteractionsCreatorGui(excelFileReader, interactionWriterGui.getInteractionWriter(), uniprotMapperGui, loadingSpinner);
+        this.interactionsCreatorGui = new InteractionsCreatorGui(excelFileReader, interactionWriterGui.getInteractionWriter(), uniprotMapperGui);
     }
 
     /**
@@ -155,7 +155,6 @@ public class XmlMakerGui {
             }
         });
     }
-
 
     /**
      * Handles file import through drag-and-drop.

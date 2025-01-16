@@ -75,6 +75,13 @@ public class InteractionWriter {
         writeInteractionsToFile(interactions, writingOptions);
     }
 
+    /**
+     * Validates the input interactions and ensures that the publication ID is set.
+     *
+     * @param interactions the list of XmlInteractionEvidence to be validated.
+     * @return {@code true} if inputs are valid, {@code false} otherwise.
+     *         If invalid, error dialogs are shown and relevant errors are logged.
+     */
     private boolean validateInputs(List<XmlInteractionEvidence> interactions) {
         if (interactions == null || interactions.isEmpty()) {
             utils.showErrorDialog("No interactions provided for writing.");
@@ -92,11 +99,21 @@ public class InteractionWriter {
         return true;
     }
 
+    /**
+     * Constructs the file path for saving the XML file, based on the save location and file naming pattern.
+     *
+     * @return the constructed file path as a string.
+     */
     private String constructFilePath() {
         String directory = this.saveLocation + "/" + FileUtils.getFileName(name) + "/";
         return directory + FileUtils.getFileName(name)  + "_" + fileCounter++ + ".xml";
     }
 
+    /**
+     * Initializes the XmlSource object with relevant details including publication reference and xrefs.
+     *
+     * @return a fully initialized {@link XmlSource} object.
+     */
     private XmlSource initializeSource() {
         Publication intactPubmedRef = new BibRef(publicationId);
         String intactMiId = utils.fetchMiId("intact");
@@ -116,6 +133,12 @@ public class InteractionWriter {
         return source;
     }
 
+    /**
+     * Creates a default release date in the form of an XMLGregorianCalendar with the current date and time.
+     *
+     * @return the default release date as an {@link XMLGregorianCalendar}.
+     * @throws RuntimeException if an error occurs while creating the release date.
+     */
     private XMLGregorianCalendar createDefaultReleaseDate() {
         try {
             GregorianCalendar calendar = new GregorianCalendar();
@@ -126,6 +149,11 @@ public class InteractionWriter {
         }
     }
 
+    /**
+     * Initializes and returns a collection of default annotations for entries.
+     *
+     * @return a collection of {@link Annotation} objects, containing a default entry annotation.
+     */
     private Collection<Annotation> initializeDefaultAnnotations() {
         Collection<Annotation> defaultEntryAnnotations = new ArrayList<>();
         XmlAnnotation defaultEntryAnnotation = new XmlAnnotation();
@@ -133,6 +161,15 @@ public class InteractionWriter {
         return defaultEntryAnnotations;
     }
 
+    /**
+     * Prepares the writing options for the interaction file.
+     *
+     * @param filePath the path of the file to be written.
+     * @param source the source to be used in the file.
+     * @param defaultReleaseDate the default release date.
+     * @param defaultEntryAnnotations the default annotations for the entries.
+     * @return a map containing the writing options for the interaction file.
+     */
     private Map<String, Object> prepareWritingOptions(String filePath, XmlSource source, XMLGregorianCalendar defaultReleaseDate, Collection<Annotation> defaultEntryAnnotations) {
         PsiJami.initialiseAllFactories();
 
@@ -151,6 +188,15 @@ public class InteractionWriter {
         );
     }
 
+    /**
+     * Writes a list of interactions to a file using the provided writing options.
+     *
+     * @param interactions the list of {@link XmlInteractionEvidence} to be written.
+     * @param writingOptions the map of options for writing the interactions.
+     *
+     * <p>Logs success and error messages during the writing process.
+     * Ensures the directory exists before writing.</p>
+     */
     private void writeInteractionsToFile(List<XmlInteractionEvidence> interactions, Map<String, Object> writingOptions) {
         InteractionWriterFactory writerFactory = InteractionWriterFactory.getInstance();
         psidev.psi.mi.jami.datasource.InteractionWriter<XmlInteractionEvidence> xmlInteractionWriter = null;
@@ -174,6 +220,11 @@ public class InteractionWriter {
         }
     }
 
+    /**
+     * Creates the directory for the output file if it does not already exist.
+     *
+     * @throws IOException if an error occurs while creating the directory.
+     */
     private void createDirectoryIfNotExists() throws IOException {
         Path directory = Path.of(this.saveLocation + "/" + FileUtils.getFileName(name) + "/");
         if (!Files.exists(directory)) {
@@ -181,6 +232,14 @@ public class InteractionWriter {
         }
     }
 
+    /**
+     * Closes the provided PSI-XML writer, handling any potential exceptions.
+     *
+     * @param writer the {@link psidev.psi.mi.jami.datasource.InteractionWriter} to be closed.
+     *               If the writer is {@code null}, no action is taken.
+     *
+     * <p>Logs any errors encountered while closing the writer.</p>
+     */
     private void closeWriter(psidev.psi.mi.jami.datasource.InteractionWriter<XmlInteractionEvidence> writer) {
         if (writer != null) {
             try {

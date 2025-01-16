@@ -10,6 +10,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class checks whether a protein is part of a defined molecule set by parsing
+ * a specified Excel file that contains the mapping between proteins and molecule sets.
+ * The file is read and parsed at initialization, and protein-to-molecule set mappings
+ * are stored in memory for later use.
+ */
 public class MoleculeSetChecker {
 
     private static final Logger LOGGER = LogManager.getLogger(MoleculeSetChecker.class);
@@ -20,11 +26,21 @@ public class MoleculeSetChecker {
     private final DataFormatter formatter = new DataFormatter();
     private final Map<String, String> proteinAndMoleculeSet = new HashMap<>();
 
+    /**
+     * Constructor that initializes the MoleculeSetChecker and parses the molecule set file.
+     * Logs the initialization and starts parsing the file.
+     */
     public MoleculeSetChecker() {
         LOGGER.info("Initializing MoleculeSetChecker.");
         parseMoleculeSetFile();
     }
 
+    /**
+     * Reads the molecule set Excel file from the predefined location.
+     *
+     * @return the {@link Workbook} representing the molecule set file.
+     * @throws IOException if an error occurs while reading the file.
+     */
     private Workbook readFile() throws IOException {
         File file = new File(DEFAULT_MOLECULE_SET_PATH);
         if (!file.exists() || !file.isFile()) {
@@ -40,6 +56,13 @@ public class MoleculeSetChecker {
         }
     }
 
+    /**
+     * Parses the molecule set file, extracting protein-to-molecule set mappings
+     * and storing them in memory.
+     * <p>
+     * If the file cannot be read or is empty, appropriate warnings are logged.
+     * </p>
+     */
     private void parseMoleculeSetFile() {
         try (Workbook workbook = readFile()) {
             if (workbook == null) {
@@ -74,6 +97,13 @@ public class MoleculeSetChecker {
         }
     }
 
+    /**
+     * Checks whether the given protein is part of a molecule set.
+     *
+     * @param proteinAc the protein accession to check.
+     * @return {@code true} if the protein is part of a molecule set, {@code false} otherwise.
+     *         Logs debug messages based on the result.
+     */
     public boolean isProteinPartOfMoleculeSet(String proteinAc) {
         boolean result = proteinAndMoleculeSet.containsKey(proteinAc);
         if (result) {

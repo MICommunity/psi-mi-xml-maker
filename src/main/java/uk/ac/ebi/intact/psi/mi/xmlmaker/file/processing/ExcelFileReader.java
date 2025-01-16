@@ -140,6 +140,12 @@ public class ExcelFileReader  {
         }
     }
 
+    /**
+     * Reads the specified sheet from the workbook and returns an iterator over its rows.
+     *
+     * @param sheetSelected the name of the sheet to read.
+     * @return an iterator of rows from the selected sheet. If the sheet does not exist, returns an empty iterator.
+     */
     public Iterator<Row> readWorkbookSheet(String sheetSelected) {
         Sheet sheet = workbook.getSheet(sheetSelected);
         if (sheet == null) {
@@ -149,7 +155,7 @@ public class ExcelFileReader  {
 
         Iterator<Row> iterator = sheet.iterator();
 
-        Boolean isFirstRow = true;
+        boolean isFirstRow = true;
 
         if (iterator.hasNext()) {
             Row row = iterator.next();
@@ -167,7 +173,7 @@ public class ExcelFileReader  {
         return iterator;
     }
 
-        /**
+    /**
          * Reads the CSV/TSV file and store its content.
          *
          * @return the file data
@@ -284,14 +290,31 @@ public class ExcelFileReader  {
         return numberOfFeatures;
     }
 
+    /**
+     * Registers an event listener for the InputSelectedEvent.
+     *
+     * @param listener the listener to be added.
+     */
     public void registerInputSelectedEventHandler(InputSelectedEvent.Listener listener) {
         listeners.add(listener);
     }
 
+    /**
+     * Triggers the InputSelectedEvent for all registered listeners.
+     *
+     * @param event the event to be fired.
+     */
     private void fireInputSelectedEvent(InputSelectedEvent event) {
         listeners.forEach(listener -> listener.handle(event));
     }
 
+    /**
+     * Reads a separated file, processes it, and updates identifiers using UniProt results.
+     *
+     * @param idColumnName      the name of the column containing the ID.
+     * @param organismColumnIndex the index of the organism column.
+     * @param idDbColumnIndex     the index of the ID database column.
+     */
     public void checkAndInsertUniprotResultsSeparatedFormat(String idColumnName, int organismColumnIndex,
                                                             int idDbColumnIndex) {
         Iterator<List<String>> iterator = readFileWithSeparator();
@@ -338,13 +361,30 @@ public class ExcelFileReader  {
             }
             uniprotMapper.clearAlreadyParsed();
             xmlMakerutils.showInfoDialog("Participants identifier updated successfully.");
+
+            File tmpFile = new File(tmpFilePath);
+            File originalFile = new File(currentFilePath);
+            if (tmpFile.renameTo(originalFile)) {
+                LOGGER.info("File replaced successfully: " + originalFile.getAbsolutePath());
+            } else {
+                LOGGER.severe("Failed to replace the original file.");
+                xmlMakerutils.showErrorDialog("Failed to replace the original file.");
+            }
+
         } catch (IOException e) {
             xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error writing file", e);
         }
     }
-
-    public void checkAndInsertUniprotResultsIterator(String sheetSelected, String idColumnName,
+    /**
+     * Processes a workbook and updates identifiers using UniProt results.
+     *
+     * @param sheetSelected     the name of the sheet to process.
+     * @param idColumnName      the name of the column containing the ID.
+     * @param organismColumnIndex the index of the organism column.
+     * @param idDbColumnIndex     the index of the ID database column.
+     */
+    public void checkAndInsertUniprotResultsWorkbook(String sheetSelected, String idColumnName,
                                                      int organismColumnIndex, int idDbColumnIndex) {
         try (FileOutputStream fileOut = new FileOutputStream("tmp." + FileUtils.getFileExtension(fileName))) {
             Iterator<Row> iterator = readWorkbookSheet(sheetSelected);
@@ -389,12 +429,50 @@ public class ExcelFileReader  {
             workbook.write(fileOut);
             uniprotMapper.clearAlreadyParsed();
             xmlMakerutils.showInfoDialog("Participants identifier updated successfully.");
-            workbook.close();
 
+            File tmpFile = new File("tmp." + FileUtils.getFileExtension(fileName));
+            File originalFile = new File(currentFilePath);
+            if (tmpFile.renameTo(originalFile)) {
+                LOGGER.info("File replaced successfully: " + originalFile.getAbsolutePath());
+            } else {
+                LOGGER.severe("Failed to replace the original file.");
+                xmlMakerutils.showErrorDialog("Failed to replace the original file.");
+            }
+
+            workbook.close();
         } catch (IOException e) {
             xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error processing workbook", e);
         }
     }
+    /**
+     * Retrieves the first few lines from the specified sheet or separated file.
+     *
+     * @param sheetSelected the name of the sheet (if applicable).
+     * @param numberOfRows  the number of rows to retrieve.
+     * @return a list of rows, where each row is a list of strings.
+     */
+    public List<List<String>> getFileFirstLines(String sheetSelected, int numberOfRows) {
+        List<List<String>> firstLines = new ArrayList<>();
+        int i = 0;
 
+        if (workbook == null){
+            Iterator<List<String>> iteratorSeparated = readFileWithSeparator();
+            while (iteratorSeparated.hasNext() && i < numberOfRows) {
+                firstLines.add(iteratorSeparated.next());
+                i++;
+            }
+            return firstLines;
+        }
+        Iterator<Row> iteratorWorkbook = readWorkbookSheet(sheetSelected);
+        while (iteratorWorkbook.hasNext() && i < numberOfRows) {
+            Row row = iteratorWorkbook.next();
+            List<String> currentLine = new ArrayList<>();
+            for (Cell cell : row) {
+                currentLine.add(cell.getStringCellValue());
+            }
+            firstLines.add(currentLine);
+        }
+        return firstLines;
+    }
 }

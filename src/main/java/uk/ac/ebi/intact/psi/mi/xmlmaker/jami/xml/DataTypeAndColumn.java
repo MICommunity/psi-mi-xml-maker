@@ -20,7 +20,9 @@ public enum DataTypeAndColumn {
     PARTICIPANT_ORGANISM("Participant taxID"),
     EXPERIMENTAL_ROLE("Experimental role"),
     PARTICIPANT_IDENTIFICATION_METHOD("Participant identification method"),
+
     PARTICIPANT_XREF("Participant xref"),
+    PARTICIPANT_XREF_DB("Participant xref database"),
 
     FEATURE_SHORT_LABEL("Feature short label", false),
     FEATURE_TYPE("Feature type", false),

@@ -15,6 +15,10 @@ import java.util.*;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
+/**
+ * This class provides functionality to fetch UniProt results for a given protein from the UniProt database.
+ * It caches previously fetched results to avoid redundant requests.
+ */
 public class UniprotMapper {
     private static final Logger LOGGER = LogManager.getLogger(UniprotMapper.class);
 
@@ -23,6 +27,14 @@ public class UniprotMapper {
     private static final String ACCEPT_JSON = "application/json";
     private final XmlMakerUtils utils = new XmlMakerUtils();
 
+    /**
+     * Fetches the UniProt results for a given protein, organism, and database.
+     *
+     * @param protein the protein identifier (e.g., accession or other unique identifier).
+     * @param organismId the organism identifier (e.g., taxonomic ID).
+     * @param database the name of the database to search in (e.g., RefSeq, GeneID, Ensembl).
+     * @return the UniProt accession for the protein, or the input protein if no accession is found.
+     */
     public String fetchUniprotResults(String protein, String organismId, String database) {
         LOGGER.info("Fetching UniProt results for protein: {}, organismId: {}, database: {}", protein, organismId, database);
 
@@ -45,6 +57,13 @@ public class UniprotMapper {
         }
     }
 
+    /**
+     * Creates an HTTP connection to the UniProt API using the provided URL string.
+     *
+     * @param urlString the URL to connect to.
+     * @return an {@link HttpURLConnection} object.
+     * @throws Exception if an error occurs while creating the connection.
+     */
     private HttpURLConnection createConnection(String urlString) throws Exception {
         LOGGER.debug("Creating connection to UniProt API with URL: {}", urlString);
 
@@ -55,6 +74,13 @@ public class UniprotMapper {
         return connection;
     }
 
+    /**
+     * Parses the response from the UniProt API to extract the UniProt accession.
+     *
+     * @param connection the HTTP connection that returned the response.
+     * @param protein the protein identifier for logging purposes.
+     * @return the UniProt accession or the input protein if no accession is found.
+     */
     private String parseResponse(HttpURLConnection connection, String protein) {
         StringBuilder content = new StringBuilder();
         try (BufferedReader queryResults = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
@@ -71,6 +97,13 @@ public class UniprotMapper {
         }
     }
 
+    /**
+     * Extracts the UniProt accession from the JSON response.
+     *
+     * @param jsonString the JSON response as a string.
+     * @param protein the protein identifier for logging purposes.
+     * @return the UniProt accession or the input protein if no accession is found.
+     */
     private String extractUniprotAccession(String jsonString, String protein) {
         LOGGER.debug("Extracting UniProt accession from JSON response for protein '{}'", protein);
         try {
@@ -93,6 +126,12 @@ public class UniprotMapper {
         }
     }
 
+    /**
+     * Retrieves the UniProt accession from the JSON response object.
+     *
+     * @param results the JSON object containing the results from the UniProt API.
+     * @return the UniProt accession, or {@code null} if not found.
+     */
     public String getUniprotAC(JsonObject results) {
         List<JsonObject> swissProtUniprotACs = new ArrayList<>();
         List<JsonObject> tremblUniprotACs = new ArrayList<>();
@@ -122,6 +161,13 @@ public class UniprotMapper {
         return chooseUniprotAc(swissProtUniprotACs, tremblUniprotACs);
     }
 
+    /**
+     * Chooses the best UniProt accession based on sequence length.
+     *
+     * @param swissProtUniprotACs list of Swiss-Prot UniProt entries.
+     * @param tremblUniprotACs list of TrEMBL UniProt entries.
+     * @return the chosen UniProt accession.
+     */
     public String chooseUniprotAc(List<JsonObject> swissProtUniprotACs, List<JsonObject> tremblUniprotACs) {
         LOGGER.debug("Choosing best UniProt accession based on sequence length.");
 
@@ -136,16 +182,35 @@ public class UniprotMapper {
         return null;
     }
 
+    /**
+     * Sorts the list of UniProt entries by sequence length in descending order.
+     *
+     * @param arrayList the list of UniProt entries to sort.
+     */
     public void sortArrayBySequenceLength(List<JsonObject> arrayList) {
         arrayList.sort((result1, result2) -> Integer.compare(getSequenceLength(result2), getSequenceLength(result1)));
     }
 
+    /**
+     * Retrieves the sequence length of a UniProt entry.
+     *
+     * @param result the UniProt entry to extract the sequence length from.
+     * @return the length of the sequence.
+     */
     private int getSequenceLength(JsonObject result) {
         return result.has("sequence") && result.getAsJsonObject("sequence").has("value")
                 ? result.getAsJsonObject("sequence").get("value").getAsString().length()
                 : 0;
     }
 
+    /**
+     * Constructs a UniProt API query URL based on the protein, organism, and database.
+     *
+     * @param query the protein identifier.
+     * @param organismId the organism ID.
+     * @param database the database to query (e.g., RefSeq, GeneID).
+     * @return the constructed UniProt API query URL.
+     */
     private String uniprotQueryConstructor(String query, String organismId, String database) {
         LOGGER.debug("Constructing UniProt query for query: {}, organismId: {}, database: {}", query, organismId, database);
 
@@ -162,6 +227,13 @@ public class UniprotMapper {
         }
     }
 
+    /**
+     * Chooses the appropriate database prefix for the query.
+     *
+     * @param query the protein query.
+     * @param db the database name.
+     * @return the appropriate database prefix.
+     */
     public String chooseDbFromCol(String query, String db) {
         if (db.toLowerCase().contains("refseq")) {
             return "RefSeq-" + query;
@@ -175,6 +247,9 @@ public class UniprotMapper {
         return "null";
     }
 
+    /**
+     * Clears the cached parsed results.
+     */
     public void clearAlreadyParsed(){
         alreadyParsed.clear();
     }

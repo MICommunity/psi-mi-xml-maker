@@ -111,7 +111,8 @@ public class InteractionsCreator {
         }
 
         Map<DataTypeAndColumn, CompletableFuture<CvTerm>> futureTerms = Stream.of(PARTICIPANT_TYPE, PARTICIPANT_ID_DB,
-                        EXPERIMENTAL_ROLE, EXPERIMENTAL_PREPARATION, PARTICIPANT_IDENTIFICATION_METHOD) //TODO: ADD XREF
+                        EXPERIMENTAL_ROLE, EXPERIMENTAL_PREPARATION, PARTICIPANT_IDENTIFICATION_METHOD,
+                        PARTICIPANT_XREF, PARTICIPANT_XREF_DB)
                 .map(type -> Map.entry(type, data.get(type.name)))
                 .filter(e -> e.getValue() != null)
                 .collect(Collectors.toMap(
@@ -133,10 +134,11 @@ public class InteractionsCreator {
         CvTerm participantIdDb = terms.get(PARTICIPANT_ID_DB);
         CvTerm experimentalRole = terms.get(EXPERIMENTAL_ROLE);
         CvTerm experimentalPreparation = terms.get(EXPERIMENTAL_PREPARATION);
-//        CvTerm xref= terms.get(PARTICIPANT_XREF);
+        CvTerm xref= terms.get(PARTICIPANT_XREF);
+        CvTerm xrefDb = terms.get(PARTICIPANT_XREF_DB);
         CvTerm participantIdentificationMethod = terms.get(PARTICIPANT_IDENTIFICATION_METHOD);
 
-        String name = getNonNullValue(data);
+        String name = Objects.requireNonNull(data, "The participant name cannot be null").toString();
         String participantId = data.get(PARTICIPANT_ID.name);
         String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
         Xref uniqueId = new XmlXref(participantIdDb, participantId);
@@ -166,30 +168,18 @@ public class InteractionsCreator {
             participantEvidence.getExperimentalPreparations().add(experimentalPreparation);
         }
 
-//        if (xref != null) {
-//            Xref xmlXref = new XmlXref(xref, xref.getShortName()); // TODO check normality of using name as identifier for xref
-//            participantEvidence.getXrefs().add(xmlXref);
-//        }
+        if (xref != null) {
+            Xref xmlXref = new XmlXref(xref, xref.getShortName());
+            xmlXref.getDatabase().setFullName(xrefDb.getShortName());
+            xmlXref.getDatabase().setMIIdentifier(xrefDb.getMIIdentifier());
+            participantEvidence.getXrefs().add(xmlXref);
+        }
 
         if (participantIdentificationMethod != null) {
             participantEvidence.getIdentificationMethods().add(participantIdentificationMethod);
         }
 
         return participantEvidence;
-    }
-
-    // TODO Either rename or thow a runtime error if null
-
-    /**
-     * Retrieves the value from the provided data map for the given column name, ensuring the value is neither null nor empty.
-     * If the value is null or empty (after trimming whitespace), the method returns null.
-     *
-     * @param data A map containing column names as keys and their corresponding values.
-     * @return The value from the map if it is non-null and non-empty, otherwise returns null.
-     */
-    private String getNonNullValue(Map<String, String> data) {
-        String value = data.get(DataTypeAndColumn.PARTICIPANT_NAME.name);
-        return (value == null || value.trim().isEmpty()) ? null : value;
     }
 
     /**
@@ -211,7 +201,7 @@ public class InteractionsCreator {
             currentInteractionNumber = firstRow.get(interactionNumberColumn);
             // Put the first row back into the iterator to process in the loop
             Iterator<List<String>> finalData = data;
-            data = new Iterator<List<String>>() {
+            data = new Iterator<>() {
                 boolean firstRowProcessed = false;
 
                 @Override
@@ -271,13 +261,17 @@ public class InteractionsCreator {
         dataList.clear();
     }
 
+    /**
+     * Processes data from the workbook, organizes it into a structured format, and manages interactions.
+     *
+     * @param columnAndIndex a map containing column names and their corresponding indices.
+     */
     public void fetchDataWithWorkbook(Map<String, Integer> columnAndIndex) {
         Iterator<Row> data = excelFileReader.readWorkbookSheet(sheetSelected);
         int expectedNumberOfColumns = excelFileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
-        String currentInteractionNumber = "0"; // Will be set based on the first row
+        String currentInteractionNumber = "0";
 
-        // Check if there's data available first
         if (data.hasNext()) {
             Row firstRow = data.next();
             List<String> firstRowData = new ArrayList<>();
@@ -287,18 +281,16 @@ public class InteractionsCreator {
             for (int cellNum = firstCellNum; cellNum < lastCellNum; cellNum++) {
                 Cell cell = firstRow.getCell(cellNum, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
                 if (cell == null) {
-                    firstRowData.add(""); // Add an empty string for blank or missing cells
+                    firstRowData.add("");
                 } else {
                     firstRowData.add(cell.toString());
                 }
             }
 
-            // Initialize currentInteractionNumber based on the first row
             currentInteractionNumber = firstRowData.get(interactionNumberColumn);
 
-            // Put the first row back into the iterator to process in the loop
             Iterator<Row> finalData = data;
-            data = new Iterator<Row>() {
+            data = new Iterator<>() {
                 boolean firstRowProcessed = false;
 
                 @Override
@@ -310,9 +302,9 @@ public class InteractionsCreator {
                 public Row next() {
                     if (!firstRowProcessed) {
                         firstRowProcessed = true;
-                        return firstRow; // Return the first row initially
+                        return firstRow;
                     } else {
-                        return finalData.next(); // Continue with the iterator
+                        return finalData.next();
                     }
                 }
             };
@@ -328,15 +320,15 @@ public class InteractionsCreator {
             for (int cellNum = firstCellNum; cellNum < lastCellNum; cellNum++) {
                 Cell cell = row.getCell(cellNum, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
                 if (cell == null) {
-                    datum.add(""); // Add an empty string for blank or missing cells
+                    datum.add("");
                 } else {
-                    datum.add(cell.toString());
+                    datum.add(getCellValueAsString(cell));
                 }
             }
 
             if (datum.size() < expectedNumberOfColumns) {
                 LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
-                continue; // Skip this row if it has fewer cells than expected
+                continue;
             }
 
             if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
@@ -370,6 +362,12 @@ public class InteractionsCreator {
         dataList.clear();
     }
 
+    /**
+     * Converts a cell's value to a string representation based on its type.
+     *
+     * @param cell the cell to process.
+     * @return the string representation of the cell's value.
+     */
     private String getCellValueAsString(Cell cell) {
         if (cell == null) return "N/A";
         switch (cell.getCellType()) {
@@ -429,6 +427,19 @@ public class InteractionsCreator {
         launchWriting();
     }
 
+    /**
+     * Creates an {@link Organism} object for the given host organism name.
+     *
+     * @param hostOrganism the name of the host organism. If null, creation is skipped.
+     * @return an {@link Organism} object, or {@code null} if:
+     *         <ul>
+     *           <li>The host organism is null.</li>
+     *           <li>No Tax ID is found.</li>
+     *           <li>The Tax ID is not a valid integer.</li>
+     *         </ul>
+     *
+     * <p>Logs warnings for null input, missing Tax ID, or invalid Tax ID format.</p>
+     */
     private Organism createOrganism(String hostOrganism) {
         if (hostOrganism == null) {
             LOGGER.warning("Host organism is null. Skipping organism creation.");
@@ -516,6 +527,19 @@ public class InteractionsCreator {
         return featureEvidence;
     }
 
+    /**
+     * Writes the current batch of interactions to a file if certain conditions are met.
+     *
+     * <p>The interactions are written if either:</p>
+     * <ul>
+     *   <li>The number of interactions reaches or exceeds the maximum allowed per file.</li>
+     *   <li>The file has been marked as finished.</li>
+     * </ul>
+     *
+     * <p>Once written, the interactions list is cleared.</p>
+     *
+     * <p>Logs the number of interactions being processed before writing.</p>
+     */
     private void launchWriting() {
         if (xmlModelledInteractions.size() >= MAX_INTERACTIONS_PER_FILE || isFileFinished) {
             LOGGER.info("Processing " + xmlModelledInteractions.size() + " interactions.");

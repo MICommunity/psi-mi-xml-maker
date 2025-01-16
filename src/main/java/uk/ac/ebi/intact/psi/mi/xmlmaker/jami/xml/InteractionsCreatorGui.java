@@ -4,9 +4,6 @@ import lombok.Getter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.events.ColumnAndIndexesEvent;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.events.InputSelectedEvent;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 
@@ -15,7 +12,6 @@ import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static org.apache.poi.ss.usermodel.CellType.STRING;
@@ -33,7 +29,6 @@ public class InteractionsCreatorGui extends JPanel {
     private final List<JComboBox<String>> columnsList = new ArrayList<>();
     private final List<String> columnNames = new ArrayList<>();
     private final JTable table = new JTable();
-    private final LoadingSpinner loadingSpinner;
 
     private final ExcelFileReader excelFileReader;
     public final InteractionsCreator interactionsCreator;
@@ -49,20 +44,18 @@ public class InteractionsCreatorGui extends JPanel {
                     .collect(Collectors.toList())
     );
 
-    private static final Logger LOGGER = Logger.getLogger(InteractionsCreatorGui.class.getName());
 
     /**
      * Constructs an instance of {@code InteractionsCreatorGui}.
      *
      * @param excelFileReader  The Excel file reader used to read data.
-     * @param writer
+     * @param writer Interaction writer
      * @param uniprotMapperGui The Uniprot mapper GUI for integrating with Uniprot.
      */
-    public InteractionsCreatorGui(ExcelFileReader excelFileReader, InteractionWriter writer, UniprotMapperGui uniprotMapperGui, LoadingSpinner loadingSpinner) {
+    public InteractionsCreatorGui(ExcelFileReader excelFileReader, InteractionWriter writer, UniprotMapperGui uniprotMapperGui) {
         this.excelFileReader = excelFileReader;
         this.participantCreatorPanel = new JPanel(new BorderLayout());
         this.interactionsCreator = new InteractionsCreator(excelFileReader, writer, uniprotMapperGui, getDataAndIndexes());
-        this.loadingSpinner = loadingSpinner;
     }
 
     /**
@@ -131,12 +124,18 @@ public class InteractionsCreatorGui extends JPanel {
         int rows = 1;
         int cols = dataNeededForInteractor.size() + excelFileReader.getNumberOfFeatures() * 4;
         String defaultCellValue = "Select from file";
+        String otherRowsValue = "value";
         String defaultColumnTitle = "Title";
 
         Object[][] data = new Object[rows][cols];
-        for (int i = 0; i < rows; i++) {
+        for (int i = 0; i < 1; i++) {
             for (int j = 0; j < cols; j++) {
                 data[i][j] = defaultCellValue;
+            }
+        }
+        for (int i = 1; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                data[i][j] = otherRowsValue;
             }
         }
 
@@ -146,18 +145,33 @@ public class InteractionsCreatorGui extends JPanel {
         TableModel tableModel = new DefaultTableModel(data, columnTitles);
         table.setModel(tableModel);
 
-
+        // Add combo box only to the first row
         for (int i = 0; i < dataNeededForInteractor.size(); i++) {
             TableColumn tableColumn = table.getColumnModel().getColumn(i);
             tableColumn.setHeaderValue(dataNeededForInteractor.get(i));
             tableColumn.setPreferredWidth(150);
             JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
+//            int finalI = i;
+//            comboBox.addActionListener(e -> {
+//                setUpPreviewRows(comboBox, finalI);
+//            });
             columnsList.add(comboBox);
-            tableColumn.setCellEditor(new DefaultCellEditor(comboBox));
+
+            tableColumn.setCellEditor(new DefaultCellEditor(comboBox) {
+                @Override
+                public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                    if (row == 0) {
+                        return super.getTableCellEditorComponent(table, value, isSelected, row, column);
+                    }
+                    return null;
+                }
+            });
         }
+
         for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
             addFeatureCells(i);
         }
+
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.repaint();
         table.revalidate();
@@ -215,31 +229,6 @@ public class InteractionsCreatorGui extends JPanel {
         }
     }
 
-//    /**
-//     * Retrieves the selected values from the ComboBoxes in the table.
-//     *
-//     * @return A {@link List} of selected column names.
-//     */
-//    public List<String> getComboBoxSelectedValues() {
-//        List<String> selectedValues = new ArrayList<>();
-//
-//        for (int columnIndex = 0; columnIndex < table.getColumnCount(); columnIndex++) {
-//            TableColumn column = table.getColumnModel().getColumn(columnIndex);
-//            DefaultCellEditor cellEditor = (DefaultCellEditor) column.getCellEditor();
-//
-//            if (cellEditor != null) {
-//                JComboBox<?> comboBox = (JComboBox<?>) cellEditor.getComponent();
-//                Object selectedItem = comboBox.getSelectedItem();
-//                selectedValues.add(selectedItem != null ? selectedItem.toString() : "Select from file");
-//            } else {
-//                Object cellValue = table.getValueAt(0, columnIndex);
-//                selectedValues.add(cellValue != null ? cellValue.toString() : "Select from file");
-//            }
-//        }
-//
-//        return selectedValues;
-//    }
-
     /**
      * Retrieves the names of the columns in the data table.
      *
@@ -252,5 +241,38 @@ public class InteractionsCreatorGui extends JPanel {
             tableColumnNames.add(columnName);
         }
         return tableColumnNames;
+    }
+
+    /**
+     * Configures table preview rows based on an Excel file and combo box selection.
+     *
+     * @param comboBox      the JComboBox with column names.
+     * @param comboBoxIndex the index of the table column to update.
+     * This method:
+     * 1. Exits if no file is loaded.
+     * 2. Retrieves preview data from the selected sheet.
+     * 3. Maps the selected combo box item to a column index.
+     * 4. Updates the table's column model with preview values.
+     *
+     * @throws NullPointerException if combo box or sheet selection is null.
+     */
+    public void setUpPreviewRows(JComboBox<String> comboBox, int comboBoxIndex) {
+        if (excelFileReader.currentFilePath == null) {
+            return;
+        }
+
+        TableColumnModel columnModel = table.getColumnModel();
+
+        List<List<String>> firstLines = excelFileReader.getFileFirstLines(Objects.requireNonNull(sheets.getSelectedItem()).toString(), 5);
+        String listSelection = Objects.requireNonNull(comboBox.getSelectedItem()).toString();
+
+        getDataAndIndexes();
+        int index = dataAndIndexes.get(listSelection);
+
+        for (List<String> firstLine : firstLines) {
+            String value = firstLine.get(index);
+            columnModel.getColumn(comboBoxIndex);
+            columnModel.getColumn(index);
+        }
     }
 }

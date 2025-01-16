@@ -31,7 +31,7 @@ public class XmlMakerGuiTest {
     private InteractionWriter interactionWriter;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp() {
         reader = new ExcelFileReader();
         UniprotMapperGui uniprotMapperGui = new UniprotMapperGui(reader, new LoadingSpinner());
         interactionWriter = new InteractionWriter(reader);
