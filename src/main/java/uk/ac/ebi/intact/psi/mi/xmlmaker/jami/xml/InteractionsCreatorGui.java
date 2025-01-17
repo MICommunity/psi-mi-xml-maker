@@ -32,6 +32,7 @@ public class InteractionsCreatorGui extends JPanel {
 
     private final ExcelFileReader excelFileReader;
     public final InteractionsCreator interactionsCreator;
+    private List<List<String>> firstLines = new ArrayList<>();
 
 
     @Getter
@@ -106,7 +107,6 @@ public class InteractionsCreatorGui extends JPanel {
     private void setUpColumns() {
         columnsList.clear();
         columnNames.clear();
-        columnNames.add("Select column to process");
         if (sheets.isEnabled()) {
             String selectedSheet = (String) sheets.getSelectedItem();
             if (selectedSheet != null && !selectedSheet.equals("Select sheet")) {
@@ -121,22 +121,18 @@ public class InteractionsCreatorGui extends JPanel {
      * Creates the data table for configuring interaction participant columns.
      */
     private void createInteractionDataTable() {
-        int rows = 1;
+        int rows = 5;
         int cols = dataNeededForInteractor.size() + excelFileReader.getNumberOfFeatures() * 4;
         String defaultCellValue = "Select from file";
-        String otherRowsValue = "value";
+        String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
 
+        String sheetName = Objects.requireNonNull(sheets.getSelectedItem(), "Sheet selection is null").toString();
+        firstLines = excelFileReader.getFileFirstLines(sheetName, rows);
+
         Object[][] data = new Object[rows][cols];
-        for (int i = 0; i < 1; i++) {
-            for (int j = 0; j < cols; j++) {
-                data[i][j] = defaultCellValue;
-            }
-        }
-        for (int i = 1; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                data[i][j] = otherRowsValue;
-            }
+        for (int i = 0; i < rows; i++) {
+            Arrays.fill(data[i], (i == 0) ? defaultCellValue : otherRowsValue);
         }
 
         String[] columnTitles = new String[cols];
@@ -145,34 +141,80 @@ public class InteractionsCreatorGui extends JPanel {
         TableModel tableModel = new DefaultTableModel(data, columnTitles);
         table.setModel(tableModel);
 
-        // Add combo box only to the first row
         for (int i = 0; i < dataNeededForInteractor.size(); i++) {
-            TableColumn tableColumn = table.getColumnModel().getColumn(i);
-            tableColumn.setHeaderValue(dataNeededForInteractor.get(i));
-            tableColumn.setPreferredWidth(150);
-            JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
-//            int finalI = i;
-//            comboBox.addActionListener(e -> {
-//                setUpPreviewRows(comboBox, finalI);
-//            });
-            columnsList.add(comboBox);
-
-            tableColumn.setCellEditor(new DefaultCellEditor(comboBox) {
-                @Override
-                public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-                    if (row == 0) {
-                        return super.getTableCellEditorComponent(table, value, isSelected, row, column);
-                    }
-                    return null;
-                }
-            });
+            configureColumn(i, dataNeededForInteractor.get(i), data, tableModel);
         }
 
         for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
             addFeatureCells(i);
         }
 
+        configureTableAppearance();
+    }
+
+    /**
+     * Configures a table column with the specified index and header value.
+     *
+     * @param columnIndex The index of the column to configure.
+     * @param headerValue The header value for the column.
+     * @param data        The table data array.
+     * @param tableModel  The table model to update.
+     */
+    private void configureColumn(int columnIndex, String headerValue, Object[][] data, TableModel tableModel) {
+        TableColumn tableColumn = table.getColumnModel().getColumn(columnIndex);
+        tableColumn.setHeaderValue(headerValue);
+        tableColumn.setPreferredWidth(150);
+
+        JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
+        String defaultValue = interactionsCreator.mostSimilarColumn(columnNames, headerValue);
+
+        if (columnNames.contains(defaultValue)) {
+            comboBox.setSelectedItem(defaultValue);
+            data[0][columnIndex] = defaultValue;
+            tableModel.setValueAt(defaultValue, 0, columnIndex);
+        }
+
+        comboBox.addActionListener(e -> setUpPreviewRows(columnIndex, headerValue));
+        columnsList.add(comboBox);
+
+        tableColumn.setCellEditor(new DefaultCellEditor(comboBox) {
+            @Override
+            public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                if (row == 0) {
+                    JComboBox<String> editorComboBox = (JComboBox<String>) super.getTableCellEditorComponent(table, value, isSelected, row, column);
+                    editorComboBox.setSelectedItem(value);
+                    return editorComboBox;
+                }
+                return null;
+            }
+        });
+
+        tableColumn.setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            protected void setValue(Object value) {
+                setText(value != null ? value.toString() : "Select from file");
+                setUpPreviewRows(columnIndex, headerValue);
+            }
+        });
+    }
+
+    /**
+     * Configures the overall appearance of the table, including header and resizing behaviour.
+     */
+    private void configureTableAppearance() {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+        JTableHeader tableHeader = table.getTableHeader();
+        tableHeader.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                component.setBackground(Color.decode("#68297c"));
+                component.setForeground(Color.WHITE);
+                return component;
+            }
+        });
+
         table.repaint();
         table.revalidate();
     }
@@ -244,35 +286,40 @@ public class InteractionsCreatorGui extends JPanel {
     }
 
     /**
-     * Configures table preview rows based on an Excel file and combo box selection.
+     * Configures preview rows in the table based on the selected column and combo box index.
      *
-     * @param comboBox      the JComboBox with column names.
-     * @param comboBoxIndex the index of the table column to update.
-     * This method:
-     * 1. Exits if no file is loaded.
-     * 2. Retrieves preview data from the selected sheet.
-     * 3. Maps the selected combo box item to a column index.
-     * 4. Updates the table's column model with preview values.
+     * @param comboBoxIndex The index of the combo box column in the table where data should be set.
+     * @param columnName    The name of the column from which data will be fetched.
      *
-     * @throws NullPointerException if combo box or sheet selection is null.
+     * @throws IndexOutOfBoundsException If the comboBoxIndex is out of bounds for the table.
      */
-    public void setUpPreviewRows(JComboBox<String> comboBox, int comboBoxIndex) {
+    public void setUpPreviewRows(int comboBoxIndex, String columnName) {
         if (excelFileReader.currentFilePath == null) {
+            System.err.println("No file is loaded. Cannot configure preview rows.");
             return;
         }
 
-        TableColumnModel columnModel = table.getColumnModel();
-
-        List<List<String>> firstLines = excelFileReader.getFileFirstLines(Objects.requireNonNull(sheets.getSelectedItem()).toString(), 5);
-        String listSelection = Objects.requireNonNull(comboBox.getSelectedItem()).toString();
-
         getDataAndIndexes();
-        int index = dataAndIndexes.get(listSelection);
+        Integer index = dataAndIndexes.get(columnName);
+        if (index == null || index < 0) {
+            System.err.println("Invalid column index mapping for selection: " + columnName);
+            return;
+        }
 
-        for (List<String> firstLine : firstLines) {
-            String value = firstLine.get(index);
-            columnModel.getColumn(comboBoxIndex);
-            columnModel.getColumn(index);
+        TableModel tableModel = table.getModel();
+        int columnCount = tableModel.getColumnCount();
+        int rowCount = tableModel.getRowCount();
+
+        if (comboBoxIndex < 0 || comboBoxIndex >= columnCount) {
+            throw new IndexOutOfBoundsException("ComboBox index " + comboBoxIndex + " is out of bounds for the table.");
+        }
+
+        int firstLinesCount = Math.min(firstLines.size(), rowCount);
+
+        for (int rowIndex = 1; rowIndex < firstLinesCount; rowIndex++) {
+            List<String> rowData = firstLines.get(rowIndex);
+            String value = (index < rowData.size()) ? rowData.get(index) : "N/A";
+            tableModel.setValueAt(value, rowIndex, comboBoxIndex);
         }
     }
 }

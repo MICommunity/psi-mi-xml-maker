@@ -547,4 +547,26 @@ public class InteractionsCreator {
             xmlModelledInteractions.clear();
         }
     }
+
+    /**
+     * Finds the most similar column name from a list of column names based on the
+     * similarity to a given GUI column name. The similarity is calculated using a
+     * similarity scoring function, which returns a percentage indicating how similar
+     * the column names are.
+     *
+     * @param columns a list of column names to compare against the given GUI column name
+     * @param guiColumnName the column name from the GUI to which similarity is calculated
+     * @return the column name from the list that is most similar to the GUI column name
+     */
+    public String mostSimilarColumn(List<String> columns, String guiColumnName) {
+        String mostSimilarColumn = null;
+        double mostSimilarColumnScore = 0;
+        for (String column : columns) {
+            if (utils.calculateSimilarity(column, guiColumnName) > mostSimilarColumnScore) {
+                mostSimilarColumn = column;
+                mostSimilarColumnScore = utils.calculateSimilarity(column, guiColumnName);
+            }
+        }
+        return mostSimilarColumn;
+    }
 }

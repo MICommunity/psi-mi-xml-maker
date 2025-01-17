@@ -110,7 +110,6 @@ public class XmlMakerUtils {
         return taxId;
     }
 
-
     /**
      * Encodes a string for safe use in a URL.
      */
@@ -143,7 +142,6 @@ public class XmlMakerUtils {
         return cvTerm == null ? null : cvTerm.getMIIdentifier();
     }
 
-
     /**
      * Extracts the OBO (Open Biomedical Ontologies) ID from a JSON response.
      */
@@ -174,5 +172,53 @@ public class XmlMakerUtils {
             return null;
         }
         return null;
+    }
+
+    /**
+     * Calculates the Levenshtein Distance between two strings. The Levenshtein
+     * Distance is a measure of the number of single-character edits (insertions,
+     * deletions, or substitutions) required to change one string into the other.
+     *
+     * @param s1 the first string
+     * @param s2 the second string
+     * @return the Levenshtein Distance between the two strings
+     */
+    private static int levenshteinDistance(String s1, String s2) {
+        int[][] dp = new int[s1.length() + 1][s2.length() + 1];
+
+        for (int i = 0; i <= s1.length(); i++) {
+            for (int j = 0; j <= s2.length(); j++) {
+                if (i == 0) {
+                    dp[i][j] = j;
+                } else if (j == 0) {
+                    dp[i][j] = i;
+                } else {
+                    dp[i][j] = Math.min(
+                            Math.min(dp[i - 1][j] + 1,
+                                    dp[i][j - 1] + 1),
+                            dp[i - 1][j - 1] + (s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1) // Substitution
+                    );
+                }
+            }
+        }
+        return dp[s1.length()][s2.length()];
+    }
+
+    /**
+     * Calculates the similarity between two strings as a percentage. The similarity
+     * is computed based on the Levenshtein Distance between the strings and their
+     * maximum possible length.
+     *
+     * @param s1 the first string
+     * @param s2 the second string
+     * @return the similarity percentage between the two strings, where 100.0 means
+     *         the strings are identical and 0.0 means they are completely dissimilar
+     */
+    public double calculateSimilarity(String s1, String s2) {
+        int maxLength = Math.max(s1.length(), s2.length());
+        if (maxLength == 0) return 100.0;
+
+        int distance = levenshteinDistance(s1, s2);
+        return ((maxLength - distance) / (double) maxLength) * 100;
     }
 }
