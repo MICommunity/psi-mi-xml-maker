@@ -192,14 +192,11 @@ public class InteractionsCreator {
         Iterator<List<String>> data = excelFileReader.readFileWithSeparator();
         int expectedNumberOfColumns = excelFileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
-        String currentInteractionNumber = "0"; // Will be set based on the first row
+        String currentInteractionNumber = "0";
 
-        // Check if there's data available first
         if (data.hasNext()) {
             List<String> firstRow = data.next();
-            // Initialize currentInteractionNumber based on the first row
             currentInteractionNumber = firstRow.get(interactionNumberColumn);
-            // Put the first row back into the iterator to process in the loop
             Iterator<List<String>> finalData = data;
             data = new Iterator<>() {
                 boolean firstRowProcessed = false;
@@ -213,9 +210,9 @@ public class InteractionsCreator {
                 public List<String> next() {
                     if (!firstRowProcessed) {
                         firstRowProcessed = true;
-                        return firstRow; // Return the first row initially
+                        return firstRow;
                     } else {
-                        return finalData.next(); // Continue with the iterator
+                        return finalData.next();
                     }
                 }
             };

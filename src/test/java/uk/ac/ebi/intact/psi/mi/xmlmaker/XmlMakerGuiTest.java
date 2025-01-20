@@ -91,6 +91,7 @@ public class XmlMakerGuiTest {
         reader.selectFileOpener(TEST_FILE_PATH + fileName);
         reader.publicationId = "1234";
 
+
         interactionWriter.setName(fileName);
         interactionWriter.setSaveLocation(TEST_FILE_PATH);
 
@@ -146,6 +147,7 @@ public class XmlMakerGuiTest {
         columnAndIndex.put(DataTypeAndColumn.EXPERIMENTAL_ROLE.name, 11);
         columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name, 2);
         columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_XREF.name, 15);
+        columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_XREF_DB.name, 16);
 
         columnAndIndex.put(DataTypeAndColumn.FEATURE_SHORT_LABEL.name, 20);
         columnAndIndex.put(DataTypeAndColumn.FEATURE_TYPE.name, 21);
