@@ -49,8 +49,8 @@ public class UniprotMapperGui extends JPanel {
 
         fileProcessingPanel.add(setComboBoxDimension(sheets, "Select sheet"));
         fileProcessingPanel.add(setComboBoxDimension(idColumn, "Select ID column"));
-        fileProcessingPanel.add(setComboBoxDimension(idDbColumn, "Select ID database column"));
-        fileProcessingPanel.add(setComboBoxDimension(organismColumn, "Select organism column"));
+//        fileProcessingPanel.add(setComboBoxDimension(idDbColumn, "Select ID database column"));
+//        fileProcessingPanel.add(setComboBoxDimension(organismColumn, "Select organism column"));
 
         sheets.addActionListener(e -> setUpColumns());
 
@@ -151,31 +151,21 @@ public class UniprotMapperGui extends JPanel {
                 protected Void doInBackground() {
                     String sheetSelected = (String) sheets.getSelectedItem();
                     String idColumnSelectedItem = (String) idColumn.getSelectedItem();
-                    int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
-                    int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
+//                    int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
+//                    int organismColumnIndex = organismColumn.getSelectedIndex() - 1; //todo: check if we can make it used but not mandatory
 
                     if (sheets.isEnabled()) {
                         if (isInvalidSelection(sheetSelected, idColumnSelectedItem)) {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                                    null,
-                                    "Please select a valid sheet and column!",
-                                    "ERROR",
-                                    JOptionPane.ERROR_MESSAGE
-                            ));
+                            SwingUtilities.invokeLater(() -> utils.showErrorDialog("Please select valid sheet and ID column"));
                             return null;
                         }
-                        processSheet(sheetSelected, idColumnSelectedItem, organismColumnIndex, idDbColumnIndex);
+                        processSheet(sheetSelected, idColumnSelectedItem);
                     } else {
                         if (idColumnSelectedItem == null || idColumnSelectedItem.equals("Select column to process")) {
-                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                                    null,
-                                    "Please select a valid column for processing!",
-                                    "ERROR",
-                                    JOptionPane.ERROR_MESSAGE
-                            ));
+                            SwingUtilities.invokeLater(() -> utils.showErrorDialog("Please select valid sheet and ID column"));
                             return null;
                         }
-                        processFileWithoutSheet(idColumnSelectedItem, organismColumnIndex, idDbColumnIndex);
+                        processFileWithoutSheet(idColumnSelectedItem);
                     }
                     return null;
                 }
@@ -183,6 +173,8 @@ public class UniprotMapperGui extends JPanel {
                 @Override
                 protected void done() {
                     loadingSpinner.hideSpinner();
+                    utils.showInfoDialog("Participants identifier updated successfully.");
+                    showMoleculeSetDialog();
                 }
             };
 
@@ -197,13 +189,10 @@ public class UniprotMapperGui extends JPanel {
      *
      * @param sheetSelected The name of the selected sheet.
      * @param idColumn The name of the selected ID column.
-     * @param organismColumnIndex The index of the selected organism column.
-     * @param idDbColumnIndex The index of the selected ID database column.
      */
-    private void processSheet(String sheetSelected, String idColumn, int organismColumnIndex, int idDbColumnIndex) {
+    private void processSheet(String sheetSelected, String idColumn) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, organismColumnIndex, idDbColumnIndex);
-            showMoleculeSetDialog();
+            excelFileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn);
         } catch (Exception ex) {
             handleProcessingError(ex);
         }
@@ -214,13 +203,10 @@ public class UniprotMapperGui extends JPanel {
      * This method processes the file with participant ID, organism, and ID database columns.
      *
      * @param idColumn The name of the selected ID column.
-     * @param organismColumnIndex The index of the selected organism column.
-     * @param idDbColumnIndex The index of the selected ID database column.
      */
-    private void processFileWithoutSheet(String idColumn, int organismColumnIndex, int idDbColumnIndex) {
+    private void processFileWithoutSheet(String idColumn) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, organismColumnIndex, idDbColumnIndex);
-            showMoleculeSetDialog();
+            excelFileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn);
         } catch (Exception ex) {
             handleProcessingError(ex);
         }
@@ -233,7 +219,8 @@ public class UniprotMapperGui extends JPanel {
     private void showMoleculeSetDialog() {
         if (!excelFileReader.proteinsPartOfMoleculeSet.isEmpty()) {
             String participantsList = String.join(", ", excelFileReader.proteinsPartOfMoleculeSet);
-            utils.showInfoDialog("Those participants have been identified as part of a molecule set: " + participantsList);
+            JOptionPane.showMessageDialog(new JFrame(),"Those participants have been identified as part of a molecule set: " + participantsList,
+                    "INFORMATION", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -245,6 +232,7 @@ public class UniprotMapperGui extends JPanel {
      */
     private void handleProcessingError(Exception ex) {
         JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+        ex.printStackTrace();
         LOGGER.warning(ex.getMessage());
     }
 
@@ -258,4 +246,5 @@ public class UniprotMapperGui extends JPanel {
     private boolean isInvalidSelection(String sheetSelected, String idColumn) {
         return sheetSelected == null || sheetSelected.equals("Select sheet") || idColumn == null || idColumn.equals("Select column to process");
     }
+
 }

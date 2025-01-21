@@ -121,14 +121,14 @@ public class InteractionsCreatorGui extends JPanel {
      * Creates the data table for configuring interaction participant columns.
      */
     private void createInteractionDataTable() {
-        int rows = 5;
+        int rows = 1;
         int cols = dataNeededForInteractor.size() + excelFileReader.getNumberOfFeatures() * 4;
         String defaultCellValue = "Select from file";
         String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
 
-        String sheetName = Objects.requireNonNull(sheets.getSelectedItem(), "Sheet selection is null").toString();
-        firstLines = excelFileReader.getFileFirstLines(sheetName, rows);
+//        String sheetName = Objects.requireNonNull(sheets.getSelectedItem(), "Sheet selection is null").toString();
+//        firstLines = excelFileReader.getFileFirstLines(sheetName, rows);
 
         Object[][] data = new Object[rows][cols];
         for (int i = 0; i < rows; i++) {
@@ -174,15 +174,15 @@ public class InteractionsCreatorGui extends JPanel {
             tableModel.setValueAt(defaultValue, 0, columnIndex);
         }
 
-        comboBox.addActionListener(e -> setUpPreviewRows(columnIndex, headerValue));
-        columnsList.add(comboBox);
+//        comboBox.addActionListener(e -> setUpPreviewRows(columnIndex, headerValue));
+//        columnsList.add(comboBox);
 
         tableColumn.setCellEditor(new DefaultCellEditor(comboBox) {
             @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
                 if (row == 0) {
                     JComboBox<String> editorComboBox = (JComboBox<String>) super.getTableCellEditorComponent(table, value, isSelected, row, column);
-                    editorComboBox.setSelectedItem(value);
+//                    editorComboBox.setSelectedItem(value);
                     return editorComboBox;
                 }
                 return null;
@@ -193,7 +193,7 @@ public class InteractionsCreatorGui extends JPanel {
             @Override
             protected void setValue(Object value) {
                 setText(value != null ? value.toString() : "Select from file");
-                setUpPreviewRows(columnIndex, headerValue);
+//                setUpPreviewRows(columnIndex, headerValue);
             }
         });
     }
@@ -299,7 +299,7 @@ public class InteractionsCreatorGui extends JPanel {
             return;
         }
 
-        getDataAndIndexes();
+//        getDataAndIndexes();
         Integer index = dataAndIndexes.get(columnName);
         if (index == null || index < 0) {
             System.err.println("Invalid column index mapping for selection: " + columnName);

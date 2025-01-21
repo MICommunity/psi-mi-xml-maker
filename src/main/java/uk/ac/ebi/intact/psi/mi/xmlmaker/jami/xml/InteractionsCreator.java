@@ -6,6 +6,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
@@ -319,7 +320,7 @@ public class InteractionsCreator {
                 if (cell == null) {
                     datum.add("");
                 } else {
-                    datum.add(getCellValueAsString(cell));
+                    datum.add(FileUtils.getCellValueAsString(cell));
                 }
             }
 
@@ -357,28 +358,6 @@ public class InteractionsCreator {
         isFileFinished = true;
         createInteractions();
         dataList.clear();
-    }
-
-    /**
-     * Converts a cell's value to a string representation based on its type.
-     *
-     * @param cell the cell to process.
-     * @return the string representation of the cell's value.
-     */
-    private String getCellValueAsString(Cell cell) {
-        if (cell == null) return "N/A";
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                return String.valueOf(cell.getNumericCellValue());
-            case BOOLEAN:
-                return String.valueOf(cell.getBooleanCellValue());
-            case FORMULA:
-                return cell.getCellFormula();
-            default:
-                return "N/A";
-        }
     }
 
     /**
