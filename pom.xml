@@ -180,6 +180,8 @@
               <icnsFile>${project.basedir}/src/main/resources/psi.icns</icnsFile>
             </macConfig>
             <iconFile>src/main/resources/psi.icns</iconFile>
+            <packagingJdk>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</packagingJdk>
+            <jdkPath>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</jdkPath>
           </configuration>
         </execution>
 
@@ -193,6 +195,8 @@
             <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
             <platform>windows</platform>
             <createZipball>true</createZipball>
+            <packagingJdk>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</packagingJdk>
+            <jdkPath>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</jdkPath>
           </configuration>
         </execution>
 
@@ -206,7 +210,8 @@
             <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
             <platform>linux</platform>
             <createTarball>true</createTarball>
-<!--            <jdkPath>X:\\path\to\linux\jdk</jdkPath>-->
+            <packagingJdk>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</packagingJdk>
+            <jdkPath>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</jdkPath>
           </configuration>
         </execution>
 
