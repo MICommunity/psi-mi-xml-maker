@@ -32,7 +32,7 @@ public class InteractionsCreatorGui extends JPanel {
 
     private final ExcelFileReader excelFileReader;
     public final InteractionsCreator interactionsCreator;
-    private final List<List<String>> firstLines = new ArrayList<>();
+    private List<List<String>> firstLines = new ArrayList<>();
 
 
     @Getter
@@ -131,14 +131,16 @@ public class InteractionsCreatorGui extends JPanel {
      * Creates the data table for configuring interaction participant columns.
      */
     private void createInteractionDataTable() {
-        int rows = 1;
+        int rows = 5;
         int cols = dataNeededForInteractor.size() + excelFileReader.getNumberOfFeatures() * 4;
         String defaultCellValue = "Select from file";
         String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
 
-//        String sheetName = Objects.requireNonNull(sheets.getSelectedItem(), "Sheet selection is null").toString();
-//        firstLines = excelFileReader.getFileFirstLines(sheetName, rows);
+        if(excelFileReader.currentFilePath != null) {
+            String sheetName = Objects.requireNonNull(sheets.getSelectedItem(), "Sheet selection is null").toString();
+            firstLines = excelFileReader.getFileFirstLines(sheetName, rows);
+        }
 
         Object[][] data = new Object[rows][cols];
         for (int i = 0; i < rows; i++) {
@@ -184,8 +186,8 @@ public class InteractionsCreatorGui extends JPanel {
             tableModel.setValueAt(defaultValue, 0, columnIndex);
         }
 
-//        comboBox.addActionListener(e -> setUpPreviewRows(columnIndex, headerValue));
-//        columnsList.add(comboBox);
+        comboBox.addActionListener(e -> setUpPreviewRows(columnIndex, headerValue));
+        columnsList.add(comboBox);
 
         tableColumn.setCellEditor(new DefaultCellEditor(comboBox) {
             @Override
@@ -202,7 +204,7 @@ public class InteractionsCreatorGui extends JPanel {
             @Override
             protected void setValue(Object value) {
                 setText(value != null ? value.toString() : "Select from file");
-//                setUpPreviewRows(columnIndex, headerValue);
+                setUpPreviewRows(columnIndex, headerValue);
             }
         });
     }
@@ -241,7 +243,7 @@ public class InteractionsCreatorGui extends JPanel {
                 dataAndIndexes.put(tableColumnsNames.get(i), index);
             }
         } else {
-            Sheet sheet = excelFileReader.workbook.getSheetAt(sheets.getSelectedIndex());
+            Sheet sheet = excelFileReader.workbook.getSheetAt(sheets.getSelectedIndex()-1);
             for (int i = 0; i < table.getColumnCount(); i++) {
                 Row row = sheet.getRow(0); // get the header
                 for (Cell cell : row) {
@@ -308,7 +310,7 @@ public class InteractionsCreatorGui extends JPanel {
             return;
         }
 
-//        getDataAndIndexes();
+        getDataAndIndexes();
         Integer index = dataAndIndexes.get(columnName);
         if (index == null || index < 0) {
             System.err.println("Invalid column index mapping for selection: " + columnName);

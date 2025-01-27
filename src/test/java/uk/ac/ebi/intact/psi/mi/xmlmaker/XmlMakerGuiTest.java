@@ -101,7 +101,7 @@ public class XmlMakerGuiTest {
         interactionsCreator.sheetSelected = "test_sample";
         interactionsCreator.createParticipantsWithFileFormat();
 
-        File writtenFile = new File(TEST_FILE_PATH + "test_sample/test_sample_0.xml");
+        File writtenFile = new File(TEST_FILE_PATH + "test_sample/test_sample_13.xml");
         assertTrue(writtenFile.exists(), "XML file should exist");
         assertTrue(writtenFile.length() > 0, "XML file should not be empty");
 

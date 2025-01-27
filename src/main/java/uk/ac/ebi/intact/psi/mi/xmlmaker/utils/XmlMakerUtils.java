@@ -106,7 +106,7 @@ public class XmlMakerUtils {
 
         String apiResponse = fetchTaxIdWithApi(organismName);
         String oboId = apiResponse != null ? extractOboId(apiResponse) : null;
-        taxId = oboId != null ? oboId : organismName;
+        taxId = oboId != null ? oboId : ""; //todo: check if throws error
         nameToTaxIdCache.put(organismName, taxId);
         return taxId;
     }

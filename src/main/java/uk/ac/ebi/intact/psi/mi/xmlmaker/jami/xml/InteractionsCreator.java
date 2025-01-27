@@ -189,9 +189,8 @@ public class InteractionsCreator {
      * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
      */
     public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex) {
-
         Iterator<List<String>> data = excelFileReader.readFileWithSeparator();
-//        int expectedNumberOfColumns = excelFileReader.fileData.size();
+        int expectedNumberOfColumns = excelFileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
         String currentInteractionNumber = "0";
 
@@ -223,10 +222,10 @@ public class InteractionsCreator {
             isFileFinished = false;
             List<String> datum = data.next();
 
-//            if (datum.size() < expectedNumberOfColumns) {
-//                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
-//                continue;
-//            }
+            if (datum.size() < expectedNumberOfColumns) {
+                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
+                continue;
+            }
 
             currentInteractionNumber = getInteractionNumber(columnAndIndex, interactionNumberColumn, currentInteractionNumber, datum);
         }
@@ -243,7 +242,7 @@ public class InteractionsCreator {
      */
     public void fetchDataWithWorkbook(Map<String, Integer> columnAndIndex) {
         Iterator<Row> data = excelFileReader.readWorkbookSheet(sheetSelected);
-//        int expectedNumberOfColumns = excelFileReader.fileData.size();
+        int expectedNumberOfColumns = excelFileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
         String currentInteractionNumber = "0";
 
@@ -258,7 +257,7 @@ public class InteractionsCreator {
                 if (cell == null) {
                     firstRowData.add("");
                 } else {
-                    firstRowData.add(cell.toString());
+                    firstRowData.add(FileUtils.getCellValueAsString(cell));
                 }
             }
 
@@ -301,10 +300,10 @@ public class InteractionsCreator {
                 }
             }
 
-//            if (datum.size() < expectedNumberOfColumns) {
-//                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
-//                continue;
-//            }
+            if (datum.size() < expectedNumberOfColumns) {
+                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
+                continue;
+            }
 
             currentInteractionNumber = getInteractionNumber(columnAndIndex, interactionNumberColumn, currentInteractionNumber, datum);
         }
@@ -463,18 +462,23 @@ public class InteractionsCreator {
 
         String featureShortLabel = data.get(DataTypeAndColumn.FEATURE_TYPE.name + featureIndexString);
         String featureType = data.get(DataTypeAndColumn.FEATURE_TYPE.name + featureIndexString);
+        String featureStartRange = data.get(DataTypeAndColumn.FEATURE_START_STATUS.name + featureIndexString);
+        String featureEndRange = data.get(DataTypeAndColumn.FEATURE_END_STATUS.name + featureIndexString);
+
+        if (featureShortLabel == null || featureType == null || featureStartRange == null || featureEndRange == null) {
+            return null;
+        }
+
         String featureTypeMiId = utils.fetchMiId(featureType);
         CvTerm featureTypeCv = new XmlCvTerm(featureType, featureTypeMiId);
         XmlFeatureEvidence featureEvidence = new XmlFeatureEvidence(featureTypeCv);
         featureEvidence.setShortName(featureShortLabel);
 
         XmlRange featureRange = new XmlRange();
-        String featureStartRange = data.get(DataTypeAndColumn.FEATURE_START_STATUS.name + featureIndexString);
         String featureStartRangeMiId = utils.fetchMiId(featureStartRange);
         XmlCvTerm featureStartRangeCv = new XmlCvTerm(featureStartRange, featureStartRangeMiId);
         featureRange.setJAXBStartStatus(featureStartRangeCv);
 
-        String featureEndRange = data.get(DataTypeAndColumn.FEATURE_END_STATUS.name + featureIndexString);
         String featureEndRangeMiId = utils.fetchMiId(featureEndRange);
         XmlCvTerm featureEndRangeCv = new XmlCvTerm(featureEndRange, featureEndRangeMiId);
         featureRange.setJAXBEndStatus(featureEndRangeCv);
