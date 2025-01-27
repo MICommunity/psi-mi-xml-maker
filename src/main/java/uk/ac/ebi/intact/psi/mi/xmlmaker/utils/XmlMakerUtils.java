@@ -106,10 +106,32 @@ public class XmlMakerUtils {
 
         String apiResponse = fetchTaxIdWithApi(organismName);
         String oboId = apiResponse != null ? extractOboId(apiResponse) : null;
-        taxId = oboId != null ? oboId : ""; //todo: check if throws error
+        taxId = oboId != null ? oboId : organismName;
+
+        if (oboId == null) {
+            String userInput = JOptionPane.showInputDialog(null,
+                    "No TaxId found for organism: " + organismName + "\nPlease enter a custom TaxId:",
+                    "Custom TaxId Input",
+                    JOptionPane.QUESTION_MESSAGE);
+
+            while (userInput != null && !userInput.matches("\\d+")) {
+                JOptionPane.showMessageDialog(null, "Please enter a valid numeric TaxId.",
+                        "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                userInput = JOptionPane.showInputDialog(null,
+                        "No TaxId found for organism: " + organismName + "\nPlease enter a valid numeric TaxId:",
+                        "Custom TaxId Input",
+                        JOptionPane.QUESTION_MESSAGE);
+            }
+
+            if (userInput != null && !userInput.trim().isEmpty()) {
+                taxId = userInput.trim(); // Update taxId with user input
+            }
+        }
+
         nameToTaxIdCache.put(organismName, taxId);
         return taxId;
     }
+
 
     /**
      * Encodes a string for safe use in a URL.

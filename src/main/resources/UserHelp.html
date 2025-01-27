@@ -39,20 +39,29 @@
 
         <p> Once the file is loaded, enter the publication ID. The XML file will not be created without it.</p>
 
-        <h3> 2. Update the Uniprot ids</h3>
+        <h3> 2. Format raw file</h3> //todo: add interactome template link
+        <p>If the file the user is inputting is not fitting the Interactome template, the user has to format it.
+            The user can select the column for the bait and the prey. If the interactions are binary, it can specify it by ticking the corresponding box.
+            Then, the same way as the editor, the user can select the different information concerning those interactions.
+            Once done, a new file called "previousFile_xmlFormatted.fileType" is generated.
+        </p>
+
+        <h3> 3. Update the Uniprot ids</h3>
         The second section is not mandatory but recommended. In the case of an XLSX or XLS file, the sheet on which the XML maker is working has to be selected.
         Then, the same way as other formats, the columns will be displayed in the three selectors.
-        The user has to select for each selector the corresponding column in the file.
+        The user has to input the participant ID column. The organism and database columns are not mandatory but can be input to refine the uniprot mapping.
         Once done, a click on the "Update the Uniprot ids" button will launch the process.
+        If multiple uniprot ids are retrieved, the user has the choice on which one he wants to select. It can also input the ID and the database in the text input area.
+        More columns will be added to the file containing the updated id, the organism and the updated database.
 
-        <h3> 3. Create the participants</h3>
+        <h3> 4. Create the participants</h3>
         Before creating the interactions, the user has to create the participants. The same way as the Uniprot update,
         the user has to select the sheet for the XLSX or XLSX file. Then the user has to associate the participant's
         elements to the columns in the file.
         The application is by default selecting the column with the most resemblance to the needed data,
         but it is necessary for the user to check if the value is correct. It can be done thanks to the preview lines.
 
-        <h3> 4. Create the PSI-MI 3.0 XML file</h3>
+        <h3> 5. Create the PSI-MI 3.0 XML file</h3>
         The user has to select the publication date in the dedicated section.
         Finally, the user has to select the number of interactions per XML file. By default, this value is set at 1000.
         If there is more than this number of interactions, multiple files will be generated.

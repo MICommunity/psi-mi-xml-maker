@@ -118,7 +118,7 @@ public class XmlMakerGui {
      */
     private JPanel createUniprotMapperPanel() {
         JPanel uniprotMapperPanel = uniprotMapperGui.uniprotPanel();
-        uniprotMapperPanel.setBorder(new TitledBorder("4. Update the Uniprot ids"));
+        uniprotMapperPanel.setBorder(new TitledBorder("3. Update the Uniprot ids"));
         return uniprotMapperPanel;
     }
 
@@ -131,7 +131,7 @@ public class XmlMakerGui {
         JPanel fileProcessingPanel = interactionsCreatorGui.participantCreatorPanel();
         fileProcessingPanel.setMaximumSize(new Dimension(FRAME_WIDTH, 300));
         fileProcessingPanel.setAutoscrolls(true);
-        fileProcessingPanel.setBorder(new TitledBorder("5. Create the interaction participants"));
+        fileProcessingPanel.setBorder(new TitledBorder("4. Create the interaction participants"));
         return fileProcessingPanel;
     }
 
@@ -143,7 +143,7 @@ public class XmlMakerGui {
     private JPanel createSaveOptionsPanel() {
         JPanel psiXmlMakerPanel = interactionWriterGui.createPsiMiXmlMakerPanel();
         psiXmlMakerPanel.setMaximumSize(new Dimension(FRAME_WIDTH, 200));
-        psiXmlMakerPanel.setBorder(new TitledBorder("6. Save options"));
+        psiXmlMakerPanel.setBorder(new TitledBorder("5. Save options"));
         return psiXmlMakerPanel;
     }
 
@@ -330,6 +330,7 @@ public class XmlMakerGui {
                         SwingUtilities.invokeLater(() ->
                                 XmlMakerUtils.showErrorDialog("An error occurred while saving the file.")
                         );
+                        ex.printStackTrace();
                     }
                     return null;
                 }

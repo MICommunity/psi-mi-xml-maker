@@ -148,8 +148,8 @@ public class InteractionsCreator {
             LOGGER.warning("Missing or invalid participant organism for participant: " + name);
             return null;
         }
-        String taxId = utils.fetchTaxIdForOrganism(participantOrganism);
-        Organism organism = new XmlOrganism(Integer.parseInt(Objects.requireNonNull(taxId)));
+
+        Organism organism = createOrganism(participantOrganism);
 
         Interactor participant = new XmlPolymer(name, participantType, organism, uniqueId);
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
