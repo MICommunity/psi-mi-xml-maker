@@ -192,7 +192,7 @@ public class InteractionsCreatorGui extends JPanel {
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
                 if (row == 0) {
                     //                    editorComboBox.setSelectedItem(value);
-                    return (JComboBox<String>) super.getTableCellEditorComponent(table, value, isSelected, row, column);
+                    return super.getTableCellEditorComponent(table, value, isSelected, row, column);
                 }
                 return null;
             }

@@ -227,7 +227,6 @@ public class UniprotMapperGui extends JPanel {
      */
     private void handleProcessingError(Exception ex) {
         JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
-        ex.printStackTrace();
         LOGGER.warning(ex.getMessage());
     }
 

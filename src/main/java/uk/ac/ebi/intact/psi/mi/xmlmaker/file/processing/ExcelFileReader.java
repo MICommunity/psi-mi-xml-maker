@@ -416,8 +416,6 @@ public class ExcelFileReader  {
     public void checkAndInsertUniprotResultsWorkbook(String sheetSelected, String idColumnName, int idDbColumnIndex, int organismColumnIndex) {
         try (FileOutputStream fileOut = new FileOutputStream(currentFilePath)) {
             Iterator<Row> iterator = readWorkbookSheet(sheetSelected);
-            String tmpFilePath = currentFilePath;
-//            String tmpFilePath = "tmp." + FileUtils.getFileExtension(currentFilePath);
 
             if (fileData == null || fileData.isEmpty()) {
                 LOGGER.severe("Header row is missing or invalid.");
@@ -526,7 +524,7 @@ public class ExcelFileReader  {
                     try {
                         wait();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        LOGGER.warning("Error fetching uniprot ID: " + e);
                     }
                 }
             }

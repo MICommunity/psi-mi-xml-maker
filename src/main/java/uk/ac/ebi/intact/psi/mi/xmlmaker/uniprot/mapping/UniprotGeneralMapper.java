@@ -18,6 +18,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Getter
 public class UniprotGeneralMapper {
@@ -45,7 +46,6 @@ public class UniprotGeneralMapper {
     public JsonObject getUniprotResponse(String protein, String previousDb, String organism){
         String urlString = "https://rest.uniprot.org/uniprotkb/search?query=" + protein;
         if (previousDb != null) {
-//            urlString = "https://rest.uniprot.org/uniprotkb/search?query=(xref:" + protein + "%20AND%20organism_id:" + organism + ")";
             urlString += "&db=" + previousDb;
         }
         if (organism != null) {
@@ -68,14 +68,12 @@ public class UniprotGeneralMapper {
                 return JsonParser.parseString(content.toString()).getAsJsonObject();
             } catch (Exception e) {
                 LOGGER.error("Error fetching Uniprot response: {}", e.getMessage(), e);
-                e.printStackTrace();
             } finally {
                 connection.disconnect();
             }
 
         } catch (Exception e) {
             LOGGER.error("Error fetching Uniprot response: {}", e.getMessage(), e);
-            e.printStackTrace();
         }
         return null;
     }
@@ -83,18 +81,28 @@ public class UniprotGeneralMapper {
     public ArrayList<UniprotResult> getUniprotIds(JsonObject results) {
         if (results == null) return null;
         JsonArray resultsAsJson = results.get("results").getAsJsonArray();
-        int numberOfResults = resultsAsJson.size();
-        System.out.println("Number of results: " + numberOfResults);
         ArrayList<UniprotResult> uniprotResults = new ArrayList<>();
 
         for (JsonElement element : resultsAsJson) {
             JsonObject result = element.getAsJsonObject();
 
-            String uniprotAc = result.get("primaryAccession").getAsString();
-            String name = result.get("uniProtkbId").getAsString();
-            String organism = result.get("organism").getAsJsonObject().get("taxonId").getAsString();
+            String uniprotAc;
+            String name;
             String entryType = result.get("entryType").getAsString();
-            String uniprotLink = "https://www.uniprot.org/uniprotkb/" + uniprotAc; //todo: see to make clickable
+            String uniprotLink;
+            String organism;
+
+            if (!Objects.equals(entryType, "Inactive")){
+                uniprotAc = result.get("primaryAccession").getAsString();
+                name = result.get("uniProtkbId").getAsString();
+                organism = result.get("organism").getAsJsonObject().get("taxonId").getAsString();
+
+            } else {
+                uniprotAc = result.get("inactiveReason").getAsJsonObject().get("mergeDemergeTo").getAsString();
+                name = uniprotAc;
+                organism = "";
+            }
+            uniprotLink = "https://www.uniprot.org/uniprotkb/" + uniprotAc;
 
             UniprotResult oneResult = new UniprotResult(uniprotAc, name, organism, entryType, uniprotLink, "UniprotKB");
             uniprotResults.add(oneResult);

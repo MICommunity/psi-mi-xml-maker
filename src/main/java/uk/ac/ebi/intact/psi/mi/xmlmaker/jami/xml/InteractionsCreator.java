@@ -139,7 +139,7 @@ public class InteractionsCreator {
         CvTerm xrefDb = terms.get(PARTICIPANT_XREF_DB);
         CvTerm participantIdentificationMethod = terms.get(PARTICIPANT_IDENTIFICATION_METHOD);
 
-        String name = Objects.requireNonNull(data.get(PARTICIPANT_NAME.name), "The participant name cannot be null").toString();
+        String name = Objects.requireNonNull(data.get(PARTICIPANT_NAME.name), "The participant name cannot be null");
         String participantId = data.get(PARTICIPANT_ID.name);
         String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
         Xref uniqueId = new XmlXref(participantIdDb, participantId);
@@ -228,30 +228,7 @@ public class InteractionsCreator {
 //                continue;
 //            }
 
-            if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
-                createInteractions();
-                dataList.clear();
-                currentInteractionNumber = datum.get(interactionNumberColumn);
-            }
-
-            Map<String, String> dataMap = new HashMap<>();
-            for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
-                if (column.initial) {
-                    dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
-                }
-                for (int i = 0; i < numberOfFeature; i++) {
-                    if (!column.initial) {
-                        String key = column.name + "_" + i;
-                        Integer index = columnAndIndex.get(key);
-                        if (index != null && index < datum.size()) {
-                            dataMap.put(key, datum.get(index));
-                        } else {
-                            LOGGER.warning("Index out of bounds for key: " + key);
-                        }
-                    }
-                }
-            }
-            dataList.add(dataMap);
+            currentInteractionNumber = getInteractionNumber(columnAndIndex, interactionNumberColumn, currentInteractionNumber, datum);
         }
 
         isFileFinished = true;
@@ -329,35 +306,40 @@ public class InteractionsCreator {
 //                continue;
 //            }
 
-            if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
-                createInteractions();
-                dataList.clear();
-                currentInteractionNumber = datum.get(interactionNumberColumn);
-            }
-
-            Map<String, String> dataMap = new HashMap<>();
-            for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
-                if (column.initial) {
-                    dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
-                }
-                for (int i = 0; i < numberOfFeature; i++) {
-                    if (!column.initial) {
-                        String key = column.name + "_" + i;
-                        Integer index = columnAndIndex.get(key);
-                        if (index != null && index < datum.size()) {
-                            dataMap.put(key, datum.get(index));
-                        } else {
-                            LOGGER.warning("Index out of bounds for key: " + key);
-                        }
-                    }
-                }
-            }
-            dataList.add(dataMap);
+            currentInteractionNumber = getInteractionNumber(columnAndIndex, interactionNumberColumn, currentInteractionNumber, datum);
         }
 
         isFileFinished = true;
         createInteractions();
         dataList.clear();
+    }
+
+    private String getInteractionNumber(Map<String, Integer> columnAndIndex, int interactionNumberColumn, String currentInteractionNumber, List<String> datum) {
+        if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
+            createInteractions();
+            dataList.clear();
+            currentInteractionNumber = datum.get(interactionNumberColumn);
+        }
+
+        Map<String, String> dataMap = new HashMap<>();
+        for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
+            if (column.initial) {
+                dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
+            }
+            for (int i = 0; i < numberOfFeature; i++) {
+                if (!column.initial) {
+                    String key = column.name + "_" + i;
+                    Integer index = columnAndIndex.get(key);
+                    if (index != null && index < datum.size()) {
+                        dataMap.put(key, datum.get(index));
+                    } else {
+                        LOGGER.warning("Index out of bounds for key: " + key);
+                    }
+                }
+            }
+        }
+        dataList.add(dataMap);
+        return currentInteractionNumber;
     }
 
     /**

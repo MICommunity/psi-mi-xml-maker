@@ -3,9 +3,9 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 public class FileFormaterGui {
     final ExcelFileReader excelFileReader;
@@ -13,7 +13,10 @@ public class FileFormaterGui {
     private final JComboBox<String> sheets = new JComboBox<>();
     private final JComboBox<String> baitColumn = new JComboBox<>();
     private final JComboBox<String> preyColumn = new JComboBox<>();
-    ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui = new ParticipantAndInteractionCreatorGui();
+    final ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui = new ParticipantAndInteractionCreatorGui();
+
+    private static final Logger LOGGER = Logger.getLogger(FileFormaterGui.class.getName());
+
 
     public FileFormaterGui(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
@@ -92,9 +95,7 @@ public class FileFormaterGui {
      * @return The configured combo box.
      */
     private JComboBox<String> setComboBoxDimension(JComboBox<String> comboBox, String defaultItem) {
-        comboBox.addItem(defaultItem);
-        comboBox.setPreferredSize(new Dimension(400, 50));
-        return comboBox;
+        return XmlMakerUtils.setComboBoxDimension(comboBox, defaultItem);
     }
 
     /**
@@ -129,7 +130,7 @@ public class FileFormaterGui {
                     binary);
         } catch (Exception e) {
             XmlMakerUtils.showErrorDialog("Error during file formatting: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.warning("Error during file formatting: " + e);
         }
     }
 }

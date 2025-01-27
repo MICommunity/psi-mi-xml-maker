@@ -171,7 +171,7 @@ public class FileFormater {
                 writer.writeNext(row.toArray(new String[0]));
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.warning("Error writing to file: " + e);
             throw new RuntimeException(e);
         }
     }
@@ -197,7 +197,7 @@ public class FileFormater {
         try (FileOutputStream fos = new FileOutputStream(filePath)) {
             workbook.write(fos);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.warning("Error writing to file: " + e);
             throw new RuntimeException(e);
         }
         try {
