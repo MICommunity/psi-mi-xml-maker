@@ -1,4 +1,5 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -7,6 +8,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
+
+import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -15,36 +19,38 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
-
-import javax.swing.*;
-
+@Getter
 public class UniprotGeneralMapper {
     private static final Logger LOGGER = LogManager.getLogger(UniprotGeneralMapper.class);
 
-    private final Map<String, String> alreadyParsed = new HashMap<>();
-    private final XmlMakerUtils utils = new XmlMakerUtils();
+    @Setter
+    private Map<String, String> alreadyParsed = new HashMap<>();
     private static final String ACCEPT_HEADER = "Accept";
     private static final String ACCEPT_JSON = "application/json";
 
-    @Getter @Setter
+    @Setter
     private UniprotResult selectedUniprot;
-
-    @Getter
     private ButtonGroup buttonGroup  = new ButtonGroup();
 
-    public ArrayList<UniprotResult> fetchUniprotResult(String protein){
+    public ArrayList<UniprotResult> fetchUniprotResult(String protein, String previousDb, String organism){
         try {
-            return getUniprotIds(getUniprotResponse(protein));
+            return getUniprotIds(getUniprotResponse(protein, previousDb, organism));
         } catch (Exception e) {
-            utils.showErrorDialog("Error fetching UniProt results, please check your internet connection");
+            XmlMakerUtils.showErrorDialog("Error fetching UniProt results, please check your internet connection");
             LOGGER.error("Error fetching UniProt results for protein '{}': {}", protein, e.getMessage(), e);
         }
         return null;
     }
 
-    public JsonObject getUniprotResponse(String protein){
+    public JsonObject getUniprotResponse(String protein, String previousDb, String organism){
         String urlString = "https://rest.uniprot.org/uniprotkb/search?query=" + protein;
+        if (previousDb != null) {
+//            urlString = "https://rest.uniprot.org/uniprotkb/search?query=(xref:" + protein + "%20AND%20organism_id:" + organism + ")";
+            urlString += "&db=" + previousDb;
+        }
+        if (organism != null) {
+            urlString = "https://rest.uniprot.org/uniprotkb/search?query=(xref:" + protein + "%20AND%20organism_id:" + organism + ")";
+        }
         System.out.println(urlString);
         try {
             URL url = new URL(urlString);
@@ -85,11 +91,12 @@ public class UniprotGeneralMapper {
             JsonObject result = element.getAsJsonObject();
 
             String uniprotAc = result.get("primaryAccession").getAsString();
+            String name = result.get("uniProtkbId").getAsString();
             String organism = result.get("organism").getAsJsonObject().get("taxonId").getAsString();
             String entryType = result.get("entryType").getAsString();
             String uniprotLink = "https://www.uniprot.org/uniprotkb/" + uniprotAc; //todo: see to make clickable
 
-            UniprotResult oneResult = new UniprotResult(uniprotAc, organism, entryType, uniprotLink);
+            UniprotResult oneResult = new UniprotResult(uniprotAc, name, organism, entryType, uniprotLink, "UniprotKB");
             uniprotResults.add(oneResult);
         }
 

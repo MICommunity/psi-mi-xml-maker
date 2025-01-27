@@ -7,10 +7,10 @@ import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 
-import java.util.List;
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
+import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,7 +32,7 @@ public class InteractionsCreatorGui extends JPanel {
 
     private final ExcelFileReader excelFileReader;
     public final InteractionsCreator interactionsCreator;
-    private List<List<String>> firstLines = new ArrayList<>();
+    private final List<List<String>> firstLines = new ArrayList<>();
 
 
     @Getter
@@ -68,13 +68,16 @@ public class InteractionsCreatorGui extends JPanel {
         JPanel sheetSelectorPanel = new JPanel();
         sheetSelectorPanel.setLayout(new BoxLayout(sheetSelectorPanel, BoxLayout.Y_AXIS));
 
+        sheets.addItem("Select sheet");
         sheetSelectorPanel.add(sheets);
 
         sheets.addActionListener(e -> {
-            interactionsCreator.sheetSelected = Objects.requireNonNull(sheets.getSelectedItem()).toString();
-            setUpColumns();
-            createInteractionDataTable();
+            if (!isUpdatingSheets) {
+                interactionsCreator.sheetSelected = Objects.requireNonNull(sheets.getSelectedItem()).toString();
+                setUpColumns();
+            }
         });
+        createInteractionDataTable();
 
         JScrollPane scrollPane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         scrollPane.setPreferredSize(new Dimension(scrollPane.getPreferredSize().width, 200)); // Set the height to 200 pixels
@@ -84,27 +87,33 @@ public class InteractionsCreatorGui extends JPanel {
         return participantCreatorPanel;
     }
 
-    /**
-     * Sets up the available sheets in the ComboBox for selection.
-     */
+    private boolean isUpdatingSheets = false;
+
     public void setUpSheets() {
-        sheets.addItem("Select sheet");
+        isUpdatingSheets = true; // Suppress events
+
         if (excelFileReader.sheets.isEmpty()) {
             sheets.setEnabled(false);
             sheets.setSelectedIndex(0);
+            sheets.addItem("Select sheet");
+            setUpColumns();
         } else {
+            sheets.removeAllItems();
             sheets.setEnabled(true);
+            sheets.addItem("Select sheet");
             for (String sheetName : excelFileReader.sheets) {
                 sheets.addItem(sheetName);
             }
         }
-
+        isUpdatingSheets = false;
     }
+
+
 
     /**
      * Sets up the columns for the currently selected sheet.
      */
-    private void setUpColumns() {
+    public void setUpColumns() {
         columnsList.clear();
         columnNames.clear();
         if (sheets.isEnabled()) {
@@ -115,6 +124,7 @@ public class InteractionsCreatorGui extends JPanel {
         } else {
             columnNames.addAll(excelFileReader.getColumns(""));
         }
+        createInteractionDataTable();
     }
 
     /**
@@ -181,9 +191,8 @@ public class InteractionsCreatorGui extends JPanel {
             @Override
             public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
                 if (row == 0) {
-                    JComboBox<String> editorComboBox = (JComboBox<String>) super.getTableCellEditorComponent(table, value, isSelected, row, column);
-//                    editorComboBox.setSelectedItem(value);
-                    return editorComboBox;
+                    //                    editorComboBox.setSelectedItem(value);
+                    return (JComboBox<String>) super.getTableCellEditorComponent(table, value, isSelected, row, column);
                 }
                 return null;
             }
@@ -232,7 +241,7 @@ public class InteractionsCreatorGui extends JPanel {
                 dataAndIndexes.put(tableColumnsNames.get(i), index);
             }
         } else {
-            Sheet sheet = excelFileReader.workbook.getSheetAt(sheets.getSelectedIndex() - 1);
+            Sheet sheet = excelFileReader.workbook.getSheetAt(sheets.getSelectedIndex());
             for (int i = 0; i < table.getColumnCount(); i++) {
                 Row row = sheet.getRow(0); // get the header
                 for (Cell cell : row) {

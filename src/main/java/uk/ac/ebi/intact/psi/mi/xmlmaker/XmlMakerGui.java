@@ -1,5 +1,12 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFormaterGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionWriterGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
@@ -10,12 +17,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionWriterGui;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 
 /**
@@ -35,8 +36,7 @@ public class XmlMakerGui {
     private final InteractionsCreatorGui interactionsCreatorGui;
     private final InteractionWriterGui interactionWriterGui;
     private final LoadingSpinner loadingSpinner;
-    private final XmlMakerUtils xmlMakerUtils = new XmlMakerUtils();
-
+    private final FileFormaterGui fileFormaterGui;
 
     /**
      * Constructs the XmlMakerGui instance, initializing all dependent components.
@@ -45,22 +45,32 @@ public class XmlMakerGui {
         this.loadingSpinner = new LoadingSpinner();
         this.excelFileReader = new ExcelFileReader();
         this.uniprotMapperGui = new UniprotMapperGui(excelFileReader, loadingSpinner);
+        this.fileFormaterGui = new FileFormaterGui(excelFileReader);
         this.interactionWriterGui = new InteractionWriterGui(excelFileReader);
-        this.interactionsCreatorGui = new InteractionsCreatorGui(excelFileReader, interactionWriterGui.getInteractionWriter(), uniprotMapperGui);
+        this.interactionsCreatorGui = new InteractionsCreatorGui(excelFileReader,
+                interactionWriterGui.getInteractionWriter(), uniprotMapperGui);
+        excelFileReader.registerInputSelectedEventHandler(event -> setUpSheets());
     }
 
-    /**
-     * Initializes the main GUI components and displays the application frame.
-     */
     public void initialize() {
         JFrame frame = createMainFrame();
+
+        JButton restartButton = createRestartButton(frame);
+        restartButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        frame.add(restartButton);
+
         frame.add(createFileLabel());
+
         frame.add(createFileFetcherPanel());
+        frame.add(createFileFormaterPanel());
         frame.add(createUniprotMapperPanel());
         frame.add(createFileProcessingPanel());
         frame.add(createSaveOptionsPanel());
         JButton saveButton = createSaveButtonWithSpinner();
-        frame.add(saveButton); //TODO: CHECK FOR CENTERING
+        frame.add(saveButton);
+
+        excelFileReader.registerInputSelectedEventHandler(event -> setUpSheets());
+
         makeFrameDnD(frame);
         frame.setGlassPane(loadingSpinner.createLoadingGlassPane(frame));
         frame.setVisible(true);
@@ -97,6 +107,7 @@ public class XmlMakerGui {
     private JPanel createFileFetcherPanel() {
         JPanel fileFetcherPanel = createFileFetcher();
         fileFetcherPanel.setBorder(new TitledBorder("1. Fetch file"));
+        fileFetcherPanel.setMaximumSize(new Dimension(FRAME_WIDTH, 200));
         return fileFetcherPanel;
     }
 
@@ -107,7 +118,7 @@ public class XmlMakerGui {
      */
     private JPanel createUniprotMapperPanel() {
         JPanel uniprotMapperPanel = uniprotMapperGui.uniprotPanel();
-        uniprotMapperPanel.setBorder(new TitledBorder("2. Update the Uniprot ids"));
+        uniprotMapperPanel.setBorder(new TitledBorder("4. Update the Uniprot ids"));
         return uniprotMapperPanel;
     }
 
@@ -118,8 +129,9 @@ public class XmlMakerGui {
      */
     private JPanel createFileProcessingPanel() {
         JPanel fileProcessingPanel = interactionsCreatorGui.participantCreatorPanel();
+        fileProcessingPanel.setMaximumSize(new Dimension(FRAME_WIDTH, 300));
         fileProcessingPanel.setAutoscrolls(true);
-        fileProcessingPanel.setBorder(new TitledBorder("3. Create the interaction participants"));
+        fileProcessingPanel.setBorder(new TitledBorder("5. Create the interaction participants"));
         return fileProcessingPanel;
     }
 
@@ -130,7 +142,8 @@ public class XmlMakerGui {
      */
     private JPanel createSaveOptionsPanel() {
         JPanel psiXmlMakerPanel = interactionWriterGui.createPsiMiXmlMakerPanel();
-        psiXmlMakerPanel.setBorder(new TitledBorder("4. Save options"));
+        psiXmlMakerPanel.setMaximumSize(new Dimension(FRAME_WIDTH, 200));
+        psiXmlMakerPanel.setBorder(new TitledBorder("6. Save options"));
         return psiXmlMakerPanel;
     }
 
@@ -173,7 +186,7 @@ public class XmlMakerGui {
             return true;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed to import file", e);
-            xmlMakerUtils.showErrorDialog("Failed to import file. Ensure it is a valid format.");
+            XmlMakerUtils.showErrorDialog("Failed to import file. Ensure it is a valid format.");
         }
         return false;
     }
@@ -186,12 +199,11 @@ public class XmlMakerGui {
     public void processFile(File file) {
         String filePath = file.getAbsolutePath();
         if (!isValidFileType(filePath)) {
-            xmlMakerUtils.showErrorDialog("Unsupported file type. Please provide a valid file (.xls, .xlsx, .csv, or .tsv).");
+            XmlMakerUtils.showErrorDialog("Unsupported file type. Please provide a valid file (.xls, .xlsx, .csv, or .tsv).");
             return;
         }
         excelFileReader.selectFileOpener(filePath);
-        uniprotMapperGui.setUpSheets();
-        interactionsCreatorGui.setUpSheets();
+        setUpSheets();
     }
 
     /**
@@ -290,7 +302,7 @@ public class XmlMakerGui {
         if (result != JFileChooser.APPROVE_OPTION) return;
         File selectedFile = chooser.getSelectedFile();
         if (selectedFile == null) {
-            xmlMakerUtils.showErrorDialog("No file was selected.");
+            XmlMakerUtils.showErrorDialog("No file was selected.");
             return;
         }
         processFile(selectedFile);
@@ -316,7 +328,7 @@ public class XmlMakerGui {
                     } catch (Exception ex) {
                         LOGGER.log(Level.SEVERE, "Error during save operation", ex);
                         SwingUtilities.invokeLater(() ->
-                                xmlMakerUtils.showErrorDialog("An error occurred while saving the file.")
+                                XmlMakerUtils.showErrorDialog("An error occurred while saving the file.")
                         );
                     }
                     return null;
@@ -334,11 +346,55 @@ public class XmlMakerGui {
     }
 
     /**
+     * Creates a restart button that restarts the application.
+     *
+     * @param currentFrame The current application frame to close upon restart.
+     * @return The JButton configured to restart the application.
+     */
+    private JButton createRestartButton(JFrame currentFrame) {
+        JButton restartButton = new JButton("Restart");
+
+        restartButton.addActionListener(e -> {
+            int confirmation = JOptionPane.showConfirmDialog(
+                    currentFrame,
+                    "Are you sure you want to restart the application?",
+                    "Restart Confirmation",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirmation == JOptionPane.YES_OPTION) {
+                currentFrame.dispose();
+
+                SwingUtilities.invokeLater(() -> new XmlMakerGui().initialize());
+            }
+        });
+
+        return restartButton;
+    }
+
+    private JPanel createFileFormaterPanel(){
+        JPanel fileFormaterPanel = fileFormaterGui.getFileFormaterPanel();
+        fileFormaterPanel.setAutoscrolls(true);
+        fileFormaterPanel.setBorder(new TitledBorder("2. Format raw file"));
+        return fileFormaterPanel;
+    }
+
+    /**
      * The main method to start the PSI-MI XML Maker application.
      *
      * @param args Command-line arguments (not used).
      */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new XmlMakerGui().initialize());
+    }
+
+    private void setUpSheets() {
+        excelFileReader.sheets.clear();
+        excelFileReader.getSheets();
+        fileFormaterGui.setUpSheets();
+        uniprotMapperGui.setUpSheets();
+        interactionsCreatorGui.setUpSheets();
+        interactionsCreatorGui.setUpColumns();
+
     }
 }

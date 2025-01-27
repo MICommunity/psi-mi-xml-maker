@@ -1,5 +1,6 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 
+import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
@@ -14,11 +15,11 @@ import java.util.logging.Logger;
  * to update UniProt IDs.
  */
 public class UniprotMapperGui extends JPanel {
+    @Getter
     private final JComboBox<String> sheets = new JComboBox<>();
     private final JComboBox<String> idColumn = new JComboBox<>();
     private final JComboBox<String> organismColumn = new JComboBox<>();
     private final JComboBox<String> idDbColumn = new JComboBox<>();
-    private final XmlMakerUtils utils = new XmlMakerUtils();
     private final ExcelFileReader excelFileReader;
     private static final Logger LOGGER = Logger.getLogger(UniprotMapperGui.class.getName());
     private final LoadingSpinner loadingSpinner;
@@ -40,22 +41,23 @@ public class UniprotMapperGui extends JPanel {
      */
     public JPanel uniprotPanel() {
         JPanel uniprotPanel = new JPanel();
-        uniprotPanel.setBounds(10, 70, 400, 400);
-
-        JPanel fileProcessingPanel = new JPanel();
-        fileProcessingPanel.setLayout(new BoxLayout(fileProcessingPanel, BoxLayout.Y_AXIS));
-
+        uniprotPanel.setLayout(new GridLayout(3, 1));
+        uniprotPanel.setMaximumSize(new Dimension(2000, 200));
         setupComboBoxDefaults();
 
-        fileProcessingPanel.add(setComboBoxDimension(sheets, "Select sheet"));
-        fileProcessingPanel.add(setComboBoxDimension(idColumn, "Select ID column"));
-//        fileProcessingPanel.add(setComboBoxDimension(idDbColumn, "Select ID database column"));
-//        fileProcessingPanel.add(setComboBoxDimension(organismColumn, "Select organism column"));
+        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(sheets, "Select sheet"));
+        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(idColumn, "Select ID column"));
+        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(idDbColumn, "Select ID database column"));
+        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(organismColumn, "Select Organism column"));
 
-        sheets.addActionListener(e -> setUpColumns());
+        sheets.addActionListener(e -> {
+            if (!isUpdatingSheets) {
+                setUpColumns();
+            }
+        });
+
 
         JButton processFile = processFileButton();
-        uniprotPanel.add(fileProcessingPanel);
         uniprotPanel.add(processFile);
 
         uniprotPanel.setVisible(true);
@@ -68,44 +70,37 @@ public class UniprotMapperGui extends JPanel {
      */
     private void setupComboBoxDefaults() {
         idColumn.addItem("Select participant ID column");
-        idColumn.setEnabled(false);
+        idColumn.setEnabled(true);
         idDbColumn.addItem("Select ID database column");
-        idDbColumn.setEnabled(false);
+        idDbColumn.setEnabled(true);
         organismColumn.addItem("Select organism column");
-        organismColumn.setEnabled(false);
-
+        organismColumn.setEnabled(true);
     }
 
-    /**
-     * Configures combo box dimensions and adds the default item to the combo box.
-     *
-     * @param comboBox The combo box to be configured.
-     * @param defaultItem The default item to add to the combo box.
-     * @return The configured combo box.
-     */
-    private JComboBox<String> setComboBoxDimension(JComboBox<String> comboBox, String defaultItem) {
-        comboBox.addItem(defaultItem);
-        comboBox.setPreferredSize(new Dimension(400, 50));
-        return comboBox;
-    }
+    private boolean isUpdatingSheets = false;
 
-    /**
-     * Populates the sheets combo box with available sheets from the ExcelFileReader.
-     * If no sheets are available, disables the combo box.
-     */
     public void setUpSheets() {
+        isUpdatingSheets = true; // Suppress events
         setupComboBoxDefaults();
+
         if (excelFileReader.sheets.isEmpty()) {
+            sheets.addItem("Select sheet");
             sheets.setEnabled(false);
             sheets.setSelectedIndex(0);
+            setUpColumns();
         } else {
+            sheets.removeAllItems();
             sheets.setEnabled(true);
+            sheets.addItem("Select sheet");
             for (String sheetName : excelFileReader.sheets) {
                 sheets.addItem(sheetName);
             }
         }
-
+        isUpdatingSheets = false;
     }
+
+
+
 
     /**
      * Populates the columns in the combo boxes based on the selected sheet.
@@ -143,6 +138,7 @@ public class UniprotMapperGui extends JPanel {
      */
     public JButton processFileButton() {
         JButton processFile = new JButton("Update the UniProt IDs");
+
         processFile.addActionListener(e -> {
             loadingSpinner.showSpinner();
 
@@ -151,21 +147,21 @@ public class UniprotMapperGui extends JPanel {
                 protected Void doInBackground() {
                     String sheetSelected = (String) sheets.getSelectedItem();
                     String idColumnSelectedItem = (String) idColumn.getSelectedItem();
-//                    int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
-//                    int organismColumnIndex = organismColumn.getSelectedIndex() - 1; //todo: check if we can make it used but not mandatory
+                    int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
+                    int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
 
                     if (sheets.isEnabled()) {
                         if (isInvalidSelection(sheetSelected, idColumnSelectedItem)) {
-                            SwingUtilities.invokeLater(() -> utils.showErrorDialog("Please select valid sheet and ID column"));
+                            SwingUtilities.invokeLater(() -> XmlMakerUtils.showErrorDialog("Please select valid sheet and ID column"));
                             return null;
                         }
-                        processSheet(sheetSelected, idColumnSelectedItem);
+                        processSheet(sheetSelected, idColumnSelectedItem, idDbColumnIndex, organismColumnIndex);
                     } else {
                         if (idColumnSelectedItem == null || idColumnSelectedItem.equals("Select column to process")) {
-                            SwingUtilities.invokeLater(() -> utils.showErrorDialog("Please select valid sheet and ID column"));
+                            SwingUtilities.invokeLater(() -> XmlMakerUtils.showErrorDialog("Please select valid sheet and ID column"));
                             return null;
                         }
-                        processFileWithoutSheet(idColumnSelectedItem);
+                        processFileWithoutSheet(idColumnSelectedItem, idDbColumnIndex, organismColumnIndex);
                     }
                     return null;
                 }
@@ -173,14 +169,13 @@ public class UniprotMapperGui extends JPanel {
                 @Override
                 protected void done() {
                     loadingSpinner.hideSpinner();
-                    utils.showInfoDialog("Participants identifier updated successfully.");
+                    XmlMakerUtils.showInfoDialog("Participants identifier updated successfully.");
                     showMoleculeSetDialog();
                 }
             };
 
             worker.execute();
         });
-
         return processFile;
     }
 
@@ -190,9 +185,9 @@ public class UniprotMapperGui extends JPanel {
      * @param sheetSelected The name of the selected sheet.
      * @param idColumn The name of the selected ID column.
      */
-    private void processSheet(String sheetSelected, String idColumn) {
+    private void processSheet(String sheetSelected, String idColumn, int idDbColumnIndex, int organismColumnIndex) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn);
+            excelFileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
         } catch (Exception ex) {
             handleProcessingError(ex);
         }
@@ -204,9 +199,9 @@ public class UniprotMapperGui extends JPanel {
      *
      * @param idColumn The name of the selected ID column.
      */
-    private void processFileWithoutSheet(String idColumn) {
+    private void processFileWithoutSheet(String idColumn, int idDbColumn, int organismColumn) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn);
+            excelFileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
         } catch (Exception ex) {
             handleProcessingError(ex);
         }

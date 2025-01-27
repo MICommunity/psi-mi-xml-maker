@@ -37,7 +37,6 @@ public class ExcelFileReader  {
     private static final Logger LOGGER = Logger.getLogger(ExcelFileReader.class.getName());
     private final MoleculeSetChecker moleculeSetChecker = new MoleculeSetChecker();
     private final DataFormatter formatter = new DataFormatter();
-    private final XmlMakerUtils xmlMakerutils = new XmlMakerUtils();
     private final UniprotGeneralMapper uniprotGeneralMapper = new UniprotGeneralMapper();
 
     public Workbook workbook;
@@ -56,7 +55,7 @@ public class ExcelFileReader  {
     public final List<String> sheets = new ArrayList<>();
     private final List<String> columns = new ArrayList<>();
     public final List<String> proteinsPartOfMoleculeSet = new ArrayList<>();
-    public Map<String, String> alreadyParsed = new HashMap<>();
+    public final Map<String, UniprotResult> alreadyParsed = new HashMap<>();
 
     public ExcelFileReader() {
         this.fileName = null;
@@ -79,7 +78,6 @@ public class ExcelFileReader  {
         fileData = new ArrayList<>();
         sheets.clear();
         columns.clear();
-
         try {
             switch (fileType) {
                 case "xlsx":
@@ -102,12 +100,12 @@ public class ExcelFileReader  {
                     break;
                 default:
                     LOGGER.warning("Unsupported file format: " + fileType);
-                    xmlMakerutils.showErrorDialog("Unsupported file format! Supported formats: .csv, .tsv, .xls, .xlsx");
+                    XmlMakerUtils.showErrorDialog("Unsupported file format! Supported formats: .csv, .tsv, .xls, .xlsx");
             }
             fireInputSelectedEvent(new InputSelectedEvent(file));
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error reading file: " + fileName, e);
-            xmlMakerutils.showErrorDialog("Unable to read file: " + e.getMessage());
+            XmlMakerUtils.showErrorDialog("Unable to read file: " + e.getMessage());
         }
     }
 
@@ -199,7 +197,7 @@ public class ExcelFileReader  {
 
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Unable to read file with separator", e);
-            xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
+            XmlMakerUtils.showErrorDialog("Error reading file: " + e.getMessage());
         }
         return iterator;
     }
@@ -310,64 +308,218 @@ public class ExcelFileReader  {
      *
      * @param idColumnName      the name of the column containing the ID.
      */
-    public void checkAndInsertUniprotResultsSeparatedFormat(String idColumnName) {
+    public void checkAndInsertUniprotResultsSeparatedFormat(String idColumnName, int previousIdDbColumnIndex, int organismColumnIndex) {
         Iterator<List<String>> iterator = readFileWithSeparator();
+//        String tmpFilePath = "tmp." + FileUtils.getFileExtension(fileName);
+        String tmpFilePath = currentFilePath;
+
+        if (fileData == null || fileData.isEmpty()) {
+            LOGGER.severe("Header row is missing or invalid.");
+            XmlMakerUtils.showErrorDialog("Header row is missing or invalid.");
+            return;
+        }
 
         int idColumnIndex = fileData.indexOf(idColumnName);
+
         if (idColumnIndex == -1) {
             LOGGER.severe("Invalid column name: " + idColumnName);
+            XmlMakerUtils.showErrorDialog("Invalid column name: " + idColumnName);
             return;
         }
 
         fileData.add("Updated ids");
         fileData.add("Updated databases");
+        fileData.add("Updated organisms");
+        fileData.add("Updated name");
 
-        String tmpFilePath = "tmp." + FileUtils.getFileExtension(fileName);
         try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(
-                new FileOutputStream(tmpFilePath), StandardCharsets.UTF_8),
-                separator, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\n")) {
+                new FileOutputStream(tmpFilePath),
+                StandardCharsets.UTF_8),
+                separator,
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                "\n")) {
 
             csvWriter.writeNext(fileData.toArray(new String[0]));
 
             while (iterator.hasNext()) {
                 List<String> row = iterator.next();
 
+                if (row == null || row.size() <= idColumnIndex) {
+                    LOGGER.warning("Skipping null or incomplete row: " + row);
+                    continue;
+                }
+
                 String previousId = row.get(idColumnIndex);
+                String previousIdDb = null;
 
-                String uniprotResult;
-                String alreadyParsedId = alreadyParsed.get(previousId);
+                String organism = null;
+                String participantName = null;
+                String uniprotResult = null;
+                String uniprotResultDb = null;
 
-                if (alreadyParsedId == null) {
-                    uniprotResult = getOneUniprotId(previousId);
-                    alreadyParsed.put(previousId, uniprotResult);
+                if (previousId == null || previousId.isEmpty()) {
+                    LOGGER.warning("Skipping row with null or empty ID: " + row);
+                    continue;
+                }
+
+                if (previousIdDbColumnIndex != -1){
+                    previousIdDb = row.get(previousIdDbColumnIndex);
+                }
+                if (organismColumnIndex != -1){
+                    organism = row.get(organismColumnIndex);
+                }
+
+                UniprotResult alreadyParsedParticipant = alreadyParsed.get(previousId);
+
+                if (alreadyParsedParticipant == null) {
+                    UniprotResult result = getOneUniprotId(previousId, previousIdDb, organism);
+                    if (result == null) {
+                        LOGGER.warning("No UniProt results for ID: " + previousId);
+                    } else {
+                        uniprotResult = result.getUniprotAc();
+                        uniprotResultDb = result.getIdDb();
+                        organism = result.getOrganism();
+                        participantName = result.getName();
+
+                        alreadyParsed.put(previousId, result);
+                    }
                 } else {
-                    uniprotResult = alreadyParsedId;
+                    uniprotResult = alreadyParsedParticipant.getUniprotAc();
+                    uniprotResultDb = alreadyParsedParticipant.getIdDb();
+                    participantName = alreadyParsedParticipant.getName();
+                    organism = alreadyParsedParticipant.getOrganism();
                 }
 
                 List<String> data = new ArrayList<>(row);
                 data.add(uniprotResult != null ? uniprotResult : previousId);
-                data.add(uniprotResult != null ? "UniprotKB" : "");
+                data.add(uniprotResultDb != null ? uniprotResultDb : "");
+                data.add(organism != null ? organism : "");
+                data.add(participantName != null ? participantName : "");
+
                 csvWriter.writeNext(data.toArray(new String[0]));
             }
             alreadyParsed.clear();
         } catch (IOException e) {
-            xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
+            XmlMakerUtils.showErrorDialog("Error reading file: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error writing file", e);
         }
+        selectFileOpener(currentFilePath);
     }
 
-    private String getOneUniprotId(String previousId) {
-        ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId);
+    /**
+     * Processes a workbook and updates identifiers using UniProt results.
+     *
+     * @param sheetSelected     the name of the sheet to process.
+     * @param idColumnName      the name of the column containing the ID.
+     */
+    public void checkAndInsertUniprotResultsWorkbook(String sheetSelected, String idColumnName, int idDbColumnIndex, int organismColumnIndex) {
+        try (FileOutputStream fileOut = new FileOutputStream(currentFilePath)) {
+            Iterator<Row> iterator = readWorkbookSheet(sheetSelected);
+            String tmpFilePath = currentFilePath;
+//            String tmpFilePath = "tmp." + FileUtils.getFileExtension(currentFilePath);
+
+            if (fileData == null || fileData.isEmpty()) {
+                LOGGER.severe("Header row is missing or invalid.");
+                XmlMakerUtils.showErrorDialog("Header row is missing or invalid.");
+                return;
+            }
+
+            int idColumnIndex = fileData.indexOf(idColumnName);
+            if (idColumnIndex == -1) {
+                LOGGER.severe("Invalid column name: " + idColumnName);
+                XmlMakerUtils.showErrorDialog("Invalid column name: " + idColumnName);
+                return;
+            }
+
+            Sheet sheet = workbook.getSheet(sheetSelected);
+            if (sheet == null) {
+                LOGGER.severe("Sheet not found: " + sheetSelected);
+                XmlMakerUtils.showErrorDialog("Sheet not found: " + sheetSelected);
+                return;
+            }
+
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                LOGGER.severe("Header row is missing.");
+                XmlMakerUtils.showErrorDialog("Header row is missing.");
+                return;
+            }
+
+            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Updated ids");
+            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Updated databases");
+            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Updated organisms");
+            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Updated name");
+
+            while (iterator.hasNext()) {
+                Row row = iterator.next();
+                if (row == null || row.getLastCellNum() <= idColumnIndex) {
+                    LOGGER.warning("Skipping null or incomplete row: " + row);
+                    continue;
+                }
+
+                String previousId = FileUtils.getCellValueAsString(row.getCell(idColumnIndex));
+                String previousDb = idDbColumnIndex != -1 ? FileUtils.getCellValueAsString(row.getCell(idDbColumnIndex)) : null;
+                String organism = organismColumnIndex != -1 ? FileUtils.getCellValueAsString(row.getCell(organismColumnIndex)) : null;
+
+                if (previousId == null || previousId.isEmpty()) {
+                    LOGGER.warning("Skipping row with null or empty ID: " + row);
+                    continue;
+                }
+
+                UniprotResult alreadyParsedParticipant = alreadyParsed.get(previousId);
+
+                String uniprotResult = previousId;
+                String uniprotResultDb = "";
+                String updatedOrganism = "";
+                String participantName = "";
+
+                if (alreadyParsedParticipant == null) {
+                    UniprotResult result = getOneUniprotId(previousId, previousDb, organism);
+                    if (result == null) {
+                        LOGGER.warning("No UniProt results for ID: " + previousId);
+                    } else {
+                        uniprotResult = result.getUniprotAc();
+                        uniprotResultDb = result.getIdDb();
+                        updatedOrganism = result.getOrganism();
+                        participantName = result.getName();
+
+                        alreadyParsed.put(previousId, result);
+                    }
+                } else {
+                    uniprotResult = alreadyParsedParticipant.getUniprotAc();
+                    uniprotResultDb = alreadyParsedParticipant.getIdDb();
+                    updatedOrganism = alreadyParsedParticipant.getOrganism();
+                    participantName = alreadyParsedParticipant.getName();
+                }
+
+                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(uniprotResult != null ? uniprotResult : previousId);
+                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(uniprotResultDb != null ? uniprotResultDb : "");
+                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(updatedOrganism != null ? updatedOrganism : "");
+                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(participantName != null ? participantName : "");
+            }
+
+            workbook.write(fileOut);
+            workbook.close();
+            alreadyParsed.clear();
+        } catch (IOException e) {
+            XmlMakerUtils.showErrorDialog("Error processing workbook: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error processing workbook", e);
+        }
+        selectFileOpener(currentFilePath);
+    }
+
+    private UniprotResult getOneUniprotId(String previousId, String previousIdDb, String organism) {
+        ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
+        UniprotResult oneUniprotId = null;
 
         if (uniprotResults.isEmpty()) {
             return null;
         }
 
-        String uniprotResult = uniprotResults.get(0).getUniprotAc();
-
         if (uniprotResults.size() > 1) {
             UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui(uniprotGeneralMapper);
-            mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup());
+            mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup(), previousId);
 
             synchronized (this) {
                 while (mapperGui.getSelectedId() == null) {
@@ -379,70 +531,20 @@ public class ExcelFileReader  {
                 }
             }
 
-            uniprotResult = mapperGui.getSelectedId();
-            System.out.println(uniprotResult);
-        }
-
-        if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResult)) {
-            proteinsPartOfMoleculeSet.add(uniprotResult);
-        }
-        return uniprotResult;
-    }
-
-    /**
-     * Processes a workbook and updates identifiers using UniProt results.
-     *
-     * @param sheetSelected     the name of the sheet to process.
-     * @param idColumnName      the name of the column containing the ID.
-     */
-    public void checkAndInsertUniprotResultsWorkbook(String sheetSelected, String idColumnName) {
-        try (FileOutputStream fileOut = new FileOutputStream("tmp." + FileUtils.getFileExtension(fileName))) {
-            Iterator<Row> iterator = readWorkbookSheet(sheetSelected);
-            if (fileData == null || fileData.isEmpty()) {
-                LOGGER.severe("Header row is missing or invalid.");
-                return;
-            }
-
-            int idColumnIndex = fileData.indexOf(idColumnName);
-            if (idColumnIndex == -1) {
-                LOGGER.severe("Invalid column name: " + idColumnName);
-                return;
-            }
-
-            while (iterator.hasNext()) {
-                Row row = iterator.next();
-                if (row == null) continue;
-
-                row.shiftCellsRight(idColumnIndex + 1, row.getLastCellNum() - 1, 1);
-                Cell previousIdCell = row.getCell(idColumnIndex);
-                String previousId = FileUtils.getCellValueAsString(previousIdCell);
-                String uniprotResult;
-                String alreadyParsedId = alreadyParsed.get(previousId);
-
-                if (alreadyParsedId == null) {
-                    uniprotResult = getOneUniprotId(previousId);
-                    alreadyParsed.put(previousId, uniprotResult);
-                } else {
-                    uniprotResult = alreadyParsedId;
+            for(UniprotResult uniprotResult : uniprotResults) {
+                if (uniprotResult.getUniprotAc().equals(mapperGui.getSelectedId())) {
+                    oneUniprotId = uniprotResult;
                 }
-
-                Cell newColumnCell = row.getCell(idColumnIndex + 1);
-                if (newColumnCell == null) {
-                    newColumnCell = row.createCell(idColumnIndex + 1);
-                    newColumnCell.setCellType(CellType.STRING);
-                }
-
-                newColumnCell.setCellValue(uniprotResult != null ? uniprotResult : previousId);
-
             }
-            workbook.write(fileOut);
-            workbook.close();
-            alreadyParsed.clear();
 
-        } catch (IOException e) {
-            xmlMakerutils.showErrorDialog("Error reading file: " + e.getMessage());
-            LOGGER.log(Level.SEVERE, "Error processing workbook", e);
+        } else {
+            oneUniprotId = uniprotResults.get(0);
         }
+
+        if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResults.get(0).getUniprotAc())) {
+            proteinsPartOfMoleculeSet.add(uniprotResults.get(0).getUniprotAc());
+        }
+        return oneUniprotId;
     }
 
     /**

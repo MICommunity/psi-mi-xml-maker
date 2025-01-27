@@ -9,6 +9,7 @@ import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
 import uk.ac.ebi.pride.utilities.ols.web.service.model.Term;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
@@ -45,7 +46,7 @@ public class XmlMakerUtils {
     /**
      * Displays an error message in a dialog box.
      */
-    public void showErrorDialog(String message) {
+    public static void showErrorDialog(String message) {
         LOGGER.severe("Error: " + message);
         JOptionPane.showMessageDialog(new JFrame(), message, "ERROR", JOptionPane.ERROR_MESSAGE);
     }
@@ -53,7 +54,7 @@ public class XmlMakerUtils {
     /**
      * Displays an informational message in a dialog box.
      */
-    public void showInfoDialog(String message) {
+    public static void showInfoDialog(String message) {
         JOptionPane.showMessageDialog(new JFrame(), message, "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -220,5 +221,18 @@ public class XmlMakerUtils {
 
         int distance = levenshteinDistance(s1, s2);
         return ((maxLength - distance) / (double) maxLength) * 100;
+    }
+
+    /**
+     * Configures combo box dimensions and adds the default item to the combo box.
+     *
+     * @param comboBox    The combo box to be configured.
+     * @param defaultItem The default item to add to the combo box.
+     * @return The configured combo box.
+     */
+    public static JComboBox<String> setComboBoxDimension(JComboBox<String> comboBox, String defaultItem) {
+        comboBox.addItem(defaultItem);
+        comboBox.setPreferredSize(new Dimension(400, 50));
+        return comboBox;
     }
 }

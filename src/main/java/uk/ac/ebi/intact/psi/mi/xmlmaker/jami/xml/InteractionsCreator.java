@@ -191,7 +191,7 @@ public class InteractionsCreator {
     public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex) {
 
         Iterator<List<String>> data = excelFileReader.readFileWithSeparator();
-        int expectedNumberOfColumns = excelFileReader.fileData.size();
+//        int expectedNumberOfColumns = excelFileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
         String currentInteractionNumber = "0";
 
@@ -223,10 +223,10 @@ public class InteractionsCreator {
             isFileFinished = false;
             List<String> datum = data.next();
 
-            if (datum.size() < expectedNumberOfColumns) {
-                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
-                continue;
-            }
+//            if (datum.size() < expectedNumberOfColumns) {
+//                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
+//                continue;
+//            }
 
             if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
                 createInteractions();
@@ -266,7 +266,7 @@ public class InteractionsCreator {
      */
     public void fetchDataWithWorkbook(Map<String, Integer> columnAndIndex) {
         Iterator<Row> data = excelFileReader.readWorkbookSheet(sheetSelected);
-        int expectedNumberOfColumns = excelFileReader.fileData.size();
+//        int expectedNumberOfColumns = excelFileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
         String currentInteractionNumber = "0";
 
@@ -324,10 +324,10 @@ public class InteractionsCreator {
                 }
             }
 
-            if (datum.size() < expectedNumberOfColumns) {
-                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
-                continue;
-            }
+//            if (datum.size() < expectedNumberOfColumns) {
+//                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
+//                continue;
+//            }
 
             if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
                 createInteractions();

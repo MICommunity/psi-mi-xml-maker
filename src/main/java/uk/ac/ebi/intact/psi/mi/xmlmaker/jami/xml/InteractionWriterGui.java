@@ -66,7 +66,7 @@ public class InteractionWriterGui {
     private JPanel createDateSelectionPanel() {
         JPanel dateSelectionPanel = new JPanel();
         dateSelectionPanel.setLayout(new FlowLayout());
-        dateSelectionPanel.setBorder(BorderFactory.createTitledBorder("4.1 Select the publication Date"));
+        dateSelectionPanel.setBorder(BorderFactory.createTitledBorder("6.1 Select the publication Date"));
 
         JLabel dateLabel = new JLabel("Date:");
         SpinnerDateModel dateModel = new SpinnerDateModel();
@@ -87,7 +87,7 @@ public class InteractionWriterGui {
     private JPanel createSaveLocationPanel() {
         JPanel saveLocationPanel = new JPanel();
         saveLocationPanel.setLayout(new FlowLayout());
-        saveLocationPanel.setBorder(BorderFactory.createTitledBorder("4.2 Select the saving location"));
+        saveLocationPanel.setBorder(BorderFactory.createTitledBorder("6.2 Select the saving location"));
 
 
         JLabel nameLabel = new JLabel("Name: ");

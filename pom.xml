@@ -163,6 +163,7 @@
         </annotationProcessorPaths>
       </configuration>
     </plugin>
+
     <plugin>
       <groupId>io.github.fvarrui</groupId>
       <artifactId>javapackager</artifactId>
@@ -181,8 +182,37 @@
             <iconFile>src/main/resources/psi.icns</iconFile>
           </configuration>
         </execution>
+
+        <execution>
+          <id>bundling-for-windows</id>
+          <phase>package</phase>
+          <goals>
+            <goal>package</goal>
+          </goals>
+          <configuration>
+            <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
+            <platform>windows</platform>
+            <createZipball>true</createZipball>
+          </configuration>
+        </execution>
+
+        <execution>
+          <id>bundling-for-linux</id>
+          <phase>package</phase>
+          <goals>
+            <goal>package</goal>
+          </goals>
+          <configuration>
+            <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
+            <platform>linux</platform>
+            <createTarball>true</createTarball>
+<!--            <jdkPath>X:\\path\to\linux\jdk</jdkPath>-->
+          </configuration>
+        </execution>
+
       </executions>
     </plugin>
+
     <plugin>
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-javadoc-plugin</artifactId>
