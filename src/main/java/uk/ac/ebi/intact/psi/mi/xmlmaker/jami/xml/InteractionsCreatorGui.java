@@ -76,8 +76,9 @@ public class InteractionsCreatorGui extends JPanel {
                 interactionsCreator.sheetSelected = Objects.requireNonNull(sheets.getSelectedItem()).toString();
                 setUpColumns();
             }
+//            createInteractionDataTable();
         });
-        createInteractionDataTable();
+
 
         JScrollPane scrollPane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         scrollPane.setPreferredSize(new Dimension(scrollPane.getPreferredSize().width, 200)); // Set the height to 200 pixels
@@ -104,6 +105,7 @@ public class InteractionsCreatorGui extends JPanel {
             for (String sheetName : excelFileReader.sheets) {
                 sheets.addItem(sheetName);
             }
+//            setUpColumns();
         }
         isUpdatingSheets = false;
     }
@@ -327,7 +329,7 @@ public class InteractionsCreatorGui extends JPanel {
 
         int firstLinesCount = Math.min(firstLines.size(), rowCount);
 
-        for (int rowIndex = 1; rowIndex < firstLinesCount; rowIndex++) {
+        for (int rowIndex = 0; rowIndex < firstLinesCount; rowIndex++) {
             List<String> rowData = firstLines.get(rowIndex);
             String value = (index < rowData.size()) ? rowData.get(index) : "N/A";
             tableModel.setValueAt(value, rowIndex, comboBoxIndex);

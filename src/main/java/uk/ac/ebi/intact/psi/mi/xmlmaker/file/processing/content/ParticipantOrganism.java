@@ -1,0 +1,72 @@
+package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content;
+
+public enum ParticipantOrganism {
+    HOMO_SAPIENS("Homo sapiens", 9606),
+    SACCHAROMYCES_CEREVISIAE("Saccharomyces cerevisiae", 559292),
+    DROSOPHILA_MELANOGASTER("Drosophila melanogaster (Fruit fly)", 7227),
+    MUS_MUSCULUS("Mus musculus", 10090),
+    ARABIDOPSIS_THALIANA("Arabidopsis thaliana (Mouse-ear cress)", 3702),
+    ZEA_MAYS("Zea mays (Maize)", 4577),
+    CAENORHABDITIS_ELEGANS("Caenorhabditis elegans", 6239),
+    ESCHERICHIA_COLI_K12("Escherichia coli (strain K12)", 83333),
+    CHEMICAL_SYNTHESIS("Chemical synthesis", -2),
+    RATTUS_NORVEGICUS("Rattus norvegicus (Rat)", 10116),
+    CAMPYLOBACTER_JEJUNI("Campylobacter jejuni subsp. jejuni serotype O:2 (strain NCTC 11168)", 192222),
+    SARS_COV_2("SARS-CoV-2", 2697049),
+    RABIES_VIRUS("Rabies virus (strain ERA)", 11295),
+    YERSINIA_PESTIS("Yersinia pestis", 632),
+    TREPONEMA_PALLIDUM("Treponema pallidum (strain Nichols)", 243276),
+    SYNECHOCYSTIS_SP("Synechocystis sp. (strain PCC 6803 / Kazusa)", 1111708),
+    SCHIZOSACCHAROMYCES_POMBE("Schizosaccharomyces pombe (strain ATCC 38366 / 972)", 284812),
+    HELICOBACTER_PYLORI("Helicobacter pylori", 85962),
+    BACILLUS_ANTHRACIS("Bacillus anthracis", 1392),
+    PLASMODIUM_FALCIPARUM("Plasmodium falciparum (isolate 3D7)", 36329),
+    BOS_TAURUS("Bos taurus (Bovine)", 9913),
+    HUMAN_SARS_CORONAVIRUS("Human SARS coronavirus", 694009),
+    XENOPUS_LAEVIS("Xenopus laevis (African clawed frog)", 8355),
+    EPSTEIN_BARR_VIRUS("Epstein-Barr virus (strain B95-8) (HHV-4)", 10377),
+    BACILLUS_SUBTILIS("Bacillus subtilis", 224308),
+    FRANCIS_TULARENSIS("Francisella tularensis subsp. tularensis", 177416),
+    INFLUENZA_A_PR8("Influenza A virus (strain A/Puerto Rico/8/1934 H1N1)", 211044),
+    INFLUENZA_A_WS33("Influenza A virus (strain A/Wilson-Smith/1933 H1N1)", 381518),
+    DESULFOVIBRIO_VULGARIS("Desulfovibrio vulgaris (strain Hildenborough / ATCC 29579 / NCIMB 8303)", 882),
+    MYCOPLASMA_PNEUMONIAE("Mycoplasma pneumoniae (strain ATCC 29342 / M129)", 272634),
+    THERMUS_THERMOPHILUS("Thermus thermophilus (strain HB8 / ATCC 27634 / DSM 579)", 300852),
+    INFLUENZA_A("Influenza A virus", 643960),
+    SACCHAROMYCES_CEREVISIAE_BAKERS("Saccharomyces cerevisiae (Baker's yeast)", 4932),
+    ASTER_YELLOWS("Aster yellows witches'-broom phytoplasma (strain AYWB)", 322098),
+    GALLUS_GALLUS("Gallus gallus (Chicken)", 9031),
+    ORYCTOLAGUS_CUNICULUS("Oryctolagus cuniculus (Rabbit)", 9986),
+    CANIS_FAMILIARIS("Canis familiaris (Dog)", 9615),
+    SALMONELLA_TYPHIMURIUM_SL1344("Salmonella typhimurium (strain SL1344)", 216597),
+    HIV_1_HXB2("Human immunodeficiency virus type 1 group M subtype B (isolate HXB2)", 11706),
+    HHV_8("Human herpesvirus 8 (HHV-8)", 37296),
+    DANIO_RERIO("Danio rerio (Zebrafish)", 7955),
+    SALMONELLA_TYPHIMURIUM_14028S("Salmonella typhimurium (strain 14028s)", 588858),
+    HPV16("Human papillomavirus type 16", 333760),
+    HALOFERAX_VOLCANII("Haloferax volcanii (strain DS2)", 309800),
+    ORYZA_SATIVA("Oryza sativa subsp. japonica (Rice)", 39947),
+    MERS_COV("Middle East respiratory syndrome-related coronavirus (isolate England 1)", 1263720),
+    HEPATITIS_C_H77("Hepatitis C virus genotype 1a (isolate H77)", 63746),
+    HEPATITIS_C_CON1("Hepatitis C virus genotype 1b (isolate Con1)", 333284),
+    ESCHERICHIA_COLI("Escherichia coli", 562),
+    HEPATITIS_C_JFH1("Hepatitis C virus genotype 2a (isolate JFH-1)", 356411),
+    MEASLES_VIRUS("Measles virus (strain Edmonston-Schwarz vaccine)", 132487),
+    HPV18("Human papillomavirus type 18", 333761),
+    INFLUENZA_A_H5N1("Influenza A virus (A/Viet Nam/1203/2004(H5N1))", 284218),
+    STREPTOCOCCUS_PNEUMONIAE("Streptococcus pneumoniae serotype 4 (strain TIGR4)", 170187),
+    SUS_SCROFA("Sus scrofa (Pig)", 9823),
+    MYCOBACTERIUM_TUBERCULOSIS("Mycobacterium tuberculosis (strain H37Rv)", 83332),
+    MYXOCOCCUS_XANTHUS("Myxococcus xanthus (strain DK 1622)", 246197),
+    HPV6B("Human papillomavirus type 6b", 10600),
+    HHV_1("Human herpesvirus 1 (strain 17)", 10299),
+    HHV_3("Varicella-zoster virus (strain Oka vaccine)", 341980);
+
+    public final String name;
+    public final int taxId;
+
+    ParticipantOrganism(String name, int taxId) {
+        this.name = name;
+        this.taxId = taxId;
+    }
+}

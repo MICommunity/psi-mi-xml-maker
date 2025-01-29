@@ -395,7 +395,7 @@ public class XmlMakerGui {
         fileFormaterGui.setUpSheets();
         uniprotMapperGui.setUpSheets();
         interactionsCreatorGui.setUpSheets();
-        interactionsCreatorGui.setUpColumns();
+//        interactionsCreatorGui.setUpColumns();
 
     }
 }

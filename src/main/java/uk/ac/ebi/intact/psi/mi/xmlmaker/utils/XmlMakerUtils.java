@@ -26,7 +26,7 @@ public class XmlMakerUtils {
 
     private static final Logger LOGGER = Logger.getLogger(XmlMakerUtils.class.getName());
     private final Map<String, CvTerm> nameToCvTerm = new ConcurrentHashMap<>();
-    private final Map<String, String> nameToTaxIdCache = new ConcurrentHashMap<>();
+    private static final Map<String, String> nameToTaxIdCache = new ConcurrentHashMap<>();
     static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
 
     static {
@@ -61,7 +61,7 @@ public class XmlMakerUtils {
     /**
      * Fetches the Taxonomy ID for a given organism name using the OLS API.
      */
-    public String fetchTaxIdWithApi(String organismName) {
+    public static String fetchTaxIdWithApi(String organismName) {
         String urlString = "https://www.ebi.ac.uk/ols4/api/search?q=" + encodeForURL(organismName) + "&ontology=ncbitaxon";
         try {
             HttpURLConnection connection = createConnection(urlString);
@@ -88,7 +88,7 @@ public class XmlMakerUtils {
     /**
      * Creates an HTTP connection for a given URL.
      */
-    public HttpURLConnection createConnection(String urlString) throws IOException {
+    public static HttpURLConnection createConnection(String urlString) throws IOException {
         LOGGER.fine("Creating HTTP connection to URL: " + urlString);
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -99,7 +99,7 @@ public class XmlMakerUtils {
     /**
      * Fetches the Taxonomy ID for a given organism name by processing the API response.
      */
-    public String fetchTaxIdForOrganism(String organismName) {
+    public static String fetchTaxIdForOrganism(String organismName) {
         String taxId = nameToTaxIdCache.get(organismName);
         if (taxId != null) return taxId;
         if (organismName.matches("\\d+")) return organismName; // already a taxId

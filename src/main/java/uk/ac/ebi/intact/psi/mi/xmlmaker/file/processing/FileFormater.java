@@ -29,9 +29,11 @@ public class FileFormater {
 
     @Setter
     private Map<String, String> interactionData = new HashMap<>();
-    private final String[] header = {"Interaction Number", "Participant", "Experimental role",
+    private String[] header = {"Interaction Number", "Participant", "Experimental role",
             "Interaction detection method", "Participant detection method", "Experimental preparation",
-            "Biological role"};
+            "Biological role", "Participant organism"};
+
+    private final Map<String, Integer> participantCountMap = new HashMap<>();
 
 
     public FileFormater(ExcelFileReader excelFileReader) {
@@ -51,6 +53,7 @@ public class FileFormater {
                 LOGGER.info("Reading xlsx file: " + fileName);
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary);
                 Workbook workbookXlsx = new XSSFWorkbook();
+                postProcessInteractions();
                 writeToExcel(newFormat, modifiedFileName + ".xlsx", workbookXlsx);
                 newFileName = modifiedFileName + ".xlsx";
                 break;
@@ -58,18 +61,21 @@ public class FileFormater {
                 LOGGER.info("Reading xls file: " + fileName);
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary);
                 Workbook workbookXls = new HSSFWorkbook();
+                postProcessInteractions();
                 writeToExcel(newFormat, modifiedFileName + ".xls", workbookXls);
                 newFileName = modifiedFileName + ".xls";
                 break;
             case "csv":
                 LOGGER.info("Reading csv file: " + fileName);
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary);
+                postProcessInteractions();
                 writeToFile(newFormat, modifiedFileName + ".csv", ',');
                 newFileName = modifiedFileName + ".csv";
                 break;
             case "tsv":
                 LOGGER.info("Reading tsv file: " + fileName);
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary);
+                postProcessInteractions();
                 writeToFile(newFormat, modifiedFileName + ".tsv", '\t');
                 newFileName = modifiedFileName + ".tsv";
                 break;
@@ -88,21 +94,28 @@ public class FileFormater {
         int interactionNumber = 0;
         String lastBait = null;
 
+        if (binary) {
+            while (iterator.hasNext()) {
+                List<String> row = iterator.next();
+                String bait = row.get(baitColumnIndex);
+                String prey = row.get(preyColumnIndex);
+                interactionNumber++;
+                addNewParticipant(String.valueOf(interactionNumber), bait, "bait");
+                addNewParticipant(String.valueOf(interactionNumber), prey, "prey");
+            }
+        }
+
         while (iterator.hasNext()) {
             List<String> row = iterator.next();
             String bait = row.get(baitColumnIndex);
             String prey = row.get(preyColumnIndex);
-
-            if (binary) {
+            if (lastBait == null || !lastBait.equals(bait)) {
                 interactionNumber++;
-                addNewParticipant(String.valueOf(interactionNumber), bait, "bait");
+                lastBait = bait;
                 addNewParticipant(String.valueOf(interactionNumber), prey, "prey");
+                addNewParticipant(String.valueOf(interactionNumber), bait, "bait");
             } else {
-                if (lastBait == null || !lastBait.equals(bait)) {
-                    interactionNumber++;
-                    lastBait = bait;
-                    addNewParticipant(String.valueOf(interactionNumber), bait, "bait");
-                }
+                lastBait = bait;
                 addNewParticipant(String.valueOf(interactionNumber), prey, "prey");
             }
         }
@@ -134,18 +147,20 @@ public class FileFormater {
                 addNewParticipant(String.valueOf(interactionNumber), prey, "prey");
             }
         }
-
         iterator.remove();
     }
 
     public void addNewParticipant(String interactionNumber, String participant, String participantType) {
         List<String> newParticipant = new ArrayList<>();
-        newParticipant.add(String.valueOf(interactionNumber));
+
+        newParticipant.add(interactionNumber);
         newParticipant.add(participant);
         newParticipant.add(participantType);
 
+        participantCountMap.put(interactionNumber, participantCountMap.getOrDefault(interactionNumber, 0) + 1);
+
         for (DataForRawFile data : DataForRawFile.values()) {
-            if (data.isCommon){
+            if (data.isCommon) {
                 newParticipant.add(interactionData.get(data.name));
             } else {
                 if ("bait".equalsIgnoreCase(participantType) && data.isBait) {
@@ -155,10 +170,8 @@ public class FileFormater {
                 }
             }
         }
-
         newFormat.add(newParticipant);
     }
-
 
     public void writeToFile(List<List<String>> data, String filePath, char delimiter) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(filePath),
@@ -206,4 +219,22 @@ public class FileFormater {
             throw new RuntimeException(e);
         }
     }
+
+    public void postProcessInteractions() {
+        String[] extendedHeader = Arrays.copyOf(header, header.length + 1);
+        extendedHeader[extendedHeader.length - 1] = "Interaction Type";
+        header = extendedHeader;
+        for (List<String> row : newFormat) {
+            String interactionNumber = row.get(0);
+            int count = participantCountMap.getOrDefault(interactionNumber, 0);
+
+            if (count > 2) {
+                row.add("association");
+            } else {
+                row.add("physical interaction");
+            }
+        }
+    }
+
+
 }

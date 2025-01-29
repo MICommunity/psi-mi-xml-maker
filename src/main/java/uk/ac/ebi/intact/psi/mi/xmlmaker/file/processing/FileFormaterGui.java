@@ -45,7 +45,6 @@ public class FileFormaterGui {
         fileFormaterButton.addActionListener(e -> {
             Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
             formatFile(fileFormaterCheckBox.isSelected(),interactionData);
-
         });
 
         fileFormaterPanel.add(fileFormaterCheckBox);

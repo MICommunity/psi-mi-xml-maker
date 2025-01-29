@@ -41,7 +41,7 @@ public class UniprotMapperGui extends JPanel {
      */
     public JPanel uniprotPanel() {
         JPanel uniprotPanel = new JPanel();
-        uniprotPanel.setLayout(new GridLayout(3, 1));
+        uniprotPanel.setLayout(new GridLayout(1, 1));
         uniprotPanel.setMaximumSize(new Dimension(2000, 200));
         setupComboBoxDefaults();
 

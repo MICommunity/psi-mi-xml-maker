@@ -50,6 +50,7 @@ public class UniprotGeneralMapper {
         }
         if (organism != null) {
             urlString = "https://rest.uniprot.org/uniprotkb/search?query=(xref:" + protein + "%20AND%20organism_id:" + organism + ")";
+//            urlString = XmlMakerUtils.encodeForURL(urlString);
         }
         System.out.println(urlString);
         try {
