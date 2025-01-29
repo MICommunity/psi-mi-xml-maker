@@ -31,7 +31,7 @@ public class FileFormater {
     private Map<String, String> interactionData = new HashMap<>();
     private String[] header = {"Interaction Number", "Participant", "Experimental role",
             "Interaction detection method", "Participant detection method", "Experimental preparation",
-            "Biological role", "Participant organism"};
+            "Biological role", "Participant organism", "Feature", "Feature start", "Feature end",};
 
     private final Map<String, Integer> participantCountMap = new HashMap<>();
 
@@ -224,10 +224,18 @@ public class FileFormater {
         String[] extendedHeader = Arrays.copyOf(header, header.length + 1);
         extendedHeader[extendedHeader.length - 1] = "Interaction Type";
         header = extendedHeader;
+
+        int expectedColumns = header.length - 1; // Before adding the new column
+
         for (List<String> row : newFormat) {
+            // Ensure the row has enough columns
+            while (row.size() < expectedColumns) {
+                row.add(""); // Add empty values for missing columns
+            }
+
+            // Determine interaction type
             String interactionNumber = row.get(0);
             int count = participantCountMap.getOrDefault(interactionNumber, 0);
-
             if (count > 2) {
                 row.add("association");
             } else {
@@ -235,6 +243,7 @@ public class FileFormater {
             }
         }
     }
+
 
 
 }

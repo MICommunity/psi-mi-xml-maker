@@ -19,15 +19,17 @@ public class ParticipantAndInteractionCreatorGui {
     private final JComboBox<String> participantDetectionMethodCombobox = new JComboBox<>();
     private final JComboBox<String> baitBiologicalRole = new JComboBox<>();
     private final JComboBox<String> preyBiologicalRole = new JComboBox<>();
-
     private final JComboBox<String> baitOrganism = new JComboBox<>();
     private final JComboBox<String> preyOrganism = new JComboBox<>();
 
+    private final JComboBox<String> baitFeatureStartLocation = new JComboBox<>();
+    private final JComboBox<String> baitFeatureEndLocation = new JComboBox<>();
+    private final JComboBox<String> baitFeature = new JComboBox<>();
 
     public JPanel createParticipantAndInteractionCreatorGui() {
         JPanel participantAndInteractionCreatorPanel = new JPanel();
         participantAndInteractionCreatorPanel.setMaximumSize(new Dimension(2000, 400));
-        participantAndInteractionCreatorPanel.setLayout(new GridLayout(2, 1));
+        participantAndInteractionCreatorPanel.setLayout(new GridLayout(3, 1));
 
         participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(participantDetectionMethodCombobox, DataForRawFile.PARTICIPANT_DETECTION_METHOD.name));
         participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(interactionDetectionMethodCombobox, DataForRawFile.INTERACTION_DETECTION_METHOD.name));
@@ -38,7 +40,9 @@ public class ParticipantAndInteractionCreatorGui {
         participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitOrganism, DataForRawFile.BAIT_ORGANISM.name));
         participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(preyOrganism, DataForRawFile.PREY_ORGANISM.name));
 
-
+        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeature, DataForRawFile.BAIT_FEATURE.name));
+        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureStartLocation, DataForRawFile.BAIT_FEATURE_START_LOCATION.name));
+        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureEndLocation, DataForRawFile.BAIT_FEATURE_END_LOCATION.name));
 
         setUp();
         return participantAndInteractionCreatorPanel;
@@ -50,6 +54,8 @@ public class ParticipantAndInteractionCreatorGui {
         setExperimentalPreparations();
         setBiologicalRole();
         setOrganisms();
+        setFeatureLocation();
+        setFeature();
     }
 
     public void setBiologicalRole() {
@@ -97,11 +103,34 @@ public class ParticipantAndInteractionCreatorGui {
         participantDetails.put(DataForRawFile.PARTICIPANT_DETECTION_METHOD.name, Objects.requireNonNull(participantDetectionMethodCombobox.getSelectedItem()).toString());
         participantDetails.put(DataForRawFile.BAIT_BIOLOGICAL_ROLE.name, Objects.requireNonNull(baitBiologicalRole.getSelectedItem()).toString());
         participantDetails.put(DataForRawFile.PREY_BIOLOGICAL_ROLE.name, Objects.requireNonNull(preyBiologicalRole.getSelectedItem()).toString());
-
         participantDetails.put(DataForRawFile.BAIT_ORGANISM.name, XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()));
         participantDetails.put(DataForRawFile.PREY_ORGANISM.name, XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()));
 
+        participantDetails.put(DataForRawFile.BAIT_FEATURE.name, Objects.requireNonNull(baitFeature.getSelectedItem()).toString());
+        participantDetails.put(DataForRawFile.BAIT_FEATURE_START_LOCATION.name, Objects.requireNonNull(baitFeatureStartLocation.getSelectedItem()).toString());
+        participantDetails.put(DataForRawFile.BAIT_FEATURE_END_LOCATION.name, Objects.requireNonNull(baitFeatureEndLocation.getSelectedItem()).toString());
+
         return participantDetails;
     }
+
+    private void setFeatureLocation(){
+        baitFeatureStartLocation.setEditable(true);
+        baitFeatureStartLocation.addItem("c-term");
+        baitFeatureStartLocation.addItem("n-term");
+        baitFeatureStartLocation.addItem("undetermined");
+
+        baitFeatureEndLocation.setEditable(true);
+        baitFeatureEndLocation.addItem("c-term");
+        baitFeatureEndLocation.addItem("n-term");
+        baitFeatureEndLocation.addItem("undetermined");
+    }
+
+    private void setFeature(){
+        baitFeature.setEditable(true);
+        baitFeature.addItem("binding domain");
+        baitFeature.addItem("flag tag");
+        baitFeature.addItem("v5 tag");
+    }
+
 
 }

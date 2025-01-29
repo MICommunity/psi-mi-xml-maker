@@ -7,9 +7,12 @@ public enum DataForRawFile {
     PREY_EXPERIMENTAL_PREPARATION("Prey Experimental Preparation", false, false),
     BAIT_BIOLOGICAL_ROLE("Bait Biological Role", true, false),
     PREY_BIOLOGICAL_ROLE("Prey Biological Role", false, false),
-
     BAIT_ORGANISM("Bait Organism", true, false),
     PREY_ORGANISM("Prey Organism", false, false),
+
+    BAIT_FEATURE("Bait Feature", true, false),
+    BAIT_FEATURE_START_LOCATION("Bait Feature Start Location", true, false),
+    BAIT_FEATURE_END_LOCATION("Bait Feature End Location", true, false),
     ;
 
     public final String name;
