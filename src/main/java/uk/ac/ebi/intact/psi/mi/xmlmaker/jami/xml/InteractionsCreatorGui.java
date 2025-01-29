@@ -134,7 +134,7 @@ public class InteractionsCreatorGui extends JPanel {
      */
     private void createInteractionDataTable() {
         int rows = 5;
-        int cols = dataNeededForInteractor.size() + excelFileReader.getNumberOfFeatures() * 4;
+        int cols = dataNeededForInteractor.size() + excelFileReader.getNumberOfFeatures() * 6;
         String defaultCellValue = "Select from file";
         String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
@@ -260,30 +260,62 @@ public class InteractionsCreatorGui extends JPanel {
     }
 
     /**
-     * Adds feature-related cells to the data table.
+     * Adds feature-related cells to the data table and configures them like other columns.
      *
      * @param featureIndex The index of the feature being added.
      */
     public void addFeatureCells(int featureIndex) {
-        ArrayList<String> featureCells = new ArrayList<>();
-        featureCells.add(DataTypeAndColumn.FEATURE_SHORT_LABEL.name + "_" + featureIndex);
-        featureCells.add(DataTypeAndColumn.FEATURE_TYPE.name + "_" + featureIndex);
-        featureCells.add(DataTypeAndColumn.FEATURE_START_STATUS.name + "_" + featureIndex);
-        featureCells.add(DataTypeAndColumn.FEATURE_END_STATUS.name + "_" + featureIndex);
+        List<String> featureCells = List.of(
+                DataTypeAndColumn.FEATURE_TYPE.name + "_" + featureIndex,
+                DataTypeAndColumn.FEATURE_START.name + "_" + featureIndex,
+                DataTypeAndColumn.FEATURE_END.name + "_" + featureIndex,
+                DataTypeAndColumn.FEATURE_RANGE_TYPE.name + "_" + featureIndex,
+                DataTypeAndColumn.FEATURE_XREF.name + "_" + featureIndex,
+                DataTypeAndColumn.FEATURE_XREF_DB.name + "_" + featureIndex
+        );
 
-        TableColumnModel columnModel = table.getColumnModel();
+        TableModel tableModel = table.getModel();
+        int baseColumnIndex = dataNeededForInteractor.size() + featureIndex * featureCells.size();
 
         for (int i = 0; i < featureCells.size(); i++) {
             String columnName = featureCells.get(i);
-            TableColumn newColumn = columnModel.getColumn(dataNeededForInteractor.size() + featureIndex * 4 + i);
-            newColumn.setHeaderValue(columnName);
-            newColumn.setPreferredWidth(150);
+            int columnIndex = baseColumnIndex + i;
+
+            if (columnIndex >= table.getColumnCount()) {
+                continue;
+            }
+
+            TableColumn tableColumn = table.getColumnModel().getColumn(columnIndex);
+            tableColumn.setHeaderValue(columnName);
+            tableColumn.setPreferredWidth(150);
+
             JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
+            String defaultValue = interactionsCreator.mostSimilarColumn(columnNames, columnName);
+
+            if (columnNames.contains(defaultValue)) {
+                comboBox.setSelectedItem(defaultValue);
+                tableModel.setValueAt(defaultValue, 0, columnIndex);
+            }
+
+            comboBox.addActionListener(e -> setUpPreviewRows(columnIndex, columnName));
             columnsList.add(comboBox);
-            newColumn.setCellEditor(new DefaultCellEditor(comboBox));
+
+            tableColumn.setCellEditor(new DefaultCellEditor(comboBox) {
+                @Override
+                public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+                    return row == 0 ? super.getTableCellEditorComponent(table, value, isSelected, row, column) : null;
+                }
+            });
+
+            tableColumn.setCellRenderer(new DefaultTableCellRenderer() {
+                @Override
+                protected void setValue(Object value) {
+                    setText(value != null ? value.toString() : "Select from file");
+                    setUpPreviewRows(columnIndex, columnName);
+                }
+            });
         }
     }
-
     /**
      * Retrieves the names of the columns in the data table.
      *
@@ -308,12 +340,13 @@ public class InteractionsCreatorGui extends JPanel {
      */
     public void setUpPreviewRows(int comboBoxIndex, String columnName) {
         if (excelFileReader.currentFilePath == null) {
-            System.err.println("No file is loaded. Cannot configure preview rows.");
+//            System.err.println("No file is loaded. Cannot configure preview rows.");
             return;
         }
 
         getDataAndIndexes();
         Integer index = dataAndIndexes.get(columnName);
+
         if (index == null || index < 0) {
             System.err.println("Invalid column index mapping for selection: " + columnName);
             return;
@@ -329,7 +362,7 @@ public class InteractionsCreatorGui extends JPanel {
 
         int firstLinesCount = Math.min(firstLines.size(), rowCount);
 
-        for (int rowIndex = 0; rowIndex < firstLinesCount; rowIndex++) {
+        for (int rowIndex = 1; rowIndex < firstLinesCount; rowIndex++) {
             List<String> rowData = firstLines.get(rowIndex);
             String value = (index < rowData.size()) ? rowData.get(index) : "N/A";
             tableModel.setValueAt(value, rowIndex, comboBoxIndex);

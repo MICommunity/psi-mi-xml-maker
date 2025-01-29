@@ -152,10 +152,10 @@ public class XmlMakerGuiTest {
         columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_XREF.name, 15);
         columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_XREF_DB.name, 16);
 
-        columnAndIndex.put(DataTypeAndColumn.FEATURE_SHORT_LABEL.name, 20);
+//        columnAndIndex.put(DataTypeAndColumn.FEATURE_SHORT_LABEL.name, 20);
         columnAndIndex.put(DataTypeAndColumn.FEATURE_TYPE.name, 21);
-        columnAndIndex.put(DataTypeAndColumn.FEATURE_START_STATUS.name, 22);
-        columnAndIndex.put(DataTypeAndColumn.FEATURE_END_STATUS.name, 23);
+        columnAndIndex.put(DataTypeAndColumn.FEATURE_START.name, 22);
+        columnAndIndex.put(DataTypeAndColumn.FEATURE_END.name, 23);
 
         return columnAndIndex;
     }

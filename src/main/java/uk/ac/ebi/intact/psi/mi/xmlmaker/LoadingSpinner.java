@@ -19,19 +19,21 @@ public class LoadingSpinner {
      * @return the {@link JComponent} representing the glass pane with the loading spinner.
      */
     public JComponent createLoadingGlassPane(JFrame frame) {
-        glassPane = new JPanel(new BorderLayout(200, 200)) {
+        glassPane = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
             }
         };
 
-        glassPane.setOpaque(false);
+        glassPane.setOpaque(false);  // Make sure the glass pane is transparent
+        glassPane.setPreferredSize(frame.getSize());  // Ensure glass pane covers entire frame
 
-        ImageIcon loadingIcon = new ImageIcon("src/main/resources/LoadingSpinner.gif");
+        // Load the GIF using getResource to ensure it's properly located in the JAR or DMG
+        ImageIcon loadingIcon = new ImageIcon(getClass().getResource("/LoadingSpinner.gif"));
 
         JLabel loadingLabel = new JLabel(loadingIcon, JLabel.CENTER);
-        glassPane.add(loadingLabel, BorderLayout.CENTER);
+        glassPane.add(loadingLabel, BorderLayout.CENTER);  // Centre the spinner
         frame.setGlassPane(glassPane);
 
         return glassPane;
@@ -42,9 +44,11 @@ public class LoadingSpinner {
      * This method should be called when the loading process begins.
      */
     public void showSpinner() {
-        if (glassPane != null) {
-            glassPane.setVisible(true);
-        }
+        SwingUtilities.invokeLater(() -> {
+            if (glassPane != null) {
+                glassPane.setVisible(true);  // Show the glass pane with the spinner
+            }
+        });
     }
 
     /**
@@ -52,8 +56,10 @@ public class LoadingSpinner {
      * This method should be called when the loading process finishes.
      */
     public void hideSpinner() {
-        if (glassPane != null) {
-            glassPane.setVisible(false);
-        }
+        SwingUtilities.invokeLater(() -> {
+            if (glassPane != null) {
+                glassPane.setVisible(false);  // Hide the glass pane with the spinner
+            }
+        });
     }
 }

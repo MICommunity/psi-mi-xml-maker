@@ -38,6 +38,8 @@ public class ParticipantAndInteractionCreatorGui {
         participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitOrganism, DataForRawFile.BAIT_ORGANISM.name));
         participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(preyOrganism, DataForRawFile.PREY_ORGANISM.name));
 
+
+
         setUp();
         return participantAndInteractionCreatorPanel;
     }

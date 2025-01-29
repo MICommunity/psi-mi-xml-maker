@@ -1,59 +1,66 @@
-# The PSI-MI XML-maker
+# PSI-MI XML Maker User Guide
 
-The PSI-MI XML-maker is a tool designed to create XML files based on the 
-[PSI-MI 3.0 format](https://rawgit.com/HUPO-PSI/miXML/master/3.0/doc/MIF300.html).
-Those files can later be input in the editor for further processing.
+## Introduction
 
-## Requirements
-The PSI-MI XML-maker runs under [JDK11](https://www.oracle.com/uk/java/technologies/javase/jdk11-archive-downloads.html).
+### What is the PSI-MI XML Maker?
+The PSI-MI XML Maker is a tool designed to create XML files based on the [PSI-MI 3.0 format](https://rawgit.com/HUPO-PSI/miXML/master/3.0/doc/MIF300.html). These XML files can later be used in the editor for further processing.
 
-## How to launch for the first time?
+### How to download?
+- **MacOs** : download the .dmg file
+- **Windows** : download the .zip file
+- **Linux** : download the .tar file
 
-1. In your console, run the command `export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home` to be set up on JDK11.
-2. To be sure that you are on this version you can check with the command `java --version`.
-3. Then go to the *PSI-MI-XML-Maker* directory by using the command `cd path_to_directory/PSI-MI-XML-Maker` and run `mvn clean install`.
-4. After the build is complete, you may be prompted to grant access to the Finder. Once you grant access, you can save the PSI-MI XML-maker as an app.
+### Supported File Formats
+The PSI-MI XML Maker supports the following file formats:
+- **CSV** (Comma-Separated Values)
+- **TSV** (Tab-Separated Values)
+- **XLSX** (Excel format from 2007 onwards)
+- **XLS** (Excel format before 2007)
 
-Once the setup is complete, you can launch the PSI-MI XML-maker and start generating XML files based on the PSI-MI 3.0 format.
+## File Processing
 
-## How to use?
+### 1. File Input
+There are three ways to import a file into the PSI-MI XML Maker:
+- Click the **File** button in the menu bar and select a file using the file browser.
+- Click the **Fetch file** button in the **1. Fetch file** section to open the file browser.
+- Drag and drop the desired file directly into the application window.
 
-### What kind of file the PSI-XML maker support?
+> **Note:** A **Publication ID** must be provided before an XML file can be created.
 
-- CSV (Comma Separated values)
-- TSV (Tab Separated values)
-- XLSX (Excel format (from 2007))
-- XLS (Excel format (before 2007))
+### 2. Formatting the Raw File
+If the imported file does not conform to the Interactome template, it must be formatted.
+- The user can select columns for **Bait** and **Prey**.
+- If interactions are binary, the user can specify this by ticking the corresponding box.
+- Additional interaction-related information can be selected.
+- Once formatted, a new file named `previousFile_xmlFormatted.fileType` is generated.
 
-## File processing
+### 3. Updating Uniprot IDs
+Updating Uniprot IDs is optional but recommended.
+- If working with an **XLSX** or **XLS** file, select the correct sheet.
+- The **Participant ID** column must be specified.
+- The **Organism** and **Database** columns are optional but can refine Uniprot mapping.
+- Clicking **Update the Uniprot IDs** will start the process.
+- If multiple Uniprot IDs are found, the user can choose one or manually enter the ID and database.
+- Additional columns will be added to the file with the updated ID, organism, and database.
 
-### 1. File input 
-    They are 3 ways to import a file in the PSI-MI XML maker:
-      - Pressing the File button in the menu bar will lead to an input button which open the file browser.
-      - Pressing the "Fetch file" button in the "1. Fetch file section" will open the file browser.
-      - Dragging the wanted file directly into the window.
-      Once the file is loaded, enter the publication ID. The XML file will not be created without it.
+### 4. Creating Participants
+Before creating interactions, participants must be defined.
+- For **XLSX** or **XLS** files, select the correct sheet.
+- Map the participant elements to the correct file columns.
+- The application suggests columns based on similarity but requires user verification.
+- A preview function is available to check values.
 
-### 2. Update the Uniprot Ids
-    The second section is not mandatory but recommended. 
-    In the case of an XLSX or XLS file, the sheet on which the XML maker is working has to be selected. 
-    Then, the same way as other formats, the columns will be displayed in the three selectors. 
-    The user has to select for each selector the corresponding column in the file. 
-    Once done, a click on the "Update the Uniprot ids" button will launch the process.
+### 5. Creating the PSI-MI 3.0 XML File
+- The **Publication Date** must be selected.
+- Choose the **Number of interactions per XML file** (default: **1000**).
+- If interactions exceed this limit, multiple files will be created.
+- The **file name** and **save location** can be customised.
+    - Default: `inputFileName_[n].xml` inside a directory named after the input file.
+- Click **Browse...** to change the save location.
+- Click **Create XML File** to generate and save the XML file(s).
 
-### 3. Create the participants
-    Before creating the interactions, the user has to create the participants. 
-    The same way as the Uniprot update, the user has to select the sheet for the XLSX or XLSX file. 
-    Then the user has to associate the participant's elements to the columns in the file. 
-    The application is by default selecting the column with the most resemblance to the needed data.
-    The application is by default selecting the column with the most resemblance to the needed data,
-    but it is necessary for the user to check if the value is correct. It can be done thanks to the preview lines.
+---
 
-### 4. Create the PSI-MI 3.0 XML file
-        The user has to select the publication date in the dedicated section.
-        Finally, the user has to select the number of interactions per XML file. By default, this value is set at 1000.
-        If there is more than this number of interactions, multiple files will be generated.
-        The user can choose the name and the saving location of the XML file(s).
-        By default, the name will be the same as the input file with "_[n of file]" and the saving directory will be also named like the input file.
-        Clicking on the "Browse..." button will open the saving file browser.
-        Once those requirements filed, clicking on the "Create XML file" button will write and save the XML file.
+### Contact & Support
+For questions or troubleshooting, please refer to the official documentation or contact the development team.
+

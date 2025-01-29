@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import psidev.psi.mi.jami.exception.IllegalRangeException;
 import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
@@ -16,6 +17,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import psidev.psi.mi.jami.utils.PositionUtils;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn.*;
 
@@ -403,7 +406,7 @@ public class InteractionsCreator {
             return null;
         }
 
-        String hostOrganismTaxId = utils.fetchTaxIdForOrganism(hostOrganism);
+        String hostOrganismTaxId = XmlMakerUtils.fetchTaxIdForOrganism(hostOrganism);
 
         if (hostOrganismTaxId == null) {
             LOGGER.warning("No Tax ID found for host organism: " + hostOrganism);
@@ -460,28 +463,33 @@ public class InteractionsCreator {
     private XmlFeatureEvidence createFeature(int featureIndex, Map<String, String> data) {
         String featureIndexString = "_" + featureIndex;
 
-        String featureShortLabel = data.get(DataTypeAndColumn.FEATURE_TYPE.name + featureIndexString);
         String featureType = data.get(DataTypeAndColumn.FEATURE_TYPE.name + featureIndexString);
-        String featureStartRange = data.get(DataTypeAndColumn.FEATURE_START_STATUS.name + featureIndexString);
-        String featureEndRange = data.get(DataTypeAndColumn.FEATURE_END_STATUS.name + featureIndexString);
+        String featureStartRange = data.get(DataTypeAndColumn.FEATURE_START.name + featureIndexString);
+        String featureEndRange = data.get(DataTypeAndColumn.FEATURE_END.name + featureIndexString);
+        String featureRangeType = data.get(DataTypeAndColumn.FEATURE_RANGE_TYPE.name + featureIndexString);
+        String featureXref = data.get(DataTypeAndColumn.FEATURE_XREF.name + featureIndexString);
+        String featureXrefDb = data.get(DataTypeAndColumn.FEATURE_XREF_DB.name + featureIndexString);
 
-        if (featureShortLabel == null || featureType == null || featureStartRange == null || featureEndRange == null) {
+        if (featureType == null || featureStartRange == null || featureEndRange == null) {
             return null;
         }
 
         String featureTypeMiId = utils.fetchMiId(featureType);
         CvTerm featureTypeCv = new XmlCvTerm(featureType, featureTypeMiId);
         XmlFeatureEvidence featureEvidence = new XmlFeatureEvidence(featureTypeCv);
-        featureEvidence.setShortName(featureShortLabel);
 
         XmlRange featureRange = new XmlRange();
-        String featureStartRangeMiId = utils.fetchMiId(featureStartRange);
-        XmlCvTerm featureStartRangeCv = new XmlCvTerm(featureStartRange, featureStartRangeMiId);
-        featureRange.setJAXBStartStatus(featureStartRangeCv);
+        Position startPosition = checkFeatureRangeType(featureStartRange, featureRangeType);
+        Position endPosition = checkFeatureRangeType(featureEndRange, featureRangeType);
+        featureRange.setPositions(startPosition, endPosition);
 
-        String featureEndRangeMiId = utils.fetchMiId(featureEndRange);
-        XmlCvTerm featureEndRangeCv = new XmlCvTerm(featureEndRange, featureEndRangeMiId);
-        featureRange.setJAXBEndStatus(featureEndRangeCv);
+        if (featureXref != null && featureXrefDb != null && utils.fetchMiId(featureXrefDb) != null) {
+            CvTerm featureCv = new XmlCvTerm(featureXrefDb, utils.fetchMiId(featureXrefDb));
+            Xref featureXrefXml = new XmlXref(featureCv, featureXref, featureCv);
+            FeatureXrefContainer featureXrefContainer = new FeatureXrefContainer();
+            featureXrefContainer.getXrefs().add(featureXrefXml);
+            featureEvidence.setJAXBXref(featureXrefContainer);
+        }
 
         featureEvidence.setJAXBRangeWrapper(new AbstractXmlFeature.JAXBRangeWrapper());
         featureEvidence.getRanges().add(featureRange);
@@ -530,5 +538,23 @@ public class InteractionsCreator {
             }
         }
         return mostSimilarColumn;
+    }
+
+    public Position checkFeatureRangeType(String range, String featureRangeType) {
+        if (featureRangeType != null) return PositionUtils.createPosition(featureRangeType, utils.fetchMiId(featureRangeType), Integer.parseInt(range));
+
+        if (range.contains("c-term")) return PositionUtils.createCTerminalRangePosition();
+
+        if (range.contains("n-term")) return PositionUtils.createNTerminalRangePosition();
+
+        if (range.matches("\\d+")) {
+            try {
+                return PositionUtils.createPositionFromString(range);
+            } catch (IllegalRangeException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return PositionUtils.createUndeterminedPosition();
     }
 }

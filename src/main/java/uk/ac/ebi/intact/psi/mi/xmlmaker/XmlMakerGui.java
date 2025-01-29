@@ -14,6 +14,8 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,6 +69,7 @@ public class XmlMakerGui {
         frame.add(createFileProcessingPanel());
         frame.add(createSaveOptionsPanel());
         JButton saveButton = createSaveButtonWithSpinner();
+        saveButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         frame.add(saveButton);
 
         excelFileReader.registerInputSelectedEventHandler(event -> setUpSheets());
@@ -231,23 +234,22 @@ public class XmlMakerGui {
         menu.add(importFile);
 
         JMenu helpMenu = new JMenu("Help");
-        JMenuItem documentation = new JMenuItem("Documentation");
-        documentation.addActionListener(e -> {
-            File htmlFile = new File("target/reports/apidocs/index.html");
-            try {
-                Desktop.getDesktop().browse(htmlFile.toURI());
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        });
-        helpMenu.add(documentation);
+//        JMenuItem documentation = new JMenuItem("Documentation");
+//        documentation.addActionListener(e -> {
+//            File htmlFile = new File("src/main/resources/UserHelp.html");
+//            try {
+//                Desktop.getDesktop().browse(htmlFile.toURI());
+//            } catch (IOException ex) {
+//                throw new RuntimeException(ex);
+//            }
+//        });
+//        helpMenu.add(documentation);
 
         JMenuItem userGuide = new JMenuItem("How to use");
         userGuide.addActionListener(e -> {
-            File htmlFile = new File("target/reports/apidocs/index.html");
             try {
-                Desktop.getDesktop().browse(htmlFile.toURI());
-            } catch (IOException ex) {
+                Desktop.getDesktop().browse(new URI("https://github.com/MICommunity/psi-mi-xml-maker"));
+            } catch (IOException | URISyntaxException ex) {
                 throw new RuntimeException(ex);
             }
         });
@@ -317,6 +319,11 @@ public class XmlMakerGui {
         JButton saveButton = new JButton("Create XML file(s)");
 
         saveButton.addActionListener(e -> {
+            if (excelFileReader.getPublicationId() == null) {
+                XmlMakerUtils.showErrorDialog("Please provide a valid publication ID.");
+                return;
+            }
+
             loadingSpinner.showSpinner();
 
             SwingWorker<Void, Void> worker = new SwingWorker<>() {
@@ -328,9 +335,8 @@ public class XmlMakerGui {
                     } catch (Exception ex) {
                         LOGGER.log(Level.SEVERE, "Error during save operation", ex);
                         SwingUtilities.invokeLater(() ->
-                                XmlMakerUtils.showErrorDialog("An error occurred while saving the file.")
+                                XmlMakerUtils.showErrorDialog("An error occurred while saving the file." + ex.getMessage())
                         );
-                        ex.printStackTrace();
                     }
                     return null;
                 }
@@ -395,7 +401,5 @@ public class XmlMakerGui {
         fileFormaterGui.setUpSheets();
         uniprotMapperGui.setUpSheets();
         interactionsCreatorGui.setUpSheets();
-//        interactionsCreatorGui.setUpColumns();
-
     }
 }

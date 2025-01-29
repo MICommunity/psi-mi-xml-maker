@@ -24,10 +24,13 @@ public enum DataTypeAndColumn {
     PARTICIPANT_XREF("Participant xref"),
     PARTICIPANT_XREF_DB("Participant xref database"),
 
-    FEATURE_SHORT_LABEL("Feature short label", false),
+//    FEATURE_SHORT_LABEL("Feature short label", false),
     FEATURE_TYPE("Feature type", false),
-    FEATURE_START_STATUS("Feature start status", false),
-    FEATURE_END_STATUS("Feature end status", false),
+    FEATURE_START("Feature start", false),
+    FEATURE_END("Feature end", false),
+    FEATURE_RANGE_TYPE("Feature range type", false),
+    FEATURE_XREF("Feature xref", false),
+    FEATURE_XREF_DB("Feature xref database", false);
     ;
 
     public final String name;

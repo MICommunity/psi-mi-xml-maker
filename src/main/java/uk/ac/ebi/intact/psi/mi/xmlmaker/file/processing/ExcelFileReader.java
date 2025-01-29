@@ -150,8 +150,6 @@ public class ExcelFileReader  {
 
         Iterator<Row> iterator = sheet.iterator();
 
-        boolean isFirstRow = true;
-
         if (iterator.hasNext()) {
             Row row = iterator.next();
             List<String> rowData = new ArrayList<>();
@@ -159,10 +157,7 @@ public class ExcelFileReader  {
                 rowData.add(formatter.formatCellValue(cell));
             }
 
-            if (isFirstRow) {
-                fileData = rowData;
-                isFirstRow = false;
-            }
+            fileData = rowData;
         }
 
         return iterator;
@@ -310,7 +305,6 @@ public class ExcelFileReader  {
      */
     public void checkAndInsertUniprotResultsSeparatedFormat(String idColumnName, int previousIdDbColumnIndex, int organismColumnIndex) {
         Iterator<List<String>> iterator = readFileWithSeparator();
-//        String tmpFilePath = "tmp." + FileUtils.getFileExtension(fileName);
         String tmpFilePath = currentFilePath;
 
         if (fileData == null || fileData.isEmpty()) {
