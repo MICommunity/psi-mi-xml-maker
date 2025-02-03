@@ -33,7 +33,7 @@ public class InteractionsCreatorGui extends JPanel {
     private final ExcelFileReader excelFileReader;
     public final InteractionsCreator interactionsCreator;
     private List<List<String>> firstLines = new ArrayList<>();
-
+    private boolean isUpdatingSheets = false;
 
     @Getter
     public JPanel participantCreatorPanel ;
@@ -76,7 +76,6 @@ public class InteractionsCreatorGui extends JPanel {
                 interactionsCreator.sheetSelected = Objects.requireNonNull(sheets.getSelectedItem()).toString();
                 setUpColumns();
             }
-//            createInteractionDataTable();
         });
 
 
@@ -88,8 +87,12 @@ public class InteractionsCreatorGui extends JPanel {
         return participantCreatorPanel;
     }
 
-    private boolean isUpdatingSheets = false;
-
+    /**
+     * Populates the sheets combo box with available sheet names from the {@code ExcelFileReader}.
+     * If no sheets are found, the combo box is disabled and a default placeholder is set.
+     * Otherwise, the combo box is enabled and updated with the available sheets.
+     * Events are temporarily suppressed using {@code isUpdatingSheets} to prevent unintended triggers.
+     */
     public void setUpSheets() {
         isUpdatingSheets = true; // Suppress events
 
@@ -109,8 +112,6 @@ public class InteractionsCreatorGui extends JPanel {
         }
         isUpdatingSheets = false;
     }
-
-
 
     /**
      * Sets up the columns for the currently selected sheet.
@@ -316,6 +317,7 @@ public class InteractionsCreatorGui extends JPanel {
             });
         }
     }
+
     /**
      * Retrieves the names of the columns in the data table.
      *
@@ -340,7 +342,6 @@ public class InteractionsCreatorGui extends JPanel {
      */
     public void setUpPreviewRows(int comboBoxIndex, String columnName) {
         if (excelFileReader.currentFilePath == null) {
-//            System.err.println("No file is loaded. Cannot configure preview rows.");
             return;
         }
 

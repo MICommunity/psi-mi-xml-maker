@@ -20,6 +20,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * This class is responsible for fetching and processing UniProt results based on a given protein, previous database,
+ * and organism. It interacts with the UniProt API to retrieve data and manages the display of results using a set of
+ * radio buttons for each UniProt entry.
+ */
 @Getter
 public class UniprotGeneralMapper {
     private static final Logger LOGGER = LogManager.getLogger(UniprotGeneralMapper.class);
@@ -33,6 +38,14 @@ public class UniprotGeneralMapper {
     private UniprotResult selectedUniprot;
     private ButtonGroup buttonGroup  = new ButtonGroup();
 
+    /**
+     * Fetches UniProt results for the given protein, previous database, and organism.
+     *
+     * @param protein The protein to search for.
+     * @param previousDb The previous database to search in (can be {@code null}).
+     * @param organism The organism's taxon ID to filter by (can be {@code null}).
+     * @return A list of {@link UniprotResult} objects containing the search results.
+     */
     public ArrayList<UniprotResult> fetchUniprotResult(String protein, String previousDb, String organism){
         try {
             return getUniprotIds(getUniprotResponse(protein, previousDb, organism));
@@ -43,15 +56,27 @@ public class UniprotGeneralMapper {
         return null;
     }
 
+    /**
+     * Sends a GET request to the UniProt API and retrieves the raw response.
+     *
+     * @param protein The protein to search for.
+     * @param previousDb The previous database to search in (can be {@code null}).
+     * @param organism The organism's taxon ID to filter by (can be {@code null}).
+     * @return A {@link JsonObject} representing the response from the UniProt API.
+     */
     public JsonObject getUniprotResponse(String protein, String previousDb, String organism){
-        String urlString = "https://rest.uniprot.org/uniprotkb/search?query=" + protein;
-        if (previousDb != null) {
-            urlString += "&db=" + previousDb;
-        }
+        StringBuilder test = new StringBuilder("https://rest.uniprot.org/uniprotkb/search?query=(xref:");
+        test.append(protein);
         if (organism != null) {
-            urlString = "https://rest.uniprot.org/uniprotkb/search?query=(xref:" + protein + "%20AND%20organism_id:" + organism + ")";
-//            urlString = XmlMakerUtils.encodeForURL(urlString);
+            test.append("%20AND%20organism_id:").append(organism);
         }
+        if (previousDb != null) {
+            test.append("%20AND%20database:").append(previousDb);
+        }
+        test.append(")");
+
+        String urlString = test.toString();
+
         try {
             URL url = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -78,6 +103,12 @@ public class UniprotGeneralMapper {
         return null;
     }
 
+    /**
+     * Extracts UniProt results from the JSON response and returns a list of {@link UniprotResult} objects.
+     *
+     * @param results The JSON response from the UniProt API.
+     * @return A list of {@link UniprotResult} objects representing the UniProt entries.
+     */
     public ArrayList<UniprotResult> getUniprotIds(JsonObject results) {
         if (results == null) return null;
         JsonArray resultsAsJson = results.get("results").getAsJsonArray();
@@ -91,20 +122,23 @@ public class UniprotGeneralMapper {
             String entryType = result.get("entryType").getAsString();
             String uniprotLink;
             String organism;
+            int sequenceSize;
 
             if (!Objects.equals(entryType, "Inactive")){
                 uniprotAc = result.get("primaryAccession").getAsString();
                 name = result.get("uniProtkbId").getAsString();
                 organism = result.get("organism").getAsJsonObject().get("taxonId").getAsString();
+                sequenceSize = result.get("sequence").getAsJsonObject().get("length").getAsInt();
 
             } else {
                 uniprotAc = result.get("inactiveReason").getAsJsonObject().get("mergeDemergeTo").getAsString();
                 name = uniprotAc;
                 organism = "";
+                sequenceSize = 0;
             }
             uniprotLink = "https://www.uniprot.org/uniprotkb/" + uniprotAc;
 
-            UniprotResult oneResult = new UniprotResult(uniprotAc, name, organism, entryType, uniprotLink, "UniprotKB");
+            UniprotResult oneResult = new UniprotResult(uniprotAc, name, organism, entryType, uniprotLink, "UniprotKB", sequenceSize);
             uniprotResults.add(oneResult);
         }
 
@@ -112,6 +146,11 @@ public class UniprotGeneralMapper {
         return uniprotResults;
     }
 
+    /**
+     * Sets the {@link ButtonGroup} for displaying the UniProt results as radio buttons.
+     *
+     * @param results A list of {@link UniprotResult} objects to be displayed.
+     */
     private void setButtonGroup(ArrayList<UniprotResult> results){
         buttonGroup = new ButtonGroup();
         for (UniprotResult result : results){

@@ -234,17 +234,6 @@ public class XmlMakerGui {
         menu.add(importFile);
 
         JMenu helpMenu = new JMenu("Help");
-//        JMenuItem documentation = new JMenuItem("Documentation");
-//        documentation.addActionListener(e -> {
-//            File htmlFile = new File("src/main/resources/UserHelp.html");
-//            try {
-//                Desktop.getDesktop().browse(htmlFile.toURI());
-//            } catch (IOException ex) {
-//                throw new RuntimeException(ex);
-//            }
-//        });
-//        helpMenu.add(documentation);
-
         JMenuItem userGuide = new JMenuItem("How to use");
         userGuide.addActionListener(e -> {
             try {

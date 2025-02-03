@@ -17,7 +17,7 @@ public enum DataTypeAndColumn {
     PARTICIPANT_ID("Participant ID"),
     PARTICIPANT_ID_DB("Participant ID database"),
     PARTICIPANT_TYPE("Participant type"),
-    PARTICIPANT_ORGANISM("Participant taxID"),
+    PARTICIPANT_ORGANISM("Participant organism"),
     EXPERIMENTAL_ROLE("Experimental role"),
     PARTICIPANT_IDENTIFICATION_METHOD("Participant identification method"),
 
@@ -31,7 +31,6 @@ public enum DataTypeAndColumn {
     FEATURE_RANGE_TYPE("Feature range type", false),
     FEATURE_XREF("Feature xref", false),
     FEATURE_XREF_DB("Feature xref database", false);
-    ;
 
     public final String name;
     public final Function<Cell, String> extractString;

@@ -1,18 +1,36 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
-
 import javax.swing.*;
+import java.awt.*;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
+/**
+ * The {@code FileFormaterGui} class provides a graphical user interface
+ * for formatting interaction data files. It allows users to select an
+ * Excel sheet, specify bait and prey columns, and format the file for
+ * XML generation with optional binary interactions.
+ *
+ * <p>Features include:</p>
+ * <ul>
+ *   <li>Dropdowns for sheet and column selection</li>
+ *   <li>Checkbox for binary interaction formatting</li>
+ *   <li>Button to trigger file formatting</li>
+ * </ul>
+ *
+ * This class interacts with {@code FileFormater} to process the selected file
+ * and {@code ExcelFileReader} to retrieve sheet and column information.
+ *
+ */
 public class FileFormaterGui {
     final ExcelFileReader excelFileReader;
     final FileFormater fileFormater;
     private final JComboBox<String> sheets = new JComboBox<>();
     private final JComboBox<String> baitColumn = new JComboBox<>();
     private final JComboBox<String> preyColumn = new JComboBox<>();
+
     final ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui = new ParticipantAndInteractionCreatorGui();
 
     private static final Logger LOGGER = Logger.getLogger(FileFormaterGui.class.getName());
@@ -31,13 +49,15 @@ public class FileFormaterGui {
      */
     public JPanel getFileFormaterPanel() {
         JPanel fileFormaterPanel = new JPanel();
+        JPanel sheetsPanel = new JPanel();
+        sheetsPanel.setLayout(new GridLayout(3, 1));
 
         JCheckBox fileFormaterCheckBox = new JCheckBox();
         fileFormaterCheckBox.setText("Create binary interactions");
 
-        fileFormaterPanel.add(setComboBoxDimension(sheets, "Select sheet"));
-        fileFormaterPanel.add(setComboBoxDimension(baitColumn, "Select baits column"));
-        fileFormaterPanel.add(setComboBoxDimension(preyColumn, "Select preys column"));
+        sheetsPanel.add(setComboBoxDimension(sheets, "Select sheet"));
+        sheetsPanel.add(setComboBoxDimension(baitColumn, "Select baits column"));
+        sheetsPanel.add(setComboBoxDimension(preyColumn, "Select preys column"));
 
         sheets.addActionListener(e -> setUpColumns());
 
@@ -47,6 +67,7 @@ public class FileFormaterGui {
             formatFile(fileFormaterCheckBox.isSelected(),interactionData);
         });
 
+        fileFormaterPanel.add(sheetsPanel);
         fileFormaterPanel.add(fileFormaterCheckBox);
 
         fileFormaterPanel.add(participantAndInteractionCreatorGui.createParticipantAndInteractionCreatorGui());
@@ -83,7 +104,6 @@ public class FileFormaterGui {
         baitColumn.setEnabled(false);
         preyColumn.addItem("Select prey column");
         preyColumn.setEnabled(false);
-
     }
 
     /**
@@ -121,6 +141,14 @@ public class FileFormaterGui {
         }
     }
 
+    /**
+     * Formats the selected file based on the given interaction data and binary mode.
+     * This method sets the interaction data, selects the appropriate file format,
+     * and processes the file accordingly.
+     *
+     * @param binary          {@code true} if the interactions should be formatted in binary mode, {@code false} otherwise.
+     * @param interactionData A map containing interaction-related data.
+     */
     public void formatFile(boolean binary, Map<String, String> interactionData) {
         try {
             fileFormater.setInteractionData(interactionData);
@@ -132,4 +160,5 @@ public class FileFormaterGui {
             LOGGER.warning("Error during file formatting: " + e);
         }
     }
+
 }

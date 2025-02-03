@@ -2,6 +2,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 
 /**
  * This class provides a loading spinner overlay for a given JFrame.
@@ -30,7 +31,7 @@ public class LoadingSpinner {
         glassPane.setPreferredSize(frame.getSize());  // Ensure glass pane covers entire frame
 
         // Load the GIF using getResource to ensure it's properly located in the JAR or DMG
-        ImageIcon loadingIcon = new ImageIcon(getClass().getResource("/LoadingSpinner.gif"));
+        ImageIcon loadingIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/LoadingSpinner.gif")));
 
         JLabel loadingLabel = new JLabel(loadingIcon, JLabel.CENTER);
         glassPane.add(loadingLabel, BorderLayout.CENTER);  // Centre the spinner

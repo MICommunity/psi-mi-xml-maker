@@ -20,6 +20,19 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
+/**
+ * The {@code FileFormater} class processes interaction data from CSV, TSV, XLS, and XLSX files,
+ * formatting it for XML generation. It extracts bait and prey interactions, supports binary
+ * and non-binary formatting, and outputs the processed data in the same format as the input.
+ *
+ * <p>Supported formats: CSV, TSV, XLS, XLSX.</p>
+ *
+ * <p>Example usage:</p>
+ * <pre>
+ *     FileFormater fileFormater = new FileFormater(excelFileReader);
+ *     fileFormater.selectFileFormater("data.xlsx", 0, 1, "Sheet1", true);
+ * </pre>
+ */
 public class FileFormater {
     final ExcelFileReader excelFileReader;
 
@@ -29,17 +42,30 @@ public class FileFormater {
 
     @Setter
     private Map<String, String> interactionData = new HashMap<>();
-    private String[] header = {"Interaction Number", "Participant", "Experimental role",
-            "Interaction detection method", "Participant detection method", "Experimental preparation",
-            "Biological role", "Participant organism", "Feature", "Feature start", "Feature end",};
+    private String[] header = {"Interaction Number", "Input Participant ID", "Experimental role", "Input Participant ID database",
+            "Interaction detection method", "Participant identification method", "Experimental preparation",
+            "Biological role", "Participant organism", "Feature type", "Feature start", "Feature end",};
 
     private final Map<String, Integer> participantCountMap = new HashMap<>();
 
-
+    /**
+     * Constructs a FileFormater object with an ExcelFileReader.
+     *
+     * @param excelFileReader The Excel file reader used to read input files.
+     */
     public FileFormater(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
     }
 
+    /**
+     * Selects the appropriate file formatting method based on the file type and processes the file.
+     *
+     * @param filePath        The path of the file to be formatted.
+     * @param baitColumnIndex The column index for the bait.
+     * @param preyColumnIndex The column index for the prey.
+     * @param sheetSelected   The sheet name (for Excel files).
+     * @param binary          Indicates whether the interactions should be formatted in binary mode.
+     */
     public void selectFileFormater(String filePath, int baitColumnIndex, int preyColumnIndex,
                                    String sheetSelected, boolean binary) {
             File file = new File(filePath);
@@ -88,6 +114,13 @@ public class FileFormater {
         excelFileReader.selectFileOpener(newFileName);
     }
 
+    /**
+     * Reads and formats a CSV or TSV file by extracting bait and prey interactions.
+     *
+     * @param baitColumnIndex The column index for the bait.
+     * @param preyColumnIndex The column index for the prey.
+     * @param binary          Indicates whether the interactions should be formatted in binary mode.
+     */
     public void formatSeparatedFormatFile(int baitColumnIndex, int preyColumnIndex, boolean binary) {
         Iterator<List<String>> iterator = excelFileReader.readFileWithSeparator();
 
@@ -123,6 +156,14 @@ public class FileFormater {
         iterator.remove();
     }
 
+    /**
+     * Reads and formats an Excel file by extracting bait and prey interactions.
+     *
+     * @param baitColumnIndex The column index for the bait.
+     * @param preyColumnIndex The column index for the prey.
+     * @param sheetSelected   The name of the sheet to be processed.
+     * @param binary          Indicates whether the interactions should be formatted in binary mode.
+     */
     public void formatExcelFile(int baitColumnIndex, int preyColumnIndex, String sheetSelected, boolean binary) {
         Iterator<Row> iterator = excelFileReader.readWorkbookSheet(sheetSelected);
 
@@ -150,6 +191,13 @@ public class FileFormater {
         iterator.remove();
     }
 
+    /**
+     * Adds a new participant to the formatted data structure.
+     *
+     * @param interactionNumber The interaction number associated with the participant.
+     * @param participant       The participant's identifier.
+     * @param participantType   The type of participant (e.g., "bait" or "prey").
+     */
     public void addNewParticipant(String interactionNumber, String participant, String participantType) {
         List<String> newParticipant = new ArrayList<>();
 
@@ -173,6 +221,13 @@ public class FileFormater {
         newFormat.add(newParticipant);
     }
 
+    /**
+     * Writes formatted interaction data to a CSV or TSV file.
+     *
+     * @param data      The formatted data to be written.
+     * @param filePath  The path of the output file.
+     * @param delimiter The character used to separate values (e.g., ',' for CSV or '\t' for TSV).
+     */
     public void writeToFile(List<List<String>> data, String filePath, char delimiter) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(filePath),
                 delimiter,
@@ -189,6 +244,13 @@ public class FileFormater {
         }
     }
 
+    /**
+     * Writes formatted interaction data to an Excel file.
+     *
+     * @param data     The formatted data to be written.
+     * @param filePath The path of the output file.
+     * @param workbook The workbook to which data should be written.
+     */
     public void writeToExcel(List<List<String>> data, String filePath, Workbook workbook) {
         Sheet sheet = workbook.createSheet("Formatted data");
 
@@ -220,20 +282,23 @@ public class FileFormater {
         }
     }
 
+    /**
+     * Post-processes the formatted interaction data by adding an "Interaction Type" column.
+     * If an interaction involves more than two participants, it is classified as an "association";
+     * otherwise, it is classified as a "physical interaction."
+     */
     public void postProcessInteractions() {
         String[] extendedHeader = Arrays.copyOf(header, header.length + 1);
         extendedHeader[extendedHeader.length - 1] = "Interaction Type";
         header = extendedHeader;
 
-        int expectedColumns = header.length - 1; // Before adding the new column
+        int expectedColumns = header.length - 1;
 
         for (List<String> row : newFormat) {
-            // Ensure the row has enough columns
             while (row.size() < expectedColumns) {
-                row.add(""); // Add empty values for missing columns
+                row.add("");
             }
 
-            // Determine interaction type
             String interactionNumber = row.get(0);
             int count = participantCountMap.getOrDefault(interactionNumber, 0);
             if (count > 2) {
@@ -243,7 +308,4 @@ public class FileFormater {
             }
         }
     }
-
-
-
 }

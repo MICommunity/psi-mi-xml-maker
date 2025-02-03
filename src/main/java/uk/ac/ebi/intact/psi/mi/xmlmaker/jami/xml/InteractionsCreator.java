@@ -11,15 +11,13 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
-
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import psidev.psi.mi.jami.utils.PositionUtils;
-
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn.*;
 
 /**
@@ -134,10 +132,22 @@ public class InteractionsCreator {
                                 e -> e.getValue().join()
                         ));
 
+        List<CvTerm> experimentalPreparations = new ArrayList<>();
+
+        if (data.get(EXPERIMENTAL_PREPARATION.name) != null) {
+            if (!data.get(EXPERIMENTAL_PREPARATION.name).contains(";")) {
+                experimentalPreparations.add(utils.fetchTerm(data.get(EXPERIMENTAL_PREPARATION.name)));
+            } else {
+                String[] preparations = data.get(EXPERIMENTAL_PREPARATION.name).split(";");
+                for (String preparation : preparations) {
+                    experimentalPreparations.add(utils.fetchTerm(preparation.trim()));
+                }
+            }
+        }
+
         CvTerm participantType = terms.get(PARTICIPANT_TYPE);
         CvTerm participantIdDb = terms.get(PARTICIPANT_ID_DB);
         CvTerm experimentalRole = terms.get(EXPERIMENTAL_ROLE);
-        CvTerm experimentalPreparation = terms.get(EXPERIMENTAL_PREPARATION);
         CvTerm xref= terms.get(PARTICIPANT_XREF);
         CvTerm xrefDb = terms.get(PARTICIPANT_XREF_DB);
         CvTerm participantIdentificationMethod = terms.get(PARTICIPANT_IDENTIFICATION_METHOD);
@@ -154,7 +164,17 @@ public class InteractionsCreator {
 
         Organism organism = createOrganism(participantOrganism);
 
-        Interactor participant = new XmlPolymer(name, participantType, organism, uniqueId);
+        Interactor participant = null;
+        participant = new XmlPolymer(name, participantType, organism, uniqueId);
+
+//        switch (participantIdDb.getFullName()){
+//            case "UniprotKB":
+//                participant = new XmlProtein(name, participantType, organism, uniqueId);
+//                break;
+//            default:
+//                participant = new XmlPolymer(name, participantType, organism, uniqueId);
+//        } //todo: make the type depending on the db
+
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
 
         if (experimentalRole != null) {
@@ -168,8 +188,10 @@ public class InteractionsCreator {
             }
         }
 
-        if (experimentalPreparation != null) {
-            participantEvidence.getExperimentalPreparations().add(experimentalPreparation);
+        for (CvTerm experimentalPreparation : experimentalPreparations) {
+            if (experimentalPreparation != null) {
+                participantEvidence.getExperimentalPreparations().add(experimentalPreparation);
+            }
         }
 
         if (xref != null) {
@@ -316,7 +338,19 @@ public class InteractionsCreator {
         dataList.clear();
     }
 
-    private String getInteractionNumber(Map<String, Integer> columnAndIndex, int interactionNumberColumn, String currentInteractionNumber, List<String> datum) {
+    /**
+     * Retrieves the current interaction number from the provided data list and updates the interaction set.
+     * If the interaction number changes, it triggers the creation of a new interaction
+     * and clears the previous data list.
+     *
+     * @param columnAndIndex A map associating column names with their respective indices.
+     * @param interactionNumberColumn The index of the column containing interaction numbers.
+     * @param currentInteractionNumber The interaction number from the previous iteration.
+     * @param datum A list containing the current row of data.
+     * @return The updated interaction number.
+     */
+    private String getInteractionNumber(Map<String, Integer> columnAndIndex, int interactionNumberColumn,
+                                        String currentInteractionNumber, List<String> datum) {
         if (!currentInteractionNumber.equals(datum.get(interactionNumberColumn))) {
             createInteractions();
             dataList.clear();
@@ -540,6 +574,18 @@ public class InteractionsCreator {
         return mostSimilarColumn;
     }
 
+    /**
+     * Determines the position type based on the given range and feature range type.
+     * If a feature range type is provided, it creates a position using the feature type
+     * and its corresponding MI identifier. Otherwise, it interprets the range string
+     * to determine whether it represents a terminal position (N-terminal or C-terminal),
+     * a numeric position, or an undetermined position.
+     *
+     * @param range The range value, which may be a numeric position or a terminal designation (e.g., "c-term").
+     * @param featureRangeType The specific feature range type, if available.
+     * @return A {@code Position} object representing the determined range type.
+     * @throws RuntimeException If an invalid numeric range is encountered.
+     */
     public Position checkFeatureRangeType(String range, String featureRangeType) {
         if (featureRangeType != null) return PositionUtils.createPosition(featureRangeType, utils.fetchMiId(featureRangeType), Integer.parseInt(range));
 

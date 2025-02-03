@@ -314,17 +314,16 @@ public class ExcelFileReader  {
         }
 
         int idColumnIndex = fileData.indexOf(idColumnName);
-
         if (idColumnIndex == -1) {
             LOGGER.severe("Invalid column name: " + idColumnName);
             XmlMakerUtils.showErrorDialog("Invalid column name: " + idColumnName);
             return;
         }
 
-        fileData.add("Updated ids");
-        fileData.add("Updated databases");
-        fileData.add("Updated organisms");
-        fileData.add("Updated name");
+        fileData.add("Participant input ID");
+        fileData.add("Participant input ID database");
+        fileData.add("Participant organism");
+        fileData.add("Participant input name");
 
         try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(
                 new FileOutputStream(tmpFilePath),
@@ -345,9 +344,9 @@ public class ExcelFileReader  {
                 }
 
                 String previousId = row.get(idColumnIndex);
-                String previousIdDb = null;
+                String previousDb = null;
 
-                String organism = null;
+                String updatedOrganism = null;
                 String participantName = null;
                 String uniprotResult = null;
                 String uniprotResultDb = null;
@@ -358,22 +357,26 @@ public class ExcelFileReader  {
                 }
 
                 if (previousIdDbColumnIndex != -1){
-                    previousIdDb = row.get(previousIdDbColumnIndex);
+                    previousDb = row.get(previousIdDbColumnIndex);
                 }
                 if (organismColumnIndex != -1){
-                    organism = row.get(organismColumnIndex);
+                    updatedOrganism = row.get(organismColumnIndex);
                 }
 
                 UniprotResult alreadyParsedParticipant = alreadyParsed.get(previousId);
 
                 if (alreadyParsedParticipant == null) {
-                    UniprotResult result = getOneUniprotId(previousId, previousIdDb, organism);
+                    UniprotResult result = getOneUniprotId(previousId, previousDb, updatedOrganism);
                     if (result == null) {
                         LOGGER.warning("No UniProt results for ID: " + previousId);
+                        uniprotResult = previousId;
+                        uniprotResultDb = previousDb; //todo: add previous organism and name
+//                        updatedOrganism = result.getOrganism();
+//                        participantName = result.getName();
                     } else {
                         uniprotResult = result.getUniprotAc();
                         uniprotResultDb = result.getIdDb();
-                        organism = result.getOrganism();
+                        updatedOrganism = result.getOrganism();
                         participantName = result.getName();
 
                         alreadyParsed.put(previousId, result);
@@ -382,13 +385,13 @@ public class ExcelFileReader  {
                     uniprotResult = alreadyParsedParticipant.getUniprotAc();
                     uniprotResultDb = alreadyParsedParticipant.getIdDb();
                     participantName = alreadyParsedParticipant.getName();
-                    organism = alreadyParsedParticipant.getOrganism();
+                    updatedOrganism = alreadyParsedParticipant.getOrganism();
                 }
 
                 List<String> data = new ArrayList<>(row);
                 data.add(uniprotResult != null ? uniprotResult : previousId);
                 data.add(uniprotResultDb != null ? uniprotResultDb : "");
-                data.add(organism != null ? organism : "");
+                data.add(updatedOrganism != null ? updatedOrganism : "");
                 data.add(participantName != null ? participantName : "");
 
                 csvWriter.writeNext(data.toArray(new String[0]));
@@ -438,10 +441,10 @@ public class ExcelFileReader  {
                 return;
             }
 
-            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Updated ids");
-            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Updated databases");
-            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Updated organisms");
-            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Updated name");
+            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant ID");
+            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant ID database");
+            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant organism");
+            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant name");
 
             while (iterator.hasNext()) {
                 Row row = iterator.next();
@@ -501,15 +504,48 @@ public class ExcelFileReader  {
         selectFileOpener(currentFilePath);
     }
 
+    /**
+     * Retrieves a single UniProt ID based on a given identifier, database, and organism.
+     * The method prioritises reviewed (Swiss-Prot) entries over unreviewed (TrEMBL) entries.
+     *
+     * <p>Selection logic:
+     * <ul>
+     *     <li>If there is exactly one Swiss-Prot entry, it is returned.</li>
+     *     <li>If multiple Swiss-Prot entries exist, a selection panel is displayed for user input.</li>
+     *     <li>If no Swiss-Prot entries exist, the TrEMBL entries are sorted by sequence size (largest first),
+     *         and the first one is returned.</li>
+     * </ul>
+     * </p>
+     *
+     * <p>If the selected UniProt ID belongs to a molecule set, it is added to the relevant set.</p>
+     *
+     * @param previousId    The identifier used to fetch UniProt entries.
+     * @param previousIdDb  The database associated with the identifier.
+     * @param organism      The organism to which the UniProt entry belongs.
+     * @return A {@link UniprotResult} object representing the selected UniProt ID, or {@code null} if no entries exist.
+     */
     private UniprotResult getOneUniprotId(String previousId, String previousIdDb, String organism) {
         ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
-        UniprotResult oneUniprotId = null;
-
         if (uniprotResults.isEmpty()) {
             return null;
         }
 
-        if (uniprotResults.size() > 1) {
+        List<UniprotResult> swissProtEntries = new ArrayList<>();
+        List<UniprotResult> tremblEntries = new ArrayList<>();
+
+        for (UniprotResult result : uniprotResults) {
+            if ("UniProtKB reviewed (Swiss-Prot)".equals(result.getEntryType())) {
+                swissProtEntries.add(result);
+            } else if ("UniProtKB unreviewed (TrEMBL)".equals(result.getEntryType())) {
+                tremblEntries.add(result);
+            }
+        }
+
+        UniprotResult oneUniprotId = null;
+
+        if (swissProtEntries.size() == 1) {
+            oneUniprotId = swissProtEntries.get(0);
+        } else if (swissProtEntries.size() > 1) {
             UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui(uniprotGeneralMapper);
             mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup(), previousId);
 
@@ -523,19 +559,21 @@ public class ExcelFileReader  {
                 }
             }
 
-            for(UniprotResult uniprotResult : uniprotResults) {
+            for (UniprotResult uniprotResult : swissProtEntries) {
                 if (uniprotResult.getUniprotAc().equals(mapperGui.getSelectedId())) {
                     oneUniprotId = uniprotResult;
+                    break;
                 }
             }
-
-        } else {
-            oneUniprotId = uniprotResults.get(0);
+        } else if (!tremblEntries.isEmpty()) {
+            tremblEntries.sort(Comparator.comparingInt(UniprotResult::getSequenceSize).reversed());
+            oneUniprotId = tremblEntries.get(0);
         }
 
-        if (moleculeSetChecker.isProteinPartOfMoleculeSet(uniprotResults.get(0).getUniprotAc())) {
-            proteinsPartOfMoleculeSet.add(uniprotResults.get(0).getUniprotAc());
+        if (oneUniprotId != null && moleculeSetChecker.isProteinPartOfMoleculeSet(oneUniprotId.getUniprotAc())) {
+            proteinsPartOfMoleculeSet.add(oneUniprotId.getUniprotAc());
         }
+
         return oneUniprotId;
     }
 

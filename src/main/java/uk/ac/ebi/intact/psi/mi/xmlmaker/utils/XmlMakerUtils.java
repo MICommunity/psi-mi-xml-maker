@@ -132,7 +132,6 @@ public class XmlMakerUtils {
         return taxId;
     }
 
-
     /**
      * Encodes a string for safe use in a URL.
      */
@@ -141,7 +140,8 @@ public class XmlMakerUtils {
     }
 
     public CvTerm fetchTerm(String input) {
-        if (input == null || input.isBlank() || input.contains("null")) return null;
+        input = input.trim();
+        if (input.isBlank() || input.contains("null")) return null;
         CvTerm term = nameToCvTerm.get(input);
         if (term != null) return term;
 
@@ -254,7 +254,7 @@ public class XmlMakerUtils {
      */
     public static JComboBox<String> setComboBoxDimension(JComboBox<String> comboBox, String defaultItem) {
         comboBox.addItem(defaultItem);
-        comboBox.setPreferredSize(new Dimension(400, 50));
+        comboBox.setPreferredSize(new Dimension(200, 50));
         return comboBox;
     }
 }
