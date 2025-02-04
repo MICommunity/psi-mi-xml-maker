@@ -30,6 +30,8 @@ public class FileFormaterGui {
     private final JComboBox<String> sheets = new JComboBox<>();
     private final JComboBox<String> baitColumn = new JComboBox<>();
     private final JComboBox<String> preyColumn = new JComboBox<>();
+    private final JComboBox<String> baitNameColumn = new JComboBox<>();
+    private final JComboBox<String> preyNameColumn = new JComboBox<>();
 
     final ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui = new ParticipantAndInteractionCreatorGui();
 
@@ -90,6 +92,10 @@ public class FileFormaterGui {
         baitColumn.setEnabled(false);
         preyColumn.addItem("Select prey column");
         preyColumn.setEnabled(false);
+        baitNameColumn.addItem("Select bait name column");
+        baitNameColumn.setEnabled(false);
+        preyNameColumn.addItem("Select prey name column");
+        preyNameColumn.setEnabled(false);
     }
 
     /**
@@ -105,6 +111,13 @@ public class FileFormaterGui {
         preyColumn.addItem("Select preys column");
         preyColumn.setEnabled(true);
 
+        baitNameColumn.removeAllItems();
+        baitNameColumn.addItem("Select baits name");
+        baitNameColumn.setEnabled(true);
+
+        preyNameColumn.removeAllItems();
+        preyNameColumn.addItem("Select preys name");
+        preyNameColumn.setEnabled(true);
 
         String selectedSheet = "";
         if (sheets.isEnabled()) {
@@ -113,6 +126,8 @@ public class FileFormaterGui {
         for (String columnName : excelFileReader.getColumns(selectedSheet)) {
             baitColumn.addItem(columnName);
             preyColumn.addItem(columnName);
+            baitNameColumn.addItem(columnName);
+            preyNameColumn.addItem(columnName);
         }
     }
 
@@ -127,9 +142,14 @@ public class FileFormaterGui {
     public void formatFile(boolean binary, Map<String, String> interactionData) {
         try {
             fileFormater.setInteractionData(interactionData);
-            fileFormater.selectFileFormater(excelFileReader.currentFilePath, baitColumn.getSelectedIndex()-1,
-                    preyColumn.getSelectedIndex()-1, Objects.requireNonNull(sheets.getSelectedItem()).toString(),
+            fileFormater.selectFileFormater(excelFileReader.currentFilePath,
+                    baitColumn.getSelectedIndex()-1,
+                    preyColumn.getSelectedIndex()-1,
+                    baitNameColumn.getSelectedIndex() -1,
+                    preyNameColumn.getSelectedIndex() -1,
+                    Objects.requireNonNull(sheets.getSelectedItem()).toString(),
                     binary);
+
         } catch (Exception e) {
             XmlMakerUtils.showErrorDialog("Error during file formatting: " + e.getMessage());
             LOGGER.warning("Error during file formatting: " + e);
@@ -138,14 +158,18 @@ public class FileFormaterGui {
 
     public JPanel createSheetPanel() {
         JPanel sheetsPanel = new JPanel();
-        sheetsPanel.setLayout(new GridLayout(3, 1));
-        sheetsPanel.setPreferredSize(new Dimension(200, 300));
+        sheetsPanel.setLayout(new GridLayout(5, 1));
+        sheetsPanel.setPreferredSize(new Dimension(250, 300));
 
         sheetsPanel.setBorder(BorderFactory.createTitledBorder(" 2.1 Select in the file"));
 
         sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(sheets, "Select sheet"));
+
         sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(baitColumn, "Select baits column"));
+        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(baitNameColumn, "Select baits name column"));
+
         sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(preyColumn, "Select preys column"));
+        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(preyNameColumn, "Select preys name column"));
 
         sheets.addActionListener(e -> setUpColumns());
 

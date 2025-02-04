@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  */
 public class XmlMakerGui {
 
-    private static int FRAME_WIDTH = 2000;
+    private static final int FRAME_WIDTH = 2000;
     private static final int FRAME_HEIGHT = 2000;
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGui.class.getName());
     private final ExcelFileReader excelFileReader;

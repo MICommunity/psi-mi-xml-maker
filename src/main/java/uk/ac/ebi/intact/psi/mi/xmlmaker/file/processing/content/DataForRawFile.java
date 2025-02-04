@@ -19,6 +19,7 @@ public enum DataForRawFile {
     BAIT_FEATURE_TYPE("Bait Feature type", true, false),
     BAIT_FEATURE_START_LOCATION("Bait Feature Start Location", true, false),
     BAIT_FEATURE_END_LOCATION("Bait Feature End Location", true, false),
+    BAIT_FEATURE_RANGE_TYPE("Bait Feature Range Type", true, false),
     ;
 
     public final String name;

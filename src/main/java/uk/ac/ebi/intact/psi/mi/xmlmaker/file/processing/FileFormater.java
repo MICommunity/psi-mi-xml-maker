@@ -42,7 +42,8 @@ public class FileFormater {
 
     @Setter
     private Map<String, String> interactionData = new HashMap<>();
-    private String[] header = {"Interaction Number", "Input Participant ID", "Experimental role", "Input Participant ID database",
+    private String[] header = {"Interaction Number", "Input Participant ID", "Input Participant Name",
+            "Experimental role", "Input Participant ID database",
             "Interaction detection method", "Participant identification method", "Experimental preparation",
             "Biological role", "Participant organism", "Feature type", "Feature start", "Feature end",};
 
@@ -66,8 +67,13 @@ public class FileFormater {
      * @param sheetSelected   The sheet name (for Excel files).
      * @param binary          Indicates whether the interactions should be formatted in binary mode.
      */
-    public void selectFileFormater(String filePath, int baitColumnIndex, int preyColumnIndex,
-                                   String sheetSelected, boolean binary) {
+    public void selectFileFormater(String filePath,
+                                   int baitColumnIndex,
+                                   int preyColumnIndex,
+                                   int baitNameColumnIndex,
+                                   int preyNameColumnIndex,
+                                   String sheetSelected,
+                                   boolean binary) {
             File file = new File(filePath);
             String fileType = FileUtils.getFileExtension(filePath);
             String fileName = file.getName();
@@ -77,7 +83,7 @@ public class FileFormater {
         switch (fileType) {
             case "xlsx":
                 LOGGER.info("Reading xlsx file: " + fileName);
-                formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary);
+                formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXlsx = new XSSFWorkbook();
                 postProcessInteractions();
                 writeToExcel(newFormat, modifiedFileName + ".xlsx", workbookXlsx);
@@ -85,7 +91,7 @@ public class FileFormater {
                 break;
             case "xls":
                 LOGGER.info("Reading xls file: " + fileName);
-                formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary);
+                formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXls = new HSSFWorkbook();
                 postProcessInteractions();
                 writeToExcel(newFormat, modifiedFileName + ".xls", workbookXls);
@@ -93,14 +99,14 @@ public class FileFormater {
                 break;
             case "csv":
                 LOGGER.info("Reading csv file: " + fileName);
-                formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary);
+                formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
                 postProcessInteractions();
                 writeToFile(newFormat, modifiedFileName + ".csv", ',');
                 newFileName = modifiedFileName + ".csv";
                 break;
             case "tsv":
                 LOGGER.info("Reading tsv file: " + fileName);
-                formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary);
+                formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
                 postProcessInteractions();
                 writeToFile(newFormat, modifiedFileName + ".tsv", '\t');
                 newFileName = modifiedFileName + ".tsv";
@@ -121,7 +127,11 @@ public class FileFormater {
      * @param preyColumnIndex The column index for the prey.
      * @param binary          Indicates whether the interactions should be formatted in binary mode.
      */
-    public void formatSeparatedFormatFile(int baitColumnIndex, int preyColumnIndex, boolean binary) {
+    public void formatSeparatedFormatFile(int baitColumnIndex,
+                                          int preyColumnIndex,
+                                          boolean binary,
+                                          int baitNameColumnIndex,
+                                          int preyNameColumnIndex) {
         Iterator<List<String>> iterator = excelFileReader.readFileWithSeparator();
 
         int interactionNumber = 0;
@@ -131,25 +141,29 @@ public class FileFormater {
             while (iterator.hasNext()) {
                 List<String> row = iterator.next();
                 String bait = row.get(baitColumnIndex);
+                String baitName = row.get(baitNameColumnIndex);
                 String prey = row.get(preyColumnIndex);
+                String preyName = row.get(preyNameColumnIndex);
                 interactionNumber++;
-                addNewParticipant(String.valueOf(interactionNumber), bait, "bait");
-                addNewParticipant(String.valueOf(interactionNumber), prey, "prey");
+                addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait");
+                addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey");
             }
         }
 
         while (iterator.hasNext()) {
             List<String> row = iterator.next();
             String bait = row.get(baitColumnIndex);
+            String baitName = row.get(baitNameColumnIndex);
             String prey = row.get(preyColumnIndex);
+            String preyName = row.get(preyNameColumnIndex);
             if (lastBait == null || !lastBait.equals(bait)) {
                 interactionNumber++;
                 lastBait = bait;
-                addNewParticipant(String.valueOf(interactionNumber), prey, "prey");
-                addNewParticipant(String.valueOf(interactionNumber), bait, "bait");
+                addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey");
+                addNewParticipant(String.valueOf(interactionNumber), bait, baitName,"bait");
             } else {
                 lastBait = bait;
-                addNewParticipant(String.valueOf(interactionNumber), prey, "prey");
+                addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey");
             }
         }
 
@@ -164,7 +178,12 @@ public class FileFormater {
      * @param sheetSelected   The name of the sheet to be processed.
      * @param binary          Indicates whether the interactions should be formatted in binary mode.
      */
-    public void formatExcelFile(int baitColumnIndex, int preyColumnIndex, String sheetSelected, boolean binary) {
+    public void formatExcelFile(int baitColumnIndex,
+                                int preyColumnIndex,
+                                String sheetSelected,
+                                boolean binary,
+                                int baitNameColumnIndex,
+                                int preyNameColumnIndex) {
         Iterator<Row> iterator = excelFileReader.readWorkbookSheet(sheetSelected);
 
         int interactionNumber = 0;
@@ -173,36 +192,40 @@ public class FileFormater {
         while (iterator.hasNext()) {
             Row row = iterator.next();
             String bait = FileUtils.getCellValueAsString(row.getCell(baitColumnIndex));
+            String baitName = FileUtils.getCellValueAsString(row.getCell(baitNameColumnIndex));
             String prey = FileUtils.getCellValueAsString(row.getCell(preyColumnIndex));
+            String preyName = FileUtils.getCellValueAsString(row.getCell(preyNameColumnIndex));
+
 
             if (binary) {
                 interactionNumber++;
-                addNewParticipant(String.valueOf(interactionNumber), bait, "bait");
-                addNewParticipant(String.valueOf(interactionNumber), prey, "prey");
+                addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait");
+                addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey");
             } else {
                 if (lastBait == null || !lastBait.equals(bait)) {
                     interactionNumber++;
                     lastBait = bait;
-                    addNewParticipant(String.valueOf(interactionNumber), bait, "bait");
+                    addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait");
                 }
-                addNewParticipant(String.valueOf(interactionNumber), prey, "prey");
+                addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey");
             }
         }
         iterator.remove();
     }
 
     /**
-     * Adds a new participant to the formatted data structure.
+     * Adds a new participantId to the formatted data structure.
      *
-     * @param interactionNumber The interaction number associated with the participant.
-     * @param participant       The participant's identifier.
-     * @param participantType   The type of participant (e.g., "bait" or "prey").
+     * @param interactionNumber The interaction number associated with the participantId.
+     * @param participantId       The participantId's identifier.
+     * @param participantType   The type of participantId (e.g., "bait" or "prey").
      */
-    public void addNewParticipant(String interactionNumber, String participant, String participantType) {
+    public void addNewParticipant(String interactionNumber, String participantId, String participantName, String participantType) {
         List<String> newParticipant = new ArrayList<>();
 
         newParticipant.add(interactionNumber);
-        newParticipant.add(participant);
+        newParticipant.add(participantId);
+        newParticipant.add(participantName);
         newParticipant.add(participantType);
 
         participantCountMap.put(interactionNumber, participantCountMap.getOrDefault(interactionNumber, 0) + 1);

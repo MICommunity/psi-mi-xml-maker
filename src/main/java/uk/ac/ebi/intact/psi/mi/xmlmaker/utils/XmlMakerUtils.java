@@ -6,6 +6,7 @@ import psidev.psi.mi.jami.model.CvTerm;
 import psidev.psi.mi.jami.xml.model.extension.xml300.XmlCvTerm;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
+import uk.ac.ebi.pride.utilities.ols.web.service.model.Identifier;
 import uk.ac.ebi.pride.utilities.ols.web.service.model.Term;
 
 import javax.swing.*;
@@ -14,6 +15,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.*;
 
@@ -25,7 +27,7 @@ import java.util.logging.*;
 public class XmlMakerUtils {
 
     private static final Logger LOGGER = Logger.getLogger(XmlMakerUtils.class.getName());
-    private final Map<String, CvTerm> nameToCvTerm = new ConcurrentHashMap<>();
+    private static final Map<String, CvTerm> nameToCvTerm = new ConcurrentHashMap<>();
     private static final Map<String, String> nameToTaxIdCache = new ConcurrentHashMap<>();
     static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
 
@@ -141,7 +143,6 @@ public class XmlMakerUtils {
 
     public CvTerm fetchTerm(String input) {
         input = input.trim();
-        System.out.println(input);
         if (input.isBlank() || input.contains("null")) return null;
         CvTerm term = nameToCvTerm.get(input);
         if (term != null) return term;
@@ -153,7 +154,6 @@ public class XmlMakerUtils {
                 nameToCvTerm.put(input, term);
             } else {
                 term = new XmlCvTerm(input, "N/A");
-                System.out.println("No mi term found for " + input);
                 nameToCvTerm.put(input, term);
             }
         } catch (Exception e) {
@@ -261,5 +261,22 @@ public class XmlMakerUtils {
         comboBox.addItem(defaultItem);
         comboBox.setPreferredSize(new Dimension(200, 50));
         return comboBox;
+    }
+
+    public static List<String> getTermsFromOls(String miId){
+        List<String> termsNames = new ArrayList<>();
+
+        Identifier identifier = new Identifier(miId, Identifier.IdentifierType.OBO);
+        List<Term> terms = olsClient.getTermChildren(identifier, "mi", 9999);
+
+        for (Term term : terms) {
+            XmlCvTerm xmlTerm = new XmlCvTerm(term.getLabel(), term.getOboId().getIdentifier());
+            if (!term.isHasChildren()){
+                nameToCvTerm.put(term.getName(), xmlTerm);
+                termsNames.add(term.getName());
+            }
+        }
+        termsNames.sort(String::compareTo);
+        return termsNames;
     }
 }

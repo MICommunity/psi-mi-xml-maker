@@ -3,7 +3,6 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
@@ -67,8 +66,7 @@ public class ParticipantAndInteractionCreatorGui {
     public JPanel createParticipantAndInteractionCreatorGui() {
         JPanel participantAndInteractionCreatorPanel = new JPanel();
 
-        int frameHeight = participantAndInteractionCreatorPanel.getHeight();
-        participantAndInteractionCreatorPanel.add(createGeneralInformationPanel(frameHeight));
+        participantAndInteractionCreatorPanel.add(createGeneralInformationPanel());
         participantAndInteractionCreatorPanel.add(createBaitPanel());
         participantAndInteractionCreatorPanel.add(createPreyPanel());
 
@@ -89,6 +87,9 @@ public class ParticipantAndInteractionCreatorGui {
         setOrganisms();
         setBiologicalRole();
         setDatabases();
+
+        setFeatureRangeType();
+
         updateBaitExperimentalPreparations((int) numberOfExperimentalPrep.getValue());
 
         addSpinnerListener();
@@ -98,9 +99,9 @@ public class ParticipantAndInteractionCreatorGui {
      * Populates the bait and prey biological role dropdowns with predefined roles.
      */
     public void setBiologicalRole() {
-        for (BiologicalRole biologicalRole : BiologicalRole.values()) {
-            baitBiologicalRole.addItem(biologicalRole.name);
-            preyBiologicalRole.addItem(biologicalRole.name);
+        for (String termName: XmlMakerUtils.getTermsFromOls(DataAndMiID.BIOLOGICAL_ROLE.miId)){
+            baitBiologicalRole.addItem(termName);
+            preyBiologicalRole.addItem(termName);
         }
     }
 
@@ -108,8 +109,8 @@ public class ParticipantAndInteractionCreatorGui {
      * Populates the bait and prey experimental preparation dropdowns.
      */
     public void setExperimentalPreparations(){
-        for (ExperimentalPreparation experimentalPreparation : ExperimentalPreparation.values()) {
-            preyExperimentalPreparation.addItem(experimentalPreparation.description);
+        for (String termName: XmlMakerUtils.getTermsFromOls(DataAndMiID.EXPERIMENTAL_PREPARATION.miId)){
+            preyExperimentalPreparation.addItem(termName);
         }
     }
 
@@ -117,8 +118,8 @@ public class ParticipantAndInteractionCreatorGui {
      * Populates the interaction detection method dropdown with predefined methods.
      */
     public void setInteractionDetectionMethod() {
-        for (InteractionDetectionMethod interactionDetectionMethod : InteractionDetectionMethod.values()) {
-            interactionDetectionMethodCombobox.addItem(interactionDetectionMethod.name);
+        for (String termName: XmlMakerUtils.getTermsFromOls(DataAndMiID.INTERACTION_DETECTION_METHOD.miId)){
+            interactionDetectionMethodCombobox.addItem(termName);
         }
     }
 
@@ -126,8 +127,8 @@ public class ParticipantAndInteractionCreatorGui {
      * Populates the participant detection method dropdown with predefined methods.
      */
     public void setParticipantDetectionMethod(){
-        for (ParticipantDetectionMethod participantDetectionMethod : ParticipantDetectionMethod.values()) {
-            participantDetectionMethodCombobox.addItem(participantDetectionMethod.name);
+        for (String termName: XmlMakerUtils.getTermsFromOls(DataAndMiID.PARTICIPANT_DETECTION_METHOD.miId)){
+            participantDetectionMethodCombobox.addItem(termName);
         }
     }
 
@@ -187,8 +188,14 @@ public class ParticipantAndInteractionCreatorGui {
     }
 
     private void setFeatureType(){
-        for (FeatureType featureType : FeatureType.values()) {
-            baitFeatureType.addItem(featureType.name);
+        for (String termName: XmlMakerUtils.getTermsFromOls(DataAndMiID.FEATUTRE_TYPE.miId)){
+            baitFeatureType.addItem(termName);
+        }
+    }
+
+    private void setFeatureRangeType(){
+        for (String termName: XmlMakerUtils.getTermsFromOls(DataAndMiID.FEATURE_RANGE_TYPE.miId)){
+            featureRangeType.addItem(termName);
         }
     }
 
@@ -205,9 +212,12 @@ public class ParticipantAndInteractionCreatorGui {
 
         for (int i = 0; i < count; i++) {
             JComboBox<String> comboBox = new JComboBox<>();
-            for (ExperimentalPreparation experimentalPreparation : ExperimentalPreparation.values()) {
-                comboBox.addItem(experimentalPreparation.description);
+            comboBox.addItem("Experimental Preparation");
+
+            for (String termName: XmlMakerUtils.getTermsFromOls(DataAndMiID.EXPERIMENTAL_PREPARATION.miId)){
+                comboBox.addItem(termName);
             }
+
             baitExperimentalPreparationList.add(comboBox);
             baitExperimentalPanel.add(XmlMakerUtils.setComboBoxDimension(comboBox, "Bait Experimental Preparation " + (i + 1)));
         }
@@ -230,9 +240,9 @@ public class ParticipantAndInteractionCreatorGui {
     }
 
     private void setDatabases(){
-        for (Databases databases : Databases.values()) {
-            baitIdDatabase.addItem(databases.abbrev);
-            preyIdDatabase.addItem(databases.abbrev);
+        for (String termName: XmlMakerUtils.getTermsFromOls(DataAndMiID.DATABASES.miId)){
+            baitIdDatabase.addItem(termName);
+            preyIdDatabase.addItem(termName);
         }
     }
 
@@ -252,9 +262,11 @@ public class ParticipantAndInteractionCreatorGui {
         baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureType, DataForRawFile.BAIT_FEATURE_TYPE.name));
         baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureStartLocation, DataForRawFile.BAIT_FEATURE_START_LOCATION.name));
         baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureEndLocation, DataForRawFile.BAIT_FEATURE_END_LOCATION.name));
-        JLabel numberOfExperimentalPreparationLabel = new JLabel("Number of experimental preparations");
-        numberOfExperimentalPreparationLabel.setPreferredSize(new Dimension(200, 50));
+        baitPanel.add(XmlMakerUtils.setComboBoxDimension(featureRangeType, DataForRawFile.BAIT_FEATURE_RANGE_TYPE.name));
+
+
         numberOfExperimentalPrep.setPreferredSize(new Dimension(200, 50));
+        numberOfExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Select number of experimental preparations"));
         baitPanel.add(numberOfExperimentalPrep);
         baitPanel.add(baitExperimentalPanel);
 
@@ -277,7 +289,7 @@ public class ParticipantAndInteractionCreatorGui {
         return preyPanel;
     }
 
-    public JPanel createGeneralInformationPanel(int frameHeight) {
+    public JPanel createGeneralInformationPanel() {
         JPanel generalInformationPanel = new JPanel();
         generalInformationPanel.setLayout(new GridLayout(3, 1));
         generalInformationPanel.setPreferredSize(new Dimension(300, 300));
@@ -288,4 +300,5 @@ public class ParticipantAndInteractionCreatorGui {
 
         return generalInformationPanel;
     }
+
 }

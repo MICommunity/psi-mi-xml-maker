@@ -172,7 +172,7 @@ public class XmlMakerGuiTest {
         ExcelFileReader reader = new ExcelFileReader();
         reader.selectFileOpener(TEST_FILE_PATH + "Book1.csv");
         FileFormater formater = new FileFormater(reader);
-        formater.selectFileFormater(TEST_FILE_PATH + "Book1.csv", 0, 2, "", false);
+        formater.selectFileFormater(TEST_FILE_PATH + "Book1.csv", 0, 2, 1, 3, "", false);
 
         File writtenFile = new File(TEST_FILE_PATH + "Book1_xmlMakerFormatted.csv");
         assertTrue(writtenFile.exists(), "Formatted file should exist");
@@ -185,7 +185,7 @@ public class XmlMakerGuiTest {
         ExcelFileReader reader = new ExcelFileReader();
         reader.selectFileOpener(TEST_FILE_PATH + "Book1.xlsx");
         FileFormater formater = new FileFormater(reader);
-        formater.selectFileFormater(TEST_FILE_PATH + "Book1.xlsx", 0, 2, "Book1", false);
+        formater.selectFileFormater(TEST_FILE_PATH + "Book1.xlsx", 0, 2, 1, 3, "Book1", false);
         File writtenFile = new File(TEST_FILE_PATH + "Book1_xmlMakerFormatted.xlsx");
         assertTrue(writtenFile.exists(), "Formatted file should exist");
         assertTrue(writtenFile.length() > 0, "Formatted file should not be empty");
