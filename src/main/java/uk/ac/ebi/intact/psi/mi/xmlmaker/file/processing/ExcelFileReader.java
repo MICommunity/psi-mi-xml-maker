@@ -47,6 +47,9 @@ public class ExcelFileReader  {
     @Getter
     @Setter
     public String publicationId;
+    @Setter
+    @Getter
+    public String publicationDb;
     public String currentFilePath;
     private String fileName;
     private String fileType;

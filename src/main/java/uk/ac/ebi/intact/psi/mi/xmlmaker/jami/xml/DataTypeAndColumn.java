@@ -24,7 +24,6 @@ public enum DataTypeAndColumn {
     PARTICIPANT_XREF("Participant xref"),
     PARTICIPANT_XREF_DB("Participant xref database"),
 
-//    FEATURE_SHORT_LABEL("Feature short label", false),
     FEATURE_TYPE("Feature type", false),
     FEATURE_START("Feature start", false),
     FEATURE_END("Feature end", false),

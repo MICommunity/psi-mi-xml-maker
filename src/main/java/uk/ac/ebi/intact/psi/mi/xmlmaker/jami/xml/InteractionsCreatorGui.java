@@ -35,6 +35,9 @@ public class InteractionsCreatorGui extends JPanel {
     private List<List<String>> firstLines = new ArrayList<>();
     private boolean isUpdatingSheets = false;
 
+    private final JSpinner numberOfFeatures = new JSpinner(new SpinnerNumberModel(1, 0, 10, 1));
+
+
     @Getter
     public JPanel participantCreatorPanel ;
     public final Map<String, Integer> dataAndIndexes = new HashMap<>();
@@ -68,8 +71,16 @@ public class InteractionsCreatorGui extends JPanel {
         JPanel sheetSelectorPanel = new JPanel();
         sheetSelectorPanel.setLayout(new BoxLayout(sheetSelectorPanel, BoxLayout.Y_AXIS));
 
+        JPanel sheetWrapperPanel = new JPanel();
+        sheetWrapperPanel.setLayout(new GridLayout(1,1));
+
         sheets.addItem("Select sheet");
-        sheetSelectorPanel.add(sheets);
+        sheetWrapperPanel.add(sheets);
+
+        numberOfFeatures.setBorder(BorderFactory.createTitledBorder("Select number of features"));
+        sheetWrapperPanel.add(numberOfFeatures);
+
+        sheetSelectorPanel.add(sheetWrapperPanel);
 
         sheets.addActionListener(e -> {
             if (!isUpdatingSheets) {
@@ -111,6 +122,7 @@ public class InteractionsCreatorGui extends JPanel {
 //            setUpColumns();
         }
         isUpdatingSheets = false;
+        addSpinnerListener();
     }
 
     /**
@@ -135,7 +147,7 @@ public class InteractionsCreatorGui extends JPanel {
      */
     private void createInteractionDataTable() {
         int rows = 5;
-        int cols = dataNeededForInteractor.size() + excelFileReader.getNumberOfFeatures() * 6;
+        int cols = dataNeededForInteractor.size() + (int) numberOfFeatures.getValue() * 6;
         String defaultCellValue = "Select from file";
         String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
@@ -160,7 +172,7 @@ public class InteractionsCreatorGui extends JPanel {
             configureColumn(i, dataNeededForInteractor.get(i), data, tableModel);
         }
 
-        for (int i = 0; i < excelFileReader.getNumberOfFeatures(); i++) {
+        for (int i = 0; i < (int) numberOfFeatures.getValue(); i++) {
             addFeatureCells(i);
         }
 
@@ -368,5 +380,16 @@ public class InteractionsCreatorGui extends JPanel {
             String value = (index < rowData.size()) ? rowData.get(index) : "N/A";
             tableModel.setValueAt(value, rowIndex, comboBoxIndex);
         }
+    }
+
+    private void addSpinnerListener() {
+        numberOfFeatures.addChangeListener(e -> {
+            int value = (int) numberOfFeatures.getValue();
+            SwingUtilities.invokeLater(() -> {
+                createInteractionDataTable();
+                addFeatureCells(value);
+            });
+            interactionsCreator.setNumberOfFeature(value);
+        });
     }
 }

@@ -197,6 +197,7 @@
             <createZipball>true</createZipball>
             <packagingJdk>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</packagingJdk>
             <jdkPath>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</jdkPath>
+            <iconFile>src/main/resources/psi.ico</iconFile>
           </configuration>
         </execution>
 
@@ -212,6 +213,7 @@
             <createTarball>true</createTarball>
             <packagingJdk>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</packagingJdk>
             <jdkPath>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</jdkPath>
+            <iconFile>src/main/resources/psi.png</iconFile>
           </configuration>
         </execution>
 

@@ -44,7 +44,9 @@ public class InteractionsCreator {
     @Setter
     @Getter
     public String publicationId;
-    public int numberOfFeature = 0;
+
+    @Setter
+    private int numberOfFeature = 1;
 
     private static final Logger LOGGER = Logger.getLogger(InteractionsCreator.class.getName());
 
@@ -71,7 +73,6 @@ public class InteractionsCreator {
     public void createParticipantsWithFileFormat() {
         xmlModelledInteractions.clear();
         dataList.clear();
-        numberOfFeature = excelFileReader.getNumberOfFeatures();
         if (excelFileReader.workbook == null) {
             fetchDataFileWithSeparator(columnAndIndex);
         } else {
@@ -103,7 +104,7 @@ public class InteractionsCreator {
      * @throws NumberFormatException if the organism's taxonomy ID is invalid.
      */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
-        DataTypeAndColumn[] required = {PARTICIPANT_NAME, PARTICIPANT_ID, PARTICIPANT_ID_DB, PARTICIPANT_TYPE, PARTICIPANT_ORGANISM};
+        DataTypeAndColumn[] required = {PARTICIPANT_NAME, PARTICIPANT_ID, PARTICIPANT_ID_DB, PARTICIPANT_ORGANISM};
 
         for (DataTypeAndColumn requiredColumn : required) {
             if (data.get(requiredColumn.name) == null || data.get(requiredColumn.name).isBlank()) {
@@ -166,7 +167,7 @@ public class InteractionsCreator {
 
         Interactor participant = new XmlPolymer(name, organism, uniqueId);
 
-        switch (participantIdDb.getShortName().toLowerCase()){ //todo: check with kalpana
+        switch (participantIdDb.getShortName().toLowerCase()){ //todo: check with kalpana for the dbs
             case "uniprot knowledge base":
                 participant = new XmlProtein(name, organism, uniqueId);
                 break;
@@ -182,6 +183,7 @@ public class InteractionsCreator {
             case "ensemblfungi":
             case "geneid":
             case "entrez gene/locuslink":
+            case "genedb":
                 participant = new XmlGene(name, organism, uniqueId);
             default:
                 break;
@@ -599,11 +601,9 @@ public class InteractionsCreator {
      * @throws RuntimeException If an invalid numeric range is encountered.
      */
     public Position checkFeatureRangeType(String range, String featureRangeType) {
-        if (featureRangeType != null) return PositionUtils.createPosition(featureRangeType, utils.fetchMiId(featureRangeType), Integer.parseInt(range));
+        if (featureRangeType.contains("c-term")) return PositionUtils.createCTerminalRangePosition();
 
-        if (range.contains("c-term")) return PositionUtils.createCTerminalRangePosition();
-
-        if (range.contains("n-term")) return PositionUtils.createNTerminalRangePosition();
+        if (featureRangeType.contains("n-term")) return PositionUtils.createNTerminalRangePosition();
 
         if (range.matches("\\d+")) {
             try {

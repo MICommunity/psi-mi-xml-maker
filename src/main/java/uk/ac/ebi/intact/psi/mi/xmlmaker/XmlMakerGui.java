@@ -281,10 +281,22 @@ public class XmlMakerGui {
         pubmedInputPanel.setLayout(new FlowLayout());
         pubmedInputPanel.setBorder(BorderFactory.createTitledBorder("1.2 Enter the PubMed ID"));
 
-        JTextField publicationTitleField = new JTextField("Publication PubMed ID");
+
+        JTextField publicationDatabase = new JTextField("Publication database");
+        publicationDatabase.setEditable(true);
+//        JButton textValidationButton = new JButton("Submit");
+//        textValidationButton.addActionListener(e -> excelFileReader.setPublicationId(publicationDatabase.getText()));
+        pubmedInputPanel.add(publicationDatabase);
+//        pubmedInputPanel.add(textValidationButton);
+
+
+        JTextField publicationTitleField = new JTextField("Publication ID");
         publicationTitleField.setEditable(true);
         JButton textValidationButton = new JButton("Submit");
-        textValidationButton.addActionListener(e -> excelFileReader.setPublicationId(publicationTitleField.getText()));
+        textValidationButton.addActionListener(e -> {
+            excelFileReader.setPublicationId(publicationTitleField.getText());
+            excelFileReader.setPublicationDb(publicationDatabase.getText());
+        });
         pubmedInputPanel.add(publicationTitleField);
         pubmedInputPanel.add(textValidationButton);
 

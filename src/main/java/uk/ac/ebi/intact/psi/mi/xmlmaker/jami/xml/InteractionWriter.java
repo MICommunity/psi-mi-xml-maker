@@ -41,6 +41,8 @@ public class InteractionWriter {
     private static final Logger LOGGER = LogManager.getLogger(InteractionWriter.class);
 
     public String publicationId;
+    public String publicationDb;
+
     final XmlMakerUtils utils = new XmlMakerUtils();
     private final ExcelFileReader excelFileReader;
 
@@ -58,6 +60,7 @@ public class InteractionWriter {
     public InteractionWriter(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
         publicationId = this.excelFileReader.getPublicationId();
+        publicationDb = this.excelFileReader.getPublicationDb();
     }
 
     /**
@@ -90,8 +93,9 @@ public class InteractionWriter {
         }
 
         publicationId = excelFileReader.getPublicationId();
-        if (publicationId == null) {
-            XmlMakerUtils.showErrorDialog("Publication ID is null. Please enter the publication ID.");
+        publicationDb = excelFileReader.getPublicationDb();
+        if (publicationId == null || publicationDb == null) {
+            XmlMakerUtils.showErrorDialog("Publication ID or publication database is null. Please enter the publication ID.");
             LOGGER.error("Impossible to find publication ID.");
             return false;
         }
@@ -121,7 +125,7 @@ public class InteractionWriter {
         XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "https://www.ebi.ac.uk",
                 "European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge, CB10 1SD, United Kingdom.", intactPubmedRef);
 
-        XmlXref primaryXref = createXref("pubmed", "primary-reference", "pubmed", publicationId);
+        XmlXref primaryXref = createXref(publicationDb, "primary-reference", publicationDb, publicationId);
         XmlXref secondaryXref = createXref("psi-mi", "identity", "psi-mi", intactMiId);
         secondaryXref.setSecondary("secondary-reference");
 

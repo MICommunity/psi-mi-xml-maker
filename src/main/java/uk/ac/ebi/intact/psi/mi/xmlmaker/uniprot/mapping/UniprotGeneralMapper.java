@@ -70,7 +70,7 @@ public class UniprotGeneralMapper {
         if (organism != null) {
             test.append("%20AND%20organism_id:").append(organism);
         }
-        if (previousDb != null) {
+        if (previousDb != null && !previousDb.equalsIgnoreCase("uniprotkb")) {
             test.append("%20AND%20database:").append(previousDb);
         }
         test.append(")");
@@ -114,7 +114,7 @@ public class UniprotGeneralMapper {
 
         if (results == null){
             uniprotResults.add(new UniprotResult(protein, protein, inputOrganism, null,
-                    null, "UniprotKB", 0));
+                    null, previousDb, 0));
             return uniprotResults;
         }
 
