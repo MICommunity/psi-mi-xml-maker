@@ -267,7 +267,7 @@ public class ParticipantAndInteractionCreatorGui {
 
     public JPanel createBaitPanel() {
         JPanel baitPanel = new JPanel();
-        baitPanel.setLayout(new GridLayout(5, 1));
+        baitPanel.setLayout(new GridLayout(6, 1));
         baitPanel.setPreferredSize(new Dimension(600, 300));
 
         baitPanel.setBorder(BorderFactory.createTitledBorder(" 2.3 Select baits information"));

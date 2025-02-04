@@ -3,7 +3,8 @@
 ## Introduction
 
 ### What is the PSI-MI XML Maker?
-The PSI-MI XML Maker is a tool designed to create XML files based on the [PSI-MI 3.0 format](https://rawgit.com/HUPO-PSI/miXML/master/3.0/doc/MIF300.html). These XML files can later be used in the editor for further processing.
+The PSI-MI XML Maker is a tool designed to create XML files based on the [PSI-MI 3.0 format](https://rawgit.com/HUPO-PSI/miXML/master/3.0/doc/MIF300.html).
+These XML files can later be used in the editor for further processing.
 
 ### How to download?
 - **MacOs** : download the .dmg file
@@ -29,26 +30,62 @@ There are three ways to import a file into the PSI-MI XML Maker:
 
 ### 2. Formatting the Raw File
 If the imported file does not conform to the Interactome template, it must be formatted.
-- The user can select columns for **Bait** and **Prey**.
-- If interactions are binary, the user can specify this by ticking the corresponding box.
-- Additional interaction-related information can be selected.
-- Once formatted, a new file named `previousFile_xmlFormatted.fileType` is generated.
+
+#### 2.1 Selecting the columns to process
+If the file format is **XLSX** or **XLS**, the user has to select the sheet to access. In other cases it is not necessary.
+Then, the dropdown menus will fill with the headers of the file.
+The user can now select the corresponding columns for the **Bait ID** and the **Prey ID**.
+If it is present in the file it can also select the name columns.
+
+#### 2.2 Selecting general information
+The general information panel contains the participant identification method and the interaction detection method.
+The user can select the corresponding options.
+
+> **Note:** The options available for the dropdown menus are directly fetched on OLS.
+
+#### 2.3 Selecting information concerning the baits
+The same way as for the general information, the user can select information about the baits thanks to the dropdown menus.
+The user can select multiple experimental preparations. To do so, it has to increase the number in the spinner. Then, multiple dropdown menu will appear.
+
+The following options can also be typed in:
+- the organism **Tax id**
+- the feature start and end locations
+- the feature xref
+
+
+#### 2.4 Selecting information concerning the preys
+The preys information selection is working the same way as the baits information selection.
+
+The following options can also be typed in:
+- the organism **Tax id**
+
+#### 2.5 Formatting the file
+Finally, the user can format the file by clicking the button **Format file**.
+If the user ticks the box **Create binary interactions** each row of the input file will be considered an interaction.
+If it is not ticked, the interaction number will remain the same as long as the bait do not change.
+
+In the end, a new file called "inputFile_XMLFormatted.inputFileFormat" is created and will be used to work on.
 
 ### 3. Updating Uniprot IDs
-Updating Uniprot IDs is optional but recommended.
-- If working with an **XLSX** or **XLS** file, select the correct sheet.
-- The **Participant ID** column must be specified.
-- The **Organism** and **Database** columns are optional but can refine Uniprot mapping.
+If the file format is **XLSX** or **XLS**, the user has to select the sheet to access. In other cases it is not necessary.
+Then, the dropdown menus will fill with the headers of the file.
+
+Once done, the user has to select the corresponding columns in the file:
+
+- the **Participant ID** column must be specified.
+- the **Organism** and **Database** columns are optional but can refine Uniprot mapping.
 - Clicking **Update the Uniprot IDs** will start the process.
-- If multiple Uniprot IDs are found, the user can choose one or manually enter the ID and database.
+- If multiple reviewed Uniprot IDs are found, the user can choose one or manually enter the ID and database.
 - Additional columns will be added to the file with the updated ID, organism, and database.
 
 ### 4. Creating Participants
 Before creating interactions, participants must be defined.
 - For **XLSX** or **XLS** files, select the correct sheet.
+- The user can select the number of features per participant present in the file, by default this number is set to 0;
+  - Once increased, the corresponding number of feature cells will be added in the selection table.
 - Map the participant elements to the correct file columns.
 - The application suggests columns based on similarity but requires user verification.
-- A preview function is available to check values.
+- The user can check the rightfulness of the data input thanks to the preview lines which are displayed from the 3rd line of the table.
 
 ### 5. Creating the PSI-MI 3.0 XML File
 - The **Publication Date** must be selected.
