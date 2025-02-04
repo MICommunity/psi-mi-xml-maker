@@ -53,9 +53,10 @@ public class ParticipantAndInteractionCreatorGui {
 
     @Getter
     private final JSpinner numberOfExperimentalPrep = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
-    private final JPanel baitExperimentalPanel = new JPanel(new GridLayout(0, 1));
 
+    private final JPanel baitExperimentalPanel = new JPanel(new GridLayout(2, 1));
 
+    private final Dimension panelDimension = new Dimension(100, 400);
 
     /**
      * Creates the GUI panel for selecting participant and interaction details.
@@ -65,31 +66,11 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public JPanel createParticipantAndInteractionCreatorGui() {
         JPanel participantAndInteractionCreatorPanel = new JPanel();
-        participantAndInteractionCreatorPanel.setMaximumSize(new Dimension(1000, 400));
-        participantAndInteractionCreatorPanel.setLayout(new GridLayout(4, 1));
 
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitIdDatabase, DataForRawFile.BAIT_ID_DB.name));
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(preyIdDatabase, DataForRawFile.PREY_ID_DB.name));
-
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(participantDetectionMethodCombobox, DataForRawFile.PARTICIPANT_DETECTION_METHOD.name));
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(interactionDetectionMethodCombobox, DataForRawFile.INTERACTION_DETECTION_METHOD.name));
-
-        participantAndInteractionCreatorPanel.add(numberOfExperimentalPrep);
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(preyExperimentalPreparation, DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
-
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitBiologicalRole, DataForRawFile.BAIT_BIOLOGICAL_ROLE.name));
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(preyBiologicalRole, DataForRawFile.PREY_BIOLOGICAL_ROLE.name));
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitOrganism, DataForRawFile.BAIT_ORGANISM.name));
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(preyOrganism, DataForRawFile.PREY_ORGANISM.name));
-
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureType, DataForRawFile.BAIT_FEATURE_TYPE.name));
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureStartLocation, DataForRawFile.BAIT_FEATURE_START_LOCATION.name));
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureEndLocation, DataForRawFile.BAIT_FEATURE_END_LOCATION.name));
-
-        participantAndInteractionCreatorPanel.add(numberOfExperimentalPrep);
-
-        participantAndInteractionCreatorPanel.add(baitExperimentalPanel);
-        participantAndInteractionCreatorPanel.add(XmlMakerUtils.setComboBoxDimension(preyExperimentalPreparation, DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
+        int frameHeight = participantAndInteractionCreatorPanel.getHeight();
+        participantAndInteractionCreatorPanel.add(createGeneralInformationPanel(frameHeight));
+        participantAndInteractionCreatorPanel.add(createBaitPanel());
+        participantAndInteractionCreatorPanel.add(createPreyPanel());
 
         setUp();
         return participantAndInteractionCreatorPanel;
@@ -128,7 +109,6 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public void setExperimentalPreparations(){
         for (ExperimentalPreparation experimentalPreparation : ExperimentalPreparation.values()) {
-//            baitExperimentalPreparation.addItem(experimentalPreparation.description);
             preyExperimentalPreparation.addItem(experimentalPreparation.description);
         }
     }
@@ -212,14 +192,12 @@ public class ParticipantAndInteractionCreatorGui {
         }
     }
 
-
     private void addSpinnerListener() {
         numberOfExperimentalPrep.addChangeListener(e -> {
             int value = (int) numberOfExperimentalPrep.getValue();
             SwingUtilities.invokeLater(() -> updateBaitExperimentalPreparations(value));
         });
     }
-
 
     private void updateBaitExperimentalPreparations(int count) {
         baitExperimentalPanel.removeAll();
@@ -256,5 +234,58 @@ public class ParticipantAndInteractionCreatorGui {
             baitIdDatabase.addItem(databases.abbrev);
             preyIdDatabase.addItem(databases.abbrev);
         }
+    }
+
+    public JPanel createBaitPanel() {
+        JPanel baitPanel = new JPanel();
+        baitPanel.setLayout(new GridLayout(4, 1));
+        baitPanel.setPreferredSize(new Dimension(600, 300));
+
+        baitPanel.setBorder(BorderFactory.createTitledBorder(" 2.3 Select baits information"));
+        baitPanel.setMaximumSize(panelDimension);
+
+
+        baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitIdDatabase, DataForRawFile.BAIT_ID_DB.name));
+        baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitBiologicalRole, DataForRawFile.BAIT_BIOLOGICAL_ROLE.name));
+        baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitOrganism, DataForRawFile.BAIT_ORGANISM.name));
+
+        baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureType, DataForRawFile.BAIT_FEATURE_TYPE.name));
+        baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureStartLocation, DataForRawFile.BAIT_FEATURE_START_LOCATION.name));
+        baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitFeatureEndLocation, DataForRawFile.BAIT_FEATURE_END_LOCATION.name));
+        JLabel numberOfExperimentalPreparationLabel = new JLabel("Number of experimental preparations");
+        numberOfExperimentalPreparationLabel.setPreferredSize(new Dimension(200, 50));
+        numberOfExperimentalPrep.setPreferredSize(new Dimension(200, 50));
+        baitPanel.add(numberOfExperimentalPrep);
+        baitPanel.add(baitExperimentalPanel);
+
+        return baitPanel;
+    }
+
+    public JPanel createPreyPanel() {
+        JPanel preyPanel = new JPanel();
+        preyPanel.setLayout(new GridLayout(4, 1));
+        preyPanel.setPreferredSize(new Dimension(300, 300));
+        preyPanel.setBorder(BorderFactory.createTitledBorder(" 2.4 Select preys information"));
+        preyPanel.setMaximumSize(panelDimension);
+
+        preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyIdDatabase, DataForRawFile.PREY_ID_DB.name));
+        preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyExperimentalPreparation, DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
+        preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyBiologicalRole, DataForRawFile.PREY_BIOLOGICAL_ROLE.name));
+        preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyOrganism, DataForRawFile.PREY_ORGANISM.name));
+        preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyExperimentalPreparation, DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
+
+        return preyPanel;
+    }
+
+    public JPanel createGeneralInformationPanel(int frameHeight) {
+        JPanel generalInformationPanel = new JPanel();
+        generalInformationPanel.setLayout(new GridLayout(3, 1));
+        generalInformationPanel.setPreferredSize(new Dimension(300, 300));
+        generalInformationPanel.setBorder(BorderFactory.createTitledBorder(" 2.2 Select general information"));
+
+        generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(participantDetectionMethodCombobox, DataForRawFile.PARTICIPANT_DETECTION_METHOD.name));
+        generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(interactionDetectionMethodCombobox, DataForRawFile.INTERACTION_DETECTION_METHOD.name));
+
+        return generalInformationPanel;
     }
 }

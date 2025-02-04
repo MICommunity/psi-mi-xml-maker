@@ -48,7 +48,7 @@ public class UniprotGeneralMapper {
      */
     public ArrayList<UniprotResult> fetchUniprotResult(String protein, String previousDb, String organism){
         try {
-            return getUniprotIds(getUniprotResponse(protein, previousDb, organism));
+            return getUniprotIds(getUniprotResponse(protein, previousDb, organism), protein, previousDb, organism);
         } catch (Exception e) {
             XmlMakerUtils.showErrorDialog("Error fetching UniProt results, please check your internet connection");
             LOGGER.error("Error fetching UniProt results for protein '{}': {}", protein, e.getMessage(), e);
@@ -96,10 +96,10 @@ public class UniprotGeneralMapper {
             } finally {
                 connection.disconnect();
             }
-
         } catch (Exception e) {
             LOGGER.error("Error fetching Uniprot response: {}", e.getMessage(), e);
         }
+
         return null;
     }
 
@@ -109,10 +109,16 @@ public class UniprotGeneralMapper {
      * @param results The JSON response from the UniProt API.
      * @return A list of {@link UniprotResult} objects representing the UniProt entries.
      */
-    public ArrayList<UniprotResult> getUniprotIds(JsonObject results) {
-        if (results == null) return null;
-        JsonArray resultsAsJson = results.get("results").getAsJsonArray();
+    public ArrayList<UniprotResult> getUniprotIds(JsonObject results, String protein, String previousDb, String inputOrganism) {
         ArrayList<UniprotResult> uniprotResults = new ArrayList<>();
+
+        if (results == null){
+            uniprotResults.add(new UniprotResult(protein, protein, inputOrganism, null,
+                    null, "UniprotKB", 0));
+            return uniprotResults;
+        }
+
+        JsonArray resultsAsJson = results.get("results").getAsJsonArray();
 
         for (JsonElement element : resultsAsJson) {
             JsonObject result = element.getAsJsonObject();
@@ -138,7 +144,7 @@ public class UniprotGeneralMapper {
             }
             uniprotLink = "https://www.uniprot.org/uniprotkb/" + uniprotAc;
 
-            UniprotResult oneResult = new UniprotResult(uniprotAc, name, organism, entryType, uniprotLink, "UniprotKB", sequenceSize);
+            UniprotResult oneResult = new UniprotResult(uniprotAc, name, organism, entryType, uniprotLink, "UniprotKB", sequenceSize); //todo: keep the previous id if not found
             uniprotResults.add(oneResult);
         }
 

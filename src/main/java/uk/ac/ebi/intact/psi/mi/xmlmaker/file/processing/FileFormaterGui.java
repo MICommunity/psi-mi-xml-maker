@@ -35,7 +35,6 @@ public class FileFormaterGui {
 
     private static final Logger LOGGER = Logger.getLogger(FileFormaterGui.class.getName());
 
-
     public FileFormaterGui(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
         fileFormater = new FileFormater(excelFileReader);
@@ -49,32 +48,19 @@ public class FileFormaterGui {
      */
     public JPanel getFileFormaterPanel() {
         JPanel fileFormaterPanel = new JPanel();
-        JPanel sheetsPanel = new JPanel();
-        sheetsPanel.setLayout(new GridLayout(3, 1));
+        fileFormaterPanel.setLayout(new BoxLayout(fileFormaterPanel, BoxLayout.X_AXIS));
 
-        JCheckBox fileFormaterCheckBox = new JCheckBox();
-        fileFormaterCheckBox.setText("Create binary interactions");
-
-        sheetsPanel.add(setComboBoxDimension(sheets, "Select sheet"));
-        sheetsPanel.add(setComboBoxDimension(baitColumn, "Select baits column"));
-        sheetsPanel.add(setComboBoxDimension(preyColumn, "Select preys column"));
-
-        sheets.addActionListener(e -> setUpColumns());
-
-        JButton fileFormaterButton = new JButton("Format file");
-        fileFormaterButton.addActionListener(e -> {
-            Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
-            formatFile(fileFormaterCheckBox.isSelected(),interactionData);
-        });
-
-        fileFormaterPanel.add(sheetsPanel);
-        fileFormaterPanel.add(fileFormaterCheckBox);
+        JPanel wrapperSheetSelection = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        wrapperSheetSelection.add(createSheetPanel());
+        fileFormaterPanel.add(wrapperSheetSelection);
 
         fileFormaterPanel.add(participantAndInteractionCreatorGui.createParticipantAndInteractionCreatorGui());
 
-        fileFormaterPanel.add(fileFormaterButton);
-        fileFormaterPanel.setVisible(true);
+        JPanel wrapperFileProcessing = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        wrapperFileProcessing.add(createFileProcessingPanel());
+        fileFormaterPanel.add(wrapperFileProcessing);
 
+        fileFormaterPanel.setVisible(true);
         return fileFormaterPanel;
     }
 
@@ -104,17 +90,6 @@ public class FileFormaterGui {
         baitColumn.setEnabled(false);
         preyColumn.addItem("Select prey column");
         preyColumn.setEnabled(false);
-    }
-
-    /**
-     * Configures combo box dimensions and adds the default item to the combo box.
-     *
-     * @param comboBox The combo box to be configured.
-     * @param defaultItem The default item to add to the combo box.
-     * @return The configured combo box.
-     */
-    private JComboBox<String> setComboBoxDimension(JComboBox<String> comboBox, String defaultItem) {
-        return XmlMakerUtils.setComboBoxDimension(comboBox, defaultItem);
     }
 
     /**
@@ -161,4 +136,48 @@ public class FileFormaterGui {
         }
     }
 
+    public JPanel createSheetPanel() {
+        JPanel sheetsPanel = new JPanel();
+        sheetsPanel.setLayout(new GridLayout(3, 1));
+        sheetsPanel.setPreferredSize(new Dimension(200, 300));
+
+        sheetsPanel.setBorder(BorderFactory.createTitledBorder(" 2.1 Select in the file"));
+
+        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(sheets, "Select sheet"));
+        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(baitColumn, "Select baits column"));
+        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(preyColumn, "Select preys column"));
+
+        sheets.addActionListener(e -> setUpColumns());
+
+        return sheetsPanel;
+    }
+
+    public JPanel createFileProcessingPanel() {
+        JCheckBox fileFormaterCheckBox = new JCheckBox("Create binary interactions");
+
+        JButton fileFormaterButton = new JButton("Format file");
+        fileFormaterButton.addActionListener(e -> {
+            Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
+            formatFile(fileFormaterCheckBox.isSelected(), interactionData);
+        });
+
+        JPanel processPanel = new JPanel();
+        processPanel.setPreferredSize(new Dimension(200, 100));
+        processPanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.weightx = 1.0;
+        gbc.gridwidth = 1;
+        gbc.weighty = 0.5;
+
+        //Checkbox position
+        gbc.gridy = 0; //row num
+        processPanel.add(fileFormaterCheckBox, gbc);
+
+        //Button position
+        gbc.gridy = 1;
+        processPanel.add(fileFormaterButton, gbc);
+
+        return processPanel;
+    }
 }

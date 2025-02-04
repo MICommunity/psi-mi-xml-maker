@@ -145,7 +145,7 @@ public class InteractionsCreator {
             }
         }
 
-        CvTerm participantType = terms.get(PARTICIPANT_TYPE);
+//        CvTerm participantType = terms.get(PARTICIPANT_TYPE);
         CvTerm participantIdDb = terms.get(PARTICIPANT_ID_DB);
         CvTerm experimentalRole = terms.get(EXPERIMENTAL_ROLE);
         CvTerm xref= terms.get(PARTICIPANT_XREF);
@@ -164,16 +164,28 @@ public class InteractionsCreator {
 
         Organism organism = createOrganism(participantOrganism);
 
-        Interactor participant = null;
-        participant = new XmlPolymer(name, participantType, organism, uniqueId);
+        Interactor participant = new XmlPolymer(name, organism, uniqueId);
 
-//        switch (participantIdDb.getFullName()){
-//            case "UniprotKB":
-//                participant = new XmlProtein(name, participantType, organism, uniqueId);
-//                break;
-//            default:
-//                participant = new XmlPolymer(name, participantType, organism, uniqueId);
-//        } //todo: make the type depending on the db
+        switch (participantIdDb.getShortName().toLowerCase()){ //todo: check with kalpana
+            case "uniprot knowledge base":
+                participant = new XmlProtein(name, organism, uniqueId);
+                break;
+            case "rnacentral":
+            case "refseq":
+                participant = new XmlNucleicAcid(name, organism, uniqueId);
+                break;
+            case "chebi":
+                participant = new XmlMolecule(name, organism, uniqueId);
+                break;
+            case "ensembl":
+            case "ensemblbacteria":
+            case "ensemblfungi":
+            case "geneid":
+            case "entrez gene/locuslink":
+                participant = new XmlGene(name, organism, uniqueId);
+            default:
+                break;
+        }
 
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
 

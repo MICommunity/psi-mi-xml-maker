@@ -371,8 +371,7 @@ public class ExcelFileReader  {
                         LOGGER.warning("No UniProt results for ID: " + previousId);
                         uniprotResult = previousId;
                         uniprotResultDb = previousDb; //todo: add previous organism and name
-//                        updatedOrganism = result.getOrganism();
-//                        participantName = result.getName();
+
                     } else {
                         uniprotResult = result.getUniprotAc();
                         uniprotResultDb = result.getIdDb();
@@ -390,9 +389,9 @@ public class ExcelFileReader  {
 
                 List<String> data = new ArrayList<>(row);
                 data.add(uniprotResult != null ? uniprotResult : previousId);
-                data.add(uniprotResultDb != null ? uniprotResultDb : "");
+                data.add(uniprotResultDb != null ? uniprotResultDb : previousDb);
                 data.add(updatedOrganism != null ? updatedOrganism : "");
-                data.add(participantName != null ? participantName : "");
+                data.add(participantName != null ? participantName : previousId);
 
                 csvWriter.writeNext(data.toArray(new String[0]));
             }
@@ -465,9 +464,9 @@ public class ExcelFileReader  {
                 UniprotResult alreadyParsedParticipant = alreadyParsed.get(previousId);
 
                 String uniprotResult = previousId;
-                String uniprotResultDb = "";
-                String updatedOrganism = "";
-                String participantName = "";
+                String uniprotResultDb = previousDb;
+                String updatedOrganism = organism;
+                String participantName = previousId;
 
                 if (alreadyParsedParticipant == null) {
                     UniprotResult result = getOneUniprotId(previousId, previousDb, organism);
@@ -573,7 +572,6 @@ public class ExcelFileReader  {
         if (oneUniprotId != null && moleculeSetChecker.isProteinPartOfMoleculeSet(oneUniprotId.getUniprotAc())) {
             proteinsPartOfMoleculeSet.add(oneUniprotId.getUniprotAc());
         }
-
         return oneUniprotId;
     }
 

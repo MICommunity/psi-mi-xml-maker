@@ -141,6 +141,7 @@ public class XmlMakerUtils {
 
     public CvTerm fetchTerm(String input) {
         input = input.trim();
+        System.out.println(input);
         if (input.isBlank() || input.contains("null")) return null;
         CvTerm term = nameToCvTerm.get(input);
         if (term != null) return term;
@@ -149,6 +150,10 @@ public class XmlMakerUtils {
             Term complexTerm = olsClient.getExactTermByName(input, "mi");
             if (complexTerm != null) {
                 term = new XmlCvTerm(complexTerm.getLabel(), complexTerm.getOboId().getIdentifier());
+                nameToCvTerm.put(input, term);
+            } else {
+                term = new XmlCvTerm(input, "N/A");
+                System.out.println("No mi term found for " + input);
                 nameToCvTerm.put(input, term);
             }
         } catch (Exception e) {
@@ -219,7 +224,7 @@ public class XmlMakerUtils {
                     dp[i][j] = Math.min(
                             Math.min(dp[i - 1][j] + 1,
                                     dp[i][j - 1] + 1),
-                            dp[i - 1][j - 1] + (s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1) // Substitution
+                            dp[i - 1][j - 1] + (s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1)
                     );
                 }
             }

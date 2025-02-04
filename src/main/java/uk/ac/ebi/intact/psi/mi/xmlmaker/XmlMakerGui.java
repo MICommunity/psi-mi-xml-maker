@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  */
 public class XmlMakerGui {
 
-    private static final int FRAME_WIDTH = 2000;
+    private static int FRAME_WIDTH = 2000;
     private static final int FRAME_HEIGHT = 2000;
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGui.class.getName());
     private final ExcelFileReader excelFileReader;
@@ -57,25 +57,34 @@ public class XmlMakerGui {
     public void initialize() {
         JFrame frame = createMainFrame();
 
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+
         JButton restartButton = createRestartButton(frame);
         restartButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        frame.add(restartButton);
+        contentPanel.add(restartButton);
 
-        frame.add(createFileLabel());
+        contentPanel.add(createFileLabel());
+        contentPanel.add(createFileFetcherPanel());
+        contentPanel.add(createFileFormaterPanel());
+        contentPanel.add(createUniprotMapperPanel());
+        contentPanel.add(createFileProcessingPanel());
+        contentPanel.add(createSaveOptionsPanel());
 
-        frame.add(createFileFetcherPanel());
-        frame.add(createFileFormaterPanel());
-        frame.add(createUniprotMapperPanel());
-        frame.add(createFileProcessingPanel());
-        frame.add(createSaveOptionsPanel());
         JButton saveButton = createSaveButtonWithSpinner();
         saveButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        frame.add(saveButton);
+        contentPanel.add(saveButton);
 
         excelFileReader.registerInputSelectedEventHandler(event -> setUpSheets());
 
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        frame.setContentPane(scrollPane);
+
         makeFrameDnD(frame);
         frame.setGlassPane(loadingSpinner.createLoadingGlassPane(frame));
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
     }
 
