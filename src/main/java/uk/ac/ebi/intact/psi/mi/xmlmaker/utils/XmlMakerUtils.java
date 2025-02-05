@@ -105,6 +105,7 @@ public class XmlMakerUtils {
         String taxId = nameToTaxIdCache.get(organismName);
         if (taxId != null) return taxId;
         if (organismName.matches("\\d+")) return organismName; // already a taxId
+        if (organismName.toLowerCase().contains("organism") || organismName.isEmpty()) {return null;}
 
         String apiResponse = fetchTaxIdWithApi(organismName);
         String oboId = apiResponse != null ? extractOboId(apiResponse) : null;

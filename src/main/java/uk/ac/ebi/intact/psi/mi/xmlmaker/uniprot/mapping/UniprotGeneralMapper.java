@@ -112,7 +112,7 @@ public class UniprotGeneralMapper {
     public ArrayList<UniprotResult> getUniprotIds(JsonObject results, String protein, String previousDb, String inputOrganism) {
         ArrayList<UniprotResult> uniprotResults = new ArrayList<>();
 
-        if (results == null){
+        if (results.isJsonNull()) {
             uniprotResults.add(new UniprotResult(protein, protein, inputOrganism, null,
                     null, previousDb, 0));
             return uniprotResults;
@@ -135,7 +135,6 @@ public class UniprotGeneralMapper {
                 name = result.get("uniProtkbId").getAsString();
                 organism = result.get("organism").getAsJsonObject().get("taxonId").getAsString();
                 sequenceSize = result.get("sequence").getAsJsonObject().get("length").getAsInt();
-
             } else {
                 uniprotAc = result.get("inactiveReason").getAsJsonObject().get("mergeDemergeTo").getAsString();
                 name = uniprotAc;

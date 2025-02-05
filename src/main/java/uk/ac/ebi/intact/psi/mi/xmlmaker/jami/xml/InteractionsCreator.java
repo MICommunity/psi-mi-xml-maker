@@ -146,7 +146,6 @@ public class InteractionsCreator {
             }
         }
 
-//        CvTerm participantType = terms.get(PARTICIPANT_TYPE);
         CvTerm participantIdDb = terms.get(PARTICIPANT_ID_DB);
         CvTerm experimentalRole = terms.get(EXPERIMENTAL_ROLE);
         CvTerm xref= terms.get(PARTICIPANT_XREF);
@@ -158,6 +157,8 @@ public class InteractionsCreator {
         String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
         Xref uniqueId = new XmlXref(participantIdDb, participantId);
 
+        Xref authorName = new XmlXref(participantIdDb, name, utils.fetchTerm("author input"));
+
         if (participantOrganism == null || participantOrganism.isEmpty()) {
             LOGGER.warning("Missing or invalid participant organism for participant: " + name);
             return null;
@@ -166,6 +167,7 @@ public class InteractionsCreator {
         Organism organism = createOrganism(participantOrganism);
 
         Interactor participant = new XmlPolymer(name, organism, uniqueId);
+
 
         switch (participantIdDb.getShortName().toLowerCase()){ //todo: check with kalpana for the dbs
             case "uniprot knowledge base":
@@ -213,6 +215,7 @@ public class InteractionsCreator {
             xmlXref.getDatabase().setFullName(xrefDb.getShortName());
             xmlXref.getDatabase().setMIIdentifier(xrefDb.getMIIdentifier());
             participantEvidence.getXrefs().add(xmlXref);
+            participantEvidence.getXrefs().add(authorName);
         }
 
         if (participantIdentificationMethod != null) {
@@ -449,7 +452,7 @@ public class InteractionsCreator {
      * <p>Logs warnings for null input, missing Tax ID, or invalid Tax ID format.</p>
      */
     private Organism createOrganism(String hostOrganism) {
-        if (hostOrganism == null) {
+        if (hostOrganism == null || hostOrganism.contains("organism") || hostOrganism.isEmpty()) {
             LOGGER.warning("Host organism is null. Skipping organism creation.");
             return null;
         }

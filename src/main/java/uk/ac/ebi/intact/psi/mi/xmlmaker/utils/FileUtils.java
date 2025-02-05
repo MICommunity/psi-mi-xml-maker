@@ -28,7 +28,7 @@ public class FileUtils {
      * @return the string representation of the cell's value.
      */
     public static String getCellValueAsString(Cell cell) {
-        if (cell == null) return "N/A";
+        if (cell == null) return "";
         switch (cell.getCellType()) {
             case STRING:
                 return cell.getStringCellValue();
@@ -43,7 +43,7 @@ public class FileUtils {
             case FORMULA:
                 return cell.getCellFormula();
             default:
-                return "N/A";
+                return "";
         }
     }
 }

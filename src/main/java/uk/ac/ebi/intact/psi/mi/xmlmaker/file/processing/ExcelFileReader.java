@@ -362,8 +362,11 @@ public class ExcelFileReader  {
                 if (previousIdDbColumnIndex != -1){
                     previousDb = row.get(previousIdDbColumnIndex);
                 }
+
                 if (organismColumnIndex != -1){
-                    updatedOrganism = row.get(organismColumnIndex);
+                    if (!row.get(organismColumnIndex).toLowerCase().contains("organism") || !row.get(organismColumnIndex).isEmpty()) {
+                        updatedOrganism = row.get(organismColumnIndex);
+                    }
                 }
 
                 UniprotResult alreadyParsedParticipant = alreadyParsed.get(previousId);
@@ -457,7 +460,15 @@ public class ExcelFileReader  {
 
                 String previousId = FileUtils.getCellValueAsString(row.getCell(idColumnIndex));
                 String previousDb = idDbColumnIndex != -1 ? FileUtils.getCellValueAsString(row.getCell(idDbColumnIndex)) : null;
-                String organism = organismColumnIndex != -1 ? FileUtils.getCellValueAsString(row.getCell(organismColumnIndex)) : null;
+
+                String organism = null;
+
+                if (organismColumnIndex != -1) {
+                    String organismTmp = FileUtils.getCellValueAsString(row.getCell(organismColumnIndex)).trim();
+                    if (!organismTmp.toLowerCase().contains("organism") && !organismTmp.isEmpty()) {
+                        organism = organismTmp;
+                    }
+                }
 
                 if (previousId == null || previousId.isEmpty()) {
                     LOGGER.warning("Skipping row with null or empty ID: " + row);
@@ -528,18 +539,23 @@ public class ExcelFileReader  {
      */
     private UniprotResult getOneUniprotId(String previousId, String previousIdDb, String organism) {
         ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
+
         if (uniprotResults.isEmpty()) {
+            LOGGER.warning("No uniprot results for ID: " + previousId);
             return null;
         }
 
         List<UniprotResult> swissProtEntries = new ArrayList<>();
         List<UniprotResult> tremblEntries = new ArrayList<>();
+        List<UniprotResult> noEntryTypes = new ArrayList<>();
 
         for (UniprotResult result : uniprotResults) {
             if ("UniProtKB reviewed (Swiss-Prot)".equals(result.getEntryType())) {
                 swissProtEntries.add(result);
             } else if ("UniProtKB unreviewed (TrEMBL)".equals(result.getEntryType())) {
                 tremblEntries.add(result);
+            } else if (result.getEntryType() == null){
+                noEntryTypes.add(result);
             }
         }
 
@@ -564,12 +580,14 @@ public class ExcelFileReader  {
             for (UniprotResult uniprotResult : swissProtEntries) {
                 if (uniprotResult.getUniprotAc().equals(mapperGui.getSelectedId())) {
                     oneUniprotId = uniprotResult;
-                    break;
+                    return oneUniprotId;
                 }
             }
         } else if (!tremblEntries.isEmpty()) {
             tremblEntries.sort(Comparator.comparingInt(UniprotResult::getSequenceSize).reversed());
             oneUniprotId = tremblEntries.get(0);
+        } else if (!noEntryTypes.isEmpty()) {
+            oneUniprotId = noEntryTypes.get(0);
         }
 
         if (oneUniprotId != null && moleculeSetChecker.isProteinPartOfMoleculeSet(oneUniprotId.getUniprotAc())) {
