@@ -2,6 +2,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.*;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import javax.swing.*;
 import java.awt.*;
@@ -156,29 +157,53 @@ public class ParticipantAndInteractionCreatorGui {
      *
      * @return A map containing the selected details, mapped by their respective data keys.
      */
-    public Map<String, String> getParticipantDetails(){
+    public Map<String, String> getParticipantDetails() {
         Map<String, String> participantDetails = new HashMap<>();
 
-        participantDetails.put(DataForRawFile.BAIT_ID_DB.name, Objects.requireNonNull(baitIdDatabase.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.PREY_ID_DB.name, Objects.requireNonNull(preyIdDatabase.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.INTERACTION_DETECTION_METHOD.name, Objects.requireNonNull(interactionDetectionMethodCombobox.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.BAIT_EXPERIMENTAL_PREPARATION.name, Objects.requireNonNull(getBaitExperimentalPreparationsAsString()));
-        participantDetails.put(DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name, Objects.requireNonNull(preyExperimentalPreparation.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.PARTICIPANT_DETECTION_METHOD.name, Objects.requireNonNull(participantDetectionMethodCombobox.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.BAIT_BIOLOGICAL_ROLE.name, Objects.requireNonNull(baitBiologicalRole.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.PREY_BIOLOGICAL_ROLE.name, Objects.requireNonNull(preyBiologicalRole.getSelectedItem()).toString());
+        participantDetails.put(DataForRawFile.BAIT_ID_DB.name,
+                checkValue(baitIdDatabase.getSelectedItem(), DataForRawFile.BAIT_ID_DB.name));
+        participantDetails.put(DataForRawFile.PREY_ID_DB.name,
+                checkValue(preyIdDatabase.getSelectedItem(), DataForRawFile.PREY_ID_DB.name));
+        participantDetails.put(DataForRawFile.INTERACTION_DETECTION_METHOD.name,
+                checkValue(interactionDetectionMethodCombobox.getSelectedItem(), DataForRawFile.INTERACTION_DETECTION_METHOD.name));
+        participantDetails.put(DataForRawFile.BAIT_EXPERIMENTAL_PREPARATION.name,
+                checkValue(getBaitExperimentalPreparationsAsString(), DataForRawFile.BAIT_EXPERIMENTAL_PREPARATION.name));
+        participantDetails.put(DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name,
+                checkValue(preyExperimentalPreparation.getSelectedItem(), DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
+        participantDetails.put(DataForRawFile.PARTICIPANT_DETECTION_METHOD.name,
+                checkValue(participantDetectionMethodCombobox.getSelectedItem(), DataForRawFile.PARTICIPANT_DETECTION_METHOD.name));
+        participantDetails.put(DataForRawFile.BAIT_BIOLOGICAL_ROLE.name,
+                checkValue(baitBiologicalRole.getSelectedItem(), DataForRawFile.BAIT_BIOLOGICAL_ROLE.name));
+        participantDetails.put(DataForRawFile.PREY_BIOLOGICAL_ROLE.name,
+                checkValue(preyBiologicalRole.getSelectedItem(), DataForRawFile.PREY_BIOLOGICAL_ROLE.name));
 
-        participantDetails.put(DataForRawFile.BAIT_ORGANISM.name, XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()));
-        participantDetails.put(DataForRawFile.PREY_ORGANISM.name, XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()));
+        participantDetails.put(DataForRawFile.BAIT_ORGANISM.name,
+                checkValue(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()), DataForRawFile.BAIT_ORGANISM.name));
+        participantDetails.put(DataForRawFile.PREY_ORGANISM.name,
+                checkValue(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), DataForRawFile.PREY_ORGANISM.name));
 
-        participantDetails.put(DataForRawFile.BAIT_FEATURE_TYPE.name, Objects.requireNonNull(baitFeatureType.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.BAIT_FEATURE_START_LOCATION.name, Objects.requireNonNull(baitFeatureStartLocation.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.BAIT_FEATURE_END_LOCATION.name, Objects.requireNonNull(baitFeatureEndLocation.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.BAIT_FEATURE_RANGE_TYPE.name, Objects.requireNonNull(baitFeatureRangeType.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.BAIT_FEATURE_XREF.name, Objects.requireNonNull(baitFeatureXref.getSelectedItem()).toString());
-        participantDetails.put(DataForRawFile.BAIT_FEATURE_XREF_DB.name, Objects.requireNonNull(baitFeatureXrefDb.getSelectedItem()).toString());
+        participantDetails.put(DataForRawFile.BAIT_FEATURE_TYPE.name,
+                checkValue(baitFeatureType.getSelectedItem(), DataForRawFile.BAIT_FEATURE_TYPE.name));
+        participantDetails.put(DataForRawFile.BAIT_FEATURE_START_LOCATION.name,
+                checkValue(baitFeatureStartLocation.getSelectedItem(), DataForRawFile.BAIT_FEATURE_START_LOCATION.name));
+        participantDetails.put(DataForRawFile.BAIT_FEATURE_END_LOCATION.name,
+                checkValue(baitFeatureEndLocation.getSelectedItem(), DataForRawFile.BAIT_FEATURE_END_LOCATION.name));
+        participantDetails.put(DataForRawFile.BAIT_FEATURE_RANGE_TYPE.name,
+                checkValue(baitFeatureRangeType.getSelectedItem(), DataForRawFile.BAIT_FEATURE_RANGE_TYPE.name));
+        participantDetails.put(DataForRawFile.BAIT_FEATURE_XREF.name,
+                checkValue(baitFeatureXref.getSelectedItem(), DataForRawFile.BAIT_FEATURE_XREF.name));
+        participantDetails.put(DataForRawFile.BAIT_FEATURE_XREF_DB.name,
+                checkValue(baitFeatureXrefDb.getSelectedItem(), DataForRawFile.BAIT_FEATURE_XREF_DB.name));
 
         return participantDetails;
+    }
+
+    private String checkValue(Object value, String keyName) {
+        if (value == null) {
+            return "";
+        }
+        String stringValue = value.toString();
+        return stringValue.equals(keyName) ? "" : stringValue;
     }
 
     /**
@@ -240,8 +265,8 @@ public class ParticipantAndInteractionCreatorGui {
         List<String> selectedPreparations = new ArrayList<>();
 
         for (JComboBox<String> comboBox : baitExperimentalPreparationList) {
-            String selectedValue = (String) comboBox.getSelectedItem();
-            if (selectedValue != null) {
+            String selectedValue = checkValue(comboBox.getSelectedItem(), DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name);
+            if (selectedValue != null && !selectedValue.isEmpty()) {
                 selectedPreparations.add(selectedValue);
             }
         }

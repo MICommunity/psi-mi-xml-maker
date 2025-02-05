@@ -11,7 +11,7 @@ public enum DataTypeAndColumn {
     INTERACTION_TYPE("Interaction type"),
     INTERACTION_DETECTION_METHOD("Interaction detection method"),
     HOST_ORGANISM("Host organism"),
-    EXPERIMENTAL_PREPARATION("Experimental preparation"),
+    EXPERIMENTAL_PREPARATION("Experimental Preparation"),
 
     PARTICIPANT_NAME("Participant name"),
     PARTICIPANT_ID("Participant ID"),

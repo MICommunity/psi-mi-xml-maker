@@ -143,9 +143,12 @@ public class FileFormater {
             while (iterator.hasNext()) {
                 List<String> row = iterator.next();
                 String bait = row.get(baitColumnIndex);
-                String baitName = row.get(baitNameColumnIndex);
                 String prey = row.get(preyColumnIndex);
-                String preyName = row.get(preyNameColumnIndex);
+
+                String baitName = baitNameColumnIndex == -1 ? "" : row.get(baitNameColumnIndex);
+                String preyName = preyNameColumnIndex == -1 ? "" : row.get(preyNameColumnIndex);
+
+
                 interactionNumber++;
                 addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait");
                 addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey");
@@ -158,11 +161,13 @@ public class FileFormater {
             String baitName = row.get(baitNameColumnIndex);
             String prey = row.get(preyColumnIndex);
             String preyName = row.get(preyNameColumnIndex);
+
+
             if (lastBait == null || !lastBait.equals(bait)) {
                 interactionNumber++;
                 lastBait = bait;
                 addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey");
-                addNewParticipant(String.valueOf(interactionNumber), bait, baitName,"bait");
+                addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait");
             } else {
                 lastBait = bait;
                 addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey");
@@ -171,6 +176,7 @@ public class FileFormater {
 
         iterator.remove();
     }
+
 
     /**
      * Reads and formats an Excel file by extracting bait and prey interactions.
@@ -194,10 +200,10 @@ public class FileFormater {
         while (iterator.hasNext()) {
             Row row = iterator.next();
             String bait = FileUtils.getCellValueAsString(row.getCell(baitColumnIndex));
-            String baitName = FileUtils.getCellValueAsString(row.getCell(baitNameColumnIndex));
             String prey = FileUtils.getCellValueAsString(row.getCell(preyColumnIndex));
-            String preyName = FileUtils.getCellValueAsString(row.getCell(preyNameColumnIndex));
 
+            String baitName = baitNameColumnIndex == -1 ? "" : FileUtils.getCellValueAsString(row.getCell(baitNameColumnIndex));
+            String preyName = preyNameColumnIndex == -1 ? "" : FileUtils.getCellValueAsString(row.getCell(preyNameColumnIndex));
 
             if (binary) {
                 interactionNumber++;
@@ -214,6 +220,7 @@ public class FileFormater {
         }
         iterator.remove();
     }
+
 
     /**
      * Adds a new participantId to the formatted data structure.
