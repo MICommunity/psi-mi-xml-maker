@@ -168,14 +168,18 @@ public class InteractionsCreator {
 
         Interactor participant = new XmlPolymer(name, organism, uniqueId);
 
-
         switch (participantIdDb.getShortName().toLowerCase()){ //todo: check with kalpana for the dbs
             case "uniprot knowledge base":
+            case "uniprotkb":
+            case "uniprot":
                 participant = new XmlProtein(name, organism, uniqueId);
                 break;
             case "rnacentral":
             case "refseq":
+            case "ensembltranscript":
                 participant = new XmlNucleicAcid(name, organism, uniqueId);
+                CvTerm rnaTerm = utils.fetchTerm("rna");
+                participant.setInteractorType(rnaTerm); //todo: check here
                 break;
             case "chebi":
                 participant = new XmlMolecule(name, organism, uniqueId);
@@ -186,8 +190,7 @@ public class InteractionsCreator {
             case "geneid":
             case "entrez gene/locuslink":
             case "genedb":
-                participant = new XmlGene(name, organism, uniqueId);
-            default:
+                participant = new XmlGene(name, organism, uniqueId); default:
                 break;
         }
 

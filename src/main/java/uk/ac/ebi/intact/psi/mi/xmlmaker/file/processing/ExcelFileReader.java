@@ -269,21 +269,6 @@ public class ExcelFileReader  {
     //MODIFY AND WRITE FILES
 
     /**
-     * Retrieves the number of features based on columns containing "FeatureShortLabel".
-     *
-     * @return The number of features found.
-     */
-    public int getNumberOfFeatures() {
-        int numberOfFeatures = 0;
-        for (String column : columns) {
-            if (column.toLowerCase().contains("featureshortlabel")) {
-                numberOfFeatures++;
-            }
-        }
-        return numberOfFeatures;
-    }
-
-    /**
      * Registers an event listener for the InputSelectedEvent.
      *
      * @param listener the listener to be added.
@@ -538,16 +523,19 @@ public class ExcelFileReader  {
      * @return A {@link UniprotResult} object representing the selected UniProt ID, or {@code null} if no entries exist.
      */
     private UniprotResult getOneUniprotId(String previousId, String previousIdDb, String organism) {
+        UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui(uniprotGeneralMapper);
         ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
-
-        if (uniprotResults.isEmpty()) {
-            LOGGER.warning("No uniprot results for ID: " + previousId);
-            return null;
-        }
-
+        UniprotResult oneUniprotId = null;
         List<UniprotResult> swissProtEntries = new ArrayList<>();
         List<UniprotResult> tremblEntries = new ArrayList<>();
         List<UniprotResult> noEntryTypes = new ArrayList<>();
+
+        if (uniprotResults.isEmpty()) {
+            mapperGui.getParticipantChoicePanel(previousId);
+            oneUniprotId = new UniprotResult(previousId, previousId, organism, null, null,
+                    previousIdDb, -1, mapperGui.getSelectedParticipantType());
+            return oneUniprotId;
+        }
 
         for (UniprotResult result : uniprotResults) {
             if ("UniProtKB reviewed (Swiss-Prot)".equals(result.getEntryType())) {
@@ -559,14 +547,10 @@ public class ExcelFileReader  {
             }
         }
 
-        UniprotResult oneUniprotId = null;
-
         if (swissProtEntries.size() == 1) {
-            oneUniprotId = swissProtEntries.get(0);
+            return swissProtEntries.get(0);
         } else if (swissProtEntries.size() > 1) {
-            UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui(uniprotGeneralMapper);
             mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup(), previousId);
-
             synchronized (this) {
                 while (mapperGui.getSelectedId() == null) {
                     try {
@@ -576,7 +560,6 @@ public class ExcelFileReader  {
                     }
                 }
             }
-
             for (UniprotResult uniprotResult : swissProtEntries) {
                 if (uniprotResult.getUniprotAc().equals(mapperGui.getSelectedId())) {
                     oneUniprotId = uniprotResult;

@@ -50,6 +50,7 @@ public class FileFormaterGui {
      */
     public JPanel getFileFormaterPanel() {
         JPanel fileFormaterPanel = new JPanel();
+        fileFormaterPanel.setPreferredSize(new Dimension(600, 500));
         fileFormaterPanel.setLayout(new BoxLayout(fileFormaterPanel, BoxLayout.X_AXIS));
 
         JPanel wrapperSheetSelection = new JPanel(new FlowLayout(FlowLayout.RIGHT));

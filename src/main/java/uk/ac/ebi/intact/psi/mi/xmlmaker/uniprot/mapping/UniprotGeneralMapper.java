@@ -113,8 +113,9 @@ public class UniprotGeneralMapper {
         ArrayList<UniprotResult> uniprotResults = new ArrayList<>();
 
         if (results.isJsonNull()) {
-            uniprotResults.add(new UniprotResult(protein, protein, inputOrganism, null,
-                    null, previousDb, 0));
+//            uniprotResults.add(new UniprotResult(protein, protein, inputOrganism, null,
+//                    null, previousDb, 0, "protein")); //todo: change
+//            return uniprotResults;
             return uniprotResults;
         }
 
@@ -143,7 +144,8 @@ public class UniprotGeneralMapper {
             }
             uniprotLink = "https://www.uniprot.org/uniprotkb/" + uniprotAc;
 
-            UniprotResult oneResult = new UniprotResult(uniprotAc, name, organism, entryType, uniprotLink, "UniprotKB", sequenceSize); //todo: keep the previous id if not found
+            UniprotResult oneResult = new UniprotResult(uniprotAc, name, organism,
+                    entryType, uniprotLink, "UniprotKB", sequenceSize, "protein"); //todo: keep the previous id if not found
             uniprotResults.add(oneResult);
         }
 

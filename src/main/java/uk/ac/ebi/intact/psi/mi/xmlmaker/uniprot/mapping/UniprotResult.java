@@ -12,8 +12,10 @@ public class UniprotResult {
     private String uniprotLink;
     private String idDb;
     private int sequenceSize;
+    private String participantType;
 
-    public UniprotResult(String uniprotAc, String name, String organism, String entryType, String uniprotLink, String idDb, int sequenceSize) {
+    public UniprotResult(String uniprotAc, String name, String organism, String entryType,
+                         String uniprotLink, String idDb, int sequenceSize,  String participantType) {
         this.uniprotAc = uniprotAc;
         this.name = name;
         this.organism = organism;
@@ -21,5 +23,6 @@ public class UniprotResult {
         this.uniprotLink = uniprotLink;
         this.idDb = idDb;
         this.sequenceSize = sequenceSize;
+        this.participantType = participantType;
     }
 }
