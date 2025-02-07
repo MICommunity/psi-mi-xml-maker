@@ -65,17 +65,17 @@ public class UniprotGeneralMapper {
      * @return A {@link JsonObject} representing the response from the UniProt API.
      */
     public JsonObject getUniprotResponse(String protein, String previousDb, String organism){
-        StringBuilder test = new StringBuilder("https://rest.uniprot.org/uniprotkb/search?query=(xref:");
-        test.append(protein);
+        StringBuilder urlBuilder = new StringBuilder("https://rest.uniprot.org/uniprotkb/search?query=(xref:");
+        urlBuilder.append(protein);
         if (organism != null) {
-            test.append("%20AND%20organism_id:").append(organism);
+            urlBuilder.append("%20AND%20organism_id:").append(organism);
         }
         if (previousDb != null && !previousDb.equalsIgnoreCase("uniprotkb")) {
-            test.append("%20AND%20database:").append(previousDb);
+            urlBuilder.append("%20AND%20database:").append(previousDb);
         }
-        test.append(")");
+        urlBuilder.append(")");
 
-        String urlString = test.toString();
+        String urlString = urlBuilder.toString();
 
         try {
             URL url = new URL(urlString);
@@ -160,13 +160,15 @@ public class UniprotGeneralMapper {
      */
     private void setButtonGroup(ArrayList<UniprotResult> results){
         buttonGroup = new ButtonGroup();
-        for (UniprotResult result : results){
-            JRadioButton button = new JRadioButton();
-            String buttonText = "<html><b>" + result.getUniprotAc() + "</b> (Tax ID:" + result.getOrganism() + ") - " +
-                    result.getEntryType() + " - <a href=\"" + result.getUniprotLink() + "\">" + result.getUniprotLink() + "</a></html>";
-            button.setText(buttonText);
-            button.setName(result.getUniprotAc());
-            buttonGroup.add(button);
+        for (UniprotResult result : results) {
+            if ("UniProtKB reviewed (Swiss-Prot)".equals(result.getEntryType())) {
+                JRadioButton button = new JRadioButton();
+                String buttonText = "<html><b>" + result.getUniprotAc() + "</b> (Tax ID:" + result.getOrganism() + ") - " +
+                        result.getEntryType() + " - <a href=\"" + result.getUniprotLink() + "\">" + result.getUniprotLink() + "</a></html>";
+                button.setText(buttonText);
+                button.setName(result.getUniprotAc());
+                buttonGroup.add(button);
+            }
         }
     }
 }

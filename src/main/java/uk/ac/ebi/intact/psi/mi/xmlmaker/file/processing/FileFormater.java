@@ -46,8 +46,7 @@ public class FileFormater {
             "Experimental role", "Input Participant ID database",
             "Interaction detection method", "Participant identification method", "Experimental preparation",
             "Biological role", "Participant organism", "Feature type", "Feature start", "Feature end", "Feature range type",
-            "Feature xref", "Feature xref database"
-    };
+            "Feature xref", "Feature xref database"};
 
     private final Map<String, Integer> participantCountMap = new HashMap<>();
 
@@ -176,7 +175,6 @@ public class FileFormater {
 
         iterator.remove();
     }
-
 
     /**
      * Reads and formats an Excel file by extracting bait and prey interactions.

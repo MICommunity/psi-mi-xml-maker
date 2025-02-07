@@ -435,6 +435,7 @@ public class ExcelFileReader  {
             headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant ID database");
             headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant organism");
             headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant name");
+            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant type");
 
             while (iterator.hasNext()) {
                 Row row = iterator.next();
@@ -466,16 +467,19 @@ public class ExcelFileReader  {
                 String uniprotResultDb = previousDb;
                 String updatedOrganism = organism;
                 String participantName = previousId;
+                String participantType = null;
 
                 if (alreadyParsedParticipant == null) {
                     UniprotResult result = getOneUniprotId(previousId, previousDb, organism);
                     if (result == null) {
+                        System.out.println(result);
                         LOGGER.warning("No UniProt results for ID: " + previousId);
                     } else {
                         uniprotResult = result.getUniprotAc();
                         uniprotResultDb = result.getIdDb();
                         updatedOrganism = result.getOrganism();
                         participantName = result.getName();
+                        participantType = result.getParticipantType();
 
                         alreadyParsed.put(previousId, result);
                     }
@@ -484,12 +488,14 @@ public class ExcelFileReader  {
                     uniprotResultDb = alreadyParsedParticipant.getIdDb();
                     updatedOrganism = alreadyParsedParticipant.getOrganism();
                     participantName = alreadyParsedParticipant.getName();
+                    participantType = alreadyParsedParticipant.getParticipantType();
                 }
 
                 row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(uniprotResult != null ? uniprotResult : previousId);
                 row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(uniprotResultDb != null ? uniprotResultDb : "");
                 row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(updatedOrganism != null ? updatedOrganism : "");
                 row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(participantName != null ? participantName : "");
+                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(participantType != null ? participantType : "");
             }
 
             workbook.write(fileOut);
@@ -526,6 +532,7 @@ public class ExcelFileReader  {
         UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui(uniprotGeneralMapper);
         ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
         UniprotResult oneUniprotId = null;
+
         List<UniprotResult> swissProtEntries = new ArrayList<>();
         List<UniprotResult> tremblEntries = new ArrayList<>();
         List<UniprotResult> noEntryTypes = new ArrayList<>();

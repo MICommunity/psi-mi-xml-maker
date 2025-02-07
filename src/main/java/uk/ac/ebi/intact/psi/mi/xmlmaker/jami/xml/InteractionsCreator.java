@@ -151,6 +151,7 @@ public class InteractionsCreator {
         CvTerm xref= terms.get(PARTICIPANT_XREF);
         CvTerm xrefDb = terms.get(PARTICIPANT_XREF_DB);
         CvTerm participantIdentificationMethod = terms.get(PARTICIPANT_IDENTIFICATION_METHOD);
+        CvTerm participantType = terms.get(PARTICIPANT_TYPE);
 
         String name = Objects.requireNonNull(data.get(PARTICIPANT_NAME.name), "The participant name cannot be null");
         String participantId = data.get(PARTICIPANT_ID.name);
@@ -168,29 +169,22 @@ public class InteractionsCreator {
 
         Interactor participant = new XmlPolymer(name, organism, uniqueId);
 
-        switch (participantIdDb.getShortName().toLowerCase()){ //todo: check with kalpana for the dbs
-            case "uniprot knowledge base":
-            case "uniprotkb":
-            case "uniprot":
+        switch (data.get(PARTICIPANT_TYPE.name).toLowerCase().trim()){
+            case "protein":
                 participant = new XmlProtein(name, organism, uniqueId);
                 break;
-            case "rnacentral":
-            case "refseq":
-            case "ensembltranscript":
+            case "nucleic acid":
                 participant = new XmlNucleicAcid(name, organism, uniqueId);
                 CvTerm rnaTerm = utils.fetchTerm("rna");
                 participant.setInteractorType(rnaTerm); //todo: check here
                 break;
-            case "chebi":
+            case "molecule":
                 participant = new XmlMolecule(name, organism, uniqueId);
                 break;
-            case "ensembl":
-            case "ensemblbacteria":
-            case "ensemblfungi":
-            case "geneid":
-            case "entrez gene/locuslink":
-            case "genedb":
-                participant = new XmlGene(name, organism, uniqueId); default:
+            case "gene":
+                participant = new XmlGene(name, organism, uniqueId);
+                break;
+            default:
                 break;
         }
 

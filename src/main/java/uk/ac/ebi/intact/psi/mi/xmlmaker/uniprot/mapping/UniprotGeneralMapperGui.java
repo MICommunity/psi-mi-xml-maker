@@ -98,19 +98,4 @@ public class UniprotGeneralMapperGui {
             selectedParticipantType = null;
         }
     }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Participant Choice");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-            UniprotGeneralMapper generalMapper = null; // Replace with a valid instance if needed
-            UniprotGeneralMapperGui gui = new UniprotGeneralMapperGui(generalMapper);
-
-            gui.getParticipantChoicePanel("P12345");
-
-            frame.pack();
-            frame.setVisible(true);
-        });
-    }
 }
