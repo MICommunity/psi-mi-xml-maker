@@ -42,11 +42,15 @@ public class FileFormater {
 
     @Setter
     private Map<String, String> interactionData = new HashMap<>();
+    @Setter
+    private List<Map<String, String>> baitFeatures = new ArrayList<>();
+    @Setter
+    private List<Map<String, String>> preyFeatures = new ArrayList<>();
+
     private String[] header = {"Interaction Number", "Input Participant ID", "Input Participant Name",
             "Experimental role", "Input Participant ID database",
             "Interaction detection method", "Participant identification method", "Experimental preparation",
-            "Biological role", "Participant organism", "Feature type", "Feature start", "Feature end", "Feature range type",
-            "Feature xref", "Feature xref database"};
+            "Biological role", "Participant organism"};
 
     private final Map<String, Integer> participantCountMap = new HashMap<>();
 
@@ -87,6 +91,7 @@ public class FileFormater {
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXlsx = new XSSFWorkbook();
                 postProcessInteractions();
+                postProcessFeatures();
                 writeToExcel(newFormat, modifiedFileName + ".xlsx", workbookXlsx);
                 newFileName = modifiedFileName + ".xlsx";
                 break;
@@ -95,6 +100,7 @@ public class FileFormater {
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXls = new HSSFWorkbook();
                 postProcessInteractions();
+                postProcessFeatures();
                 writeToExcel(newFormat, modifiedFileName + ".xls", workbookXls);
                 newFileName = modifiedFileName + ".xls";
                 break;
@@ -102,6 +108,7 @@ public class FileFormater {
                 LOGGER.info("Reading csv file: " + fileName);
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
                 postProcessInteractions();
+                postProcessFeatures();
                 writeToFile(newFormat, modifiedFileName + ".csv", ',');
                 newFileName = modifiedFileName + ".csv";
                 break;
@@ -109,6 +116,7 @@ public class FileFormater {
                 LOGGER.info("Reading tsv file: " + fileName);
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
                 postProcessInteractions();
+                postProcessFeatures();
                 writeToFile(newFormat, modifiedFileName + ".tsv", '\t');
                 newFileName = modifiedFileName + ".tsv";
                 break;
@@ -238,12 +246,12 @@ public class FileFormater {
         participantCountMap.put(interactionNumber, participantCountMap.getOrDefault(interactionNumber, 0) + 1);
 
         for (DataForRawFile data : DataForRawFile.values()) {
-            if (data.isCommon) {
+            if (data.isCommon && !data.isFeature) {
                 newParticipant.add(interactionData.get(data.name));
             } else {
-                if ("bait".equalsIgnoreCase(participantType) && data.isBait) {
+                if ("bait".equalsIgnoreCase(participantType) && data.isBait && !data.isFeature) {
                     newParticipant.add(interactionData.get(data.name));
-                } else if ("prey".equalsIgnoreCase(participantType) && !data.isBait) {
+                } else if ("prey".equalsIgnoreCase(participantType) && !data.isBait && !data.isFeature) {
                     newParticipant.add(interactionData.get(data.name));
                 }
             }
@@ -337,5 +345,55 @@ public class FileFormater {
                 row.add("physical interaction");
             }
         }
+    }
+
+    private void postProcessFeatures() {
+        int numberOfColumnsToAdd = numberOfFeaturesColumns() * 6;
+        ArrayList<String> featuresHeader = getFeaturesHeader();
+        String[] extendedHeader = Arrays.copyOf(header, header.length + numberOfColumnsToAdd);
+
+        for (int i = 0; i < featuresHeader.size(); i++) {
+            extendedHeader[header.length + i] = featuresHeader.get(i);
+        }
+
+        header = extendedHeader;
+
+        for (List<String> row : newFormat) {
+            String participantExperimentalRole = row.get(3);
+            if (participantExperimentalRole.trim().equals("prey")){
+                addFeatureToRow(row, preyFeatures);
+            } else if (participantExperimentalRole.trim().equals("bait")){
+                addFeatureToRow(row, baitFeatures);
+            }
+        }
+    }
+
+    private void addFeatureToRow(List<String> row, List<Map<String, String>> baitFeatures) {
+        for (Map<String, String> feature : baitFeatures) {
+            row.add(feature.get(DataForRawFile.FEATURE_TYPE.name));
+            row.add(feature.get(DataForRawFile.FEATURE_START_LOCATION.name));
+            row.add(feature.get(DataForRawFile.FEATURE_END_LOCATION.name));
+            row.add(feature.get(DataForRawFile.FEATURE_RANGE_TYPE.name));
+            row.add(feature.get(DataForRawFile.FEATURE_XREF.name));
+            row.add(feature.get(DataForRawFile.FEATURE_XREF_DB.name));
+        }
+    }
+
+    private int numberOfFeaturesColumns() {
+        int numberOfBaitFeatures = baitFeatures.size();
+        int numberOfPreyFeatures = preyFeatures.size();
+        return Math.max(numberOfBaitFeatures, numberOfPreyFeatures);
+    }
+
+    private ArrayList<String> getFeaturesHeader(){
+        ArrayList<String> header = new ArrayList<>();
+        for (int i = 0; i < numberOfFeaturesColumns(); i++) {
+            for (DataForRawFile data : DataForRawFile.values()) {
+                if (data.isFeature){
+                    header.add(data.name + "_" + i);
+                }
+            }
+        }
+        return header;
     }
 }

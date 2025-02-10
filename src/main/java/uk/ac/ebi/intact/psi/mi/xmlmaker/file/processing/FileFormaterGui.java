@@ -3,6 +3,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -50,7 +51,7 @@ public class FileFormaterGui {
      */
     public JPanel getFileFormaterPanel() {
         JPanel fileFormaterPanel = new JPanel();
-        fileFormaterPanel.setPreferredSize(new Dimension(600, 500));
+//        fileFormaterPanel.setPreferredSize(new Dimension(2_000, 500));
         fileFormaterPanel.setLayout(new BoxLayout(fileFormaterPanel, BoxLayout.X_AXIS));
 
         JPanel wrapperSheetSelection = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -183,6 +184,9 @@ public class FileFormaterGui {
         JButton fileFormaterButton = new JButton("Format file");
         fileFormaterButton.addActionListener(e -> {
             Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
+
+            fileFormater.setBaitFeatures(participantAndInteractionCreatorGui.getFeaturesData(true));
+            fileFormater.setPreyFeatures(participantAndInteractionCreatorGui.getFeaturesData(false));
             formatFile(fileFormaterCheckBox.isSelected(), interactionData);
         });
 

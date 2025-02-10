@@ -472,7 +472,6 @@ public class ExcelFileReader  {
                 if (alreadyParsedParticipant == null) {
                     UniprotResult result = getOneUniprotId(previousId, previousDb, organism);
                     if (result == null) {
-                        System.out.println(result);
                         LOGGER.warning("No UniProt results for ID: " + previousId);
                     } else {
                         uniprotResult = result.getUniprotAc();
