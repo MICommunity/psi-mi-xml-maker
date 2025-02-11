@@ -184,7 +184,6 @@ public class FileFormaterGui {
         JButton fileFormaterButton = new JButton("Format file");
         fileFormaterButton.addActionListener(e -> {
             Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
-
             fileFormater.setBaitFeatures(participantAndInteractionCreatorGui.getFeaturesData(true));
             fileFormater.setPreyFeatures(participantAndInteractionCreatorGui.getFeaturesData(false));
             formatFile(fileFormaterCheckBox.isSelected(), interactionData);

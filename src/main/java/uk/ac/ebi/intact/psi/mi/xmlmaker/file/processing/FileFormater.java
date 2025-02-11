@@ -36,10 +36,10 @@ import java.util.logging.Logger;
 public class FileFormater {
     final ExcelFileReader excelFileReader;
 
-    @Getter
-    private final List<List<String>> newFormat = new ArrayList<>();
     private static final Logger LOGGER = Logger.getLogger(FileFormater.class.getName());
 
+    @Getter
+    private final List<List<String>> newFormat = new ArrayList<>();
     @Setter
     private Map<String, String> interactionData = new HashMap<>();
     @Setter

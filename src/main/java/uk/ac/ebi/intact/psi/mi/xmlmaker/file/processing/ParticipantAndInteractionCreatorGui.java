@@ -50,7 +50,8 @@ public class ParticipantAndInteractionCreatorGui {
 
     private final JPanel baitExperimentalPanel = new JPanel(new GridLayout(2, 1));
 
-    private final Dimension panelDimension = new Dimension(500, 500);
+    private final int HEIGHT = 300;
+    private final Dimension panelDimension = new Dimension(500, HEIGHT);
 
     private final List<String> featureRangeTypeCache = new ArrayList<>();
     private final List<String> featureTypeCache = new ArrayList<>();
@@ -58,6 +59,13 @@ public class ParticipantAndInteractionCreatorGui {
 
     private final List<Map<String, JComboBox<String>>> preyFeaturesComboBoxes = new ArrayList<>();
     private final List<Map<String, JComboBox<String>>> baitFeaturesComboBoxes = new ArrayList<>();
+
+//    private final Map<String, Map<String, JComboBox<String>>> featureAndXrefs = new HashMap<>();
+
+    private final List<JComboBox<String>> baitFeatureXrefs = new ArrayList<>();
+    private final List<JComboBox<String>> preyFeatureXrefs = new ArrayList<>();
+    private final List<JComboBox<String>> baitFeatureXrefDb = new ArrayList<>();
+    private final List<JComboBox<String>> preyFeatureXrefDb = new ArrayList<>();
 
     /**
      * Creates the GUI panel for selecting participant and interaction details.
@@ -174,8 +182,6 @@ public class ParticipantAndInteractionCreatorGui {
         participantDetails.put(DataForRawFile.PREY_ORGANISM.name,
                 checkValue(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), DataForRawFile.PREY_ORGANISM.name));
 
-        //TODO: CHECK HOW TO ADD FEATURES
-
         return participantDetails;
     }
 
@@ -225,10 +231,16 @@ public class ParticipantAndInteractionCreatorGui {
     }
 
     private void updateBaitExperimentalPreparations(int count) {
-        baitExperimentalPanel.removeAll();
-        baitExperimentalPreparationList.clear();
+//        baitExperimentalPanel.removeAll(); //todo: check for decreasing number
+        int numberExperiments = baitExperimentalPanel.getComponents().length;
+//        baitExperimentalPreparationList.clear();
 
-        for (int i = 0; i < count; i++) {
+//        if (numberExperiments > count) {
+//            baitExperimentalPanel.removeAll();
+//            baitExperimentalPreparationList.clear();
+//        }
+
+        for (int i = numberExperiments; i < count; i++) {
             JComboBox<String> comboBox = new JComboBox<>();
             comboBox.addItem("Experimental Preparation");
 
@@ -297,6 +309,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         numberOfExperimentalPrep.setPreferredSize(new Dimension(200, 100));
         numberOfExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Select number of experimental preparations"));
+        numberOfExperimentalPrep.add(baitExperimentalPanel);
         baitPanel.add(numberOfExperimentalPrep);
         baitPanel.add(baitExperimentalPanel);
 
@@ -312,7 +325,7 @@ public class ParticipantAndInteractionCreatorGui {
 
     public JPanel createPreyPanel() {
         JPanel preyPanel = new JPanel();
-        preyPanel.setLayout(new GridLayout(6, 1));
+        preyPanel.setLayout(new GridLayout(5, 1));
         preyPanel.setPreferredSize(panelDimension);
         preyPanel.setBorder(BorderFactory.createTitledBorder(" 2.4 Select preys information"));
         preyPanel.setMaximumSize(panelDimension);
@@ -338,7 +351,7 @@ public class ParticipantAndInteractionCreatorGui {
     public JPanel createGeneralInformationPanel() {
         JPanel generalInformationPanel = new JPanel();
         generalInformationPanel.setLayout(new GridLayout(3, 1));
-        generalInformationPanel.setPreferredSize(new Dimension(200, 500));
+        generalInformationPanel.setPreferredSize(new Dimension(200, HEIGHT));
         generalInformationPanel.setBorder(BorderFactory.createTitledBorder(" 2.2 Select general information"));
 
         generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(participantDetectionMethodCombobox, DataForRawFile.PARTICIPANT_DETECTION_METHOD.name));
@@ -349,11 +362,12 @@ public class ParticipantAndInteractionCreatorGui {
 
     // MULTIPLE FEATURES CREATION
 
-    public JPanel createFeatureOptionPanel(boolean bait) {
+    private JPanel createFeatureOptionPanel(boolean bait) {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setPreferredSize(new Dimension(1500, 500));
 
         JSpinner numberOfFeature = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
+        numberOfFeature.setBorder(BorderFactory.createTitledBorder(" Select number of features"));
         JPanel featureContainerPanel = new JPanel();
         featureContainerPanel.setLayout(new BoxLayout(featureContainerPanel, BoxLayout.Y_AXIS));
 
@@ -378,8 +392,10 @@ public class ParticipantAndInteractionCreatorGui {
     }
 
     private void updateFeaturePanels(JPanel featureContainerPanel, int count, boolean bait) {
-        featureContainerPanel.removeAll();
-        for (int i = 0; i < count; i++) {
+//        featureContainerPanel.removeAll();
+        //todo: check for decreasing number
+        int numberOfFeatures = featureContainerPanel.getComponents().length;
+        for (int i = numberOfFeatures; i < count; i++) {
             featureContainerPanel.add(createFeaturePanel(i, bait));
         }
 
@@ -387,8 +403,9 @@ public class ParticipantAndInteractionCreatorGui {
         featureContainerPanel.repaint();
     }
 
-    public JPanel createFeaturePanel(int featureNumber, boolean bait) {
+    private JPanel createFeaturePanel(int featureNumber, boolean bait) {
         Map<String, JComboBox<String>> comboBoxMap = new HashMap<>();
+        Map<String, Map<String, String>> featureXrefs = new HashMap<>();
 
         JPanel featurePanel = new JPanel(new GridLayout(2, 1));
         featurePanel.setBorder(BorderFactory.createTitledBorder("Create feature " + (featureNumber + 1)));
@@ -397,9 +414,7 @@ public class ParticipantAndInteractionCreatorGui {
                 DataForRawFile.FEATURE_START_LOCATION,
                 DataForRawFile.FEATURE_END_LOCATION,
                 DataForRawFile.FEATURE_TYPE,
-                DataForRawFile.FEATURE_RANGE_TYPE,
-                DataForRawFile.FEATURE_XREF,
-                DataForRawFile.FEATURE_XREF_DB
+                DataForRawFile.FEATURE_RANGE_TYPE
         );
 
         for (DataForRawFile attribute : featureAttributes) {
@@ -408,11 +423,13 @@ public class ParticipantAndInteractionCreatorGui {
             featurePanel.add(XmlMakerUtils.setComboBoxDimension(comboBox, attribute.name));
         }
 
+        featurePanel.add(featureXrefPanel(featureNumber, bait));
+//        featureXrefs.put(featureNumber + )
+
         setFeatureType(comboBoxMap.get(DataForRawFile.FEATURE_TYPE.name));
         setFeatureRangeType(comboBoxMap.get(DataForRawFile.FEATURE_RANGE_TYPE.name));
         setFeatureLocation(comboBoxMap.get(DataForRawFile.FEATURE_START_LOCATION.name));
         setFeatureLocation(comboBoxMap.get(DataForRawFile.FEATURE_END_LOCATION.name));
-        setFeatureDb(comboBoxMap.get(DataForRawFile.FEATURE_XREF_DB.name));
 
         if (bait) {
             baitFeaturesComboBoxes.add(comboBoxMap);
@@ -426,15 +443,15 @@ public class ParticipantAndInteractionCreatorGui {
     public List<Map<String, String>> getFeaturesData(boolean bait){
         List<Map<String, String>> featuresData;
         if (bait) {
-            featuresData = getFeaturesDataFromCombobox(baitFeaturesComboBoxes);
+            featuresData = getFeaturesDataFromCombobox(baitFeaturesComboBoxes, true);
         } else {
-            featuresData = getFeaturesDataFromCombobox(preyFeaturesComboBoxes);
+            featuresData = getFeaturesDataFromCombobox(preyFeaturesComboBoxes, false);
         }
 
         return featuresData;
     }
 
-    public List<Map<String, String>> getFeaturesDataFromCombobox(List<Map<String, JComboBox<String>>> comboBoxes){
+    private List<Map<String, String>> getFeaturesDataFromCombobox(List<Map<String, JComboBox<String>>> comboBoxes, boolean bait) {
         List<Map<String, String>> featuresData = new ArrayList<>();
 
         for (Map<String, JComboBox<String>> comboBoxMap : comboBoxes) {
@@ -455,12 +472,94 @@ public class ParticipantAndInteractionCreatorGui {
                     Objects.requireNonNull(comboBoxMap.get(DataForRawFile.FEATURE_RANGE_TYPE.name).
                             getSelectedItem()).toString());
 
-            featureData.put(DataForRawFile.FEATURE_XREF_DB.name,
-                    Objects.requireNonNull(comboBoxMap.get(DataForRawFile.FEATURE_XREF_DB.name).
-                            getSelectedItem()).toString());
+            featureData.put(DataForRawFile.FEATURE_XREF.name, featureXrefAsString(bait));
+
+            featureData.put(DataForRawFile.FEATURE_XREF_DB.name, featureXrefDbAsString(bait));
 
             featuresData.add(featureData);
         }
         return featuresData;
+    }
+
+    private JPanel featureXrefPanel(int featureNumber, boolean bait) {
+        JPanel featureXrefPanel = new JPanel();
+        featureXrefPanel.setBorder(BorderFactory.createTitledBorder("Feature Xref"));
+        JSpinner numberOfXref = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
+        numberOfXref.setBorder(BorderFactory.createTitledBorder("Select number of xref"));
+        featureXrefPanel.add(numberOfXref);
+
+        JPanel xrefContainerPanel = new JPanel();
+        xrefContainerPanel.setLayout(new BoxLayout(xrefContainerPanel, BoxLayout.Y_AXIS));
+        xrefContainerPanel.add(oneFeatureXrefPanel(featureNumber, bait));
+
+        featureXrefPanel.add(xrefContainerPanel);
+
+        numberOfXref.addChangeListener(e -> updateXrefPanel(xrefContainerPanel,
+                (int) numberOfXref.getValue(), featureNumber, bait));
+
+        return featureXrefPanel;
+    }
+
+    private JPanel oneFeatureXrefPanel(int featureNumber, boolean bait) {
+        JPanel xrefPanel = new JPanel();
+
+        JComboBox<String> xrefComboBox = new JComboBox<>();
+        xrefComboBox.setEditable(true);
+        xrefComboBox.addItem(DataForRawFile.FEATURE_XREF.name);
+        xrefPanel.add(xrefComboBox);
+
+        JComboBox<String> xrefDbComboBox = new JComboBox<>();
+        xrefDbComboBox.setEditable(true);
+        xrefDbComboBox.addItem(DataForRawFile.FEATURE_XREF_DB.name);
+        setFeatureDb(xrefDbComboBox);
+        xrefPanel.add(xrefDbComboBox);
+
+        if (bait) {
+            baitFeatureXrefs.add(xrefComboBox);
+            baitFeatureXrefDb.add(xrefDbComboBox);
+        } else {
+            preyFeatureXrefs.add(xrefComboBox);
+            preyFeatureXrefDb.add(xrefDbComboBox);
+        }
+        return xrefPanel;
+    }
+
+    private void updateXrefPanel(JPanel xrefPanel, int numberOfXref, int featureNumber, boolean bait) {
+//        xrefPanel.removeAll(); //TODO: CHECK HOW TO NOT REMOVE EVERYTHING
+        //todo: check for decreasing number
+        int length = xrefPanel.getComponents().length;
+        for (int i = length; i < numberOfXref; i++) {
+            xrefPanel.add(oneFeatureXrefPanel(featureNumber, bait));
+        }
+        xrefPanel.revalidate();
+        xrefPanel.repaint();
+    }
+
+    private String featureXrefAsString(boolean bait) {
+        StringBuilder xrefBuilder = new StringBuilder();
+        if (bait) {
+            for (JComboBox<String> comboBox : baitFeatureXrefs) {
+                xrefBuilder.append(comboBox.getSelectedItem()).append(";");
+            }
+        } else {
+            for (JComboBox<String> comboBox : preyFeatureXrefs) {
+                xrefBuilder.append(comboBox.getSelectedItem()).append(";");
+            }
+        }
+        return xrefBuilder.toString();
+    }
+
+    private String featureXrefDbAsString(boolean bait) {
+        StringBuilder xrefBuilder = new StringBuilder();
+        if (bait) {
+            for (JComboBox<String> comboBox : baitFeatureXrefDb) {
+                xrefBuilder.append(comboBox.getSelectedItem()).append(";");
+            }
+        } else {
+            for (JComboBox<String> comboBox : preyFeatureXrefDb) {
+                xrefBuilder.append(comboBox.getSelectedItem()).append(";");
+            }
+        }
+        return xrefBuilder.toString();
     }
 }

@@ -151,7 +151,7 @@ public class InteractionsCreator {
         CvTerm xref= terms.get(PARTICIPANT_XREF);
         CvTerm xrefDb = terms.get(PARTICIPANT_XREF_DB);
         CvTerm participantIdentificationMethod = terms.get(PARTICIPANT_IDENTIFICATION_METHOD);
-        CvTerm participantType = terms.get(PARTICIPANT_TYPE);
+//        CvTerm participantType = terms.get(PARTICIPANT_TYPE);
 
         String name = Objects.requireNonNull(data.get(PARTICIPANT_NAME.name), "The participant name cannot be null");
         String participantId = data.get(PARTICIPANT_ID.name);
@@ -197,7 +197,8 @@ public class InteractionsCreator {
         if (numberOfFeature > 0) {
             for (int i = 0; i < numberOfFeature; i++) {
                 XmlFeatureEvidence feature = createFeature(i, data);
-                participantEvidence.addFeature(feature);
+
+                participantEvidence.addFeature(feature); //todo: add feature xref here
             }
         }
 
@@ -510,6 +511,7 @@ public class InteractionsCreator {
      */
     private XmlFeatureEvidence createFeature(int featureIndex, Map<String, String> data) {
         String featureIndexString = "_" + featureIndex;
+        FeatureXrefContainer featureXrefContainer = new FeatureXrefContainer();
 
         String featureType = data.get(DataTypeAndColumn.FEATURE_TYPE.name + featureIndexString);
         String featureStartRange = data.get(DataTypeAndColumn.FEATURE_START.name + featureIndexString);
@@ -531,18 +533,41 @@ public class InteractionsCreator {
         Position endPosition = checkFeatureRangeType(featureEndRange, featureRangeType);
         featureRange.setPositions(startPosition, endPosition);
 
-        if (featureXref != null && featureXrefDb != null && utils.fetchMiId(featureXrefDb) != null) {
-            CvTerm featureCv = new XmlCvTerm(featureXrefDb, utils.fetchMiId(featureXrefDb));
-            Xref featureXrefXml = new XmlXref(featureCv, featureXref, featureCv);
-            FeatureXrefContainer featureXrefContainer = new FeatureXrefContainer();
-            featureXrefContainer.getXrefs().add(featureXrefXml);
-            featureEvidence.setJAXBXref(featureXrefContainer);
-        }
+        if (featureXref != null && featureXrefDb != null) {
+            List<String> featuresXrefs = new ArrayList<>();
+            List<CvTerm> featuresXrefsDb = new ArrayList<>();
 
+            if (!featureXref.contains(";")) {
+                featuresXrefs.add(featureXref);
+            } else {
+                String[] xrefs = featureXref.split(";");
+                for (String oneXref : xrefs) {
+                    featuresXrefs.add(oneXref.trim());
+                }
+            }
+
+            if (!featureXrefDb.contains(";")) {
+                featuresXrefsDb.add(utils.fetchTerm(featureXrefDb));
+            } else {
+                String[] xrefsDbs = featureXrefDb.split(";");
+                for (String oneXrefDb : xrefsDbs) {
+                    featuresXrefsDb.add(utils.fetchTerm(oneXrefDb.trim()));
+                }
+            }
+
+            for (int i = 0; i < featuresXrefsDb.size(); i++) {
+                Xref featureXrefXml = new XmlXref(featuresXrefsDb.get(i), featuresXrefs.get(i));
+                featureXrefContainer.getXrefs().add(featureXrefXml);
+
+            }
+
+        }
+        featureEvidence.setJAXBXref(featureXrefContainer);
         featureEvidence.setJAXBRangeWrapper(new AbstractXmlFeature.JAXBRangeWrapper());
         featureEvidence.getRanges().add(featureRange);
 
         return featureEvidence;
+
     }
 
     /**
