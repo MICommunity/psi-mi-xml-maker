@@ -6,7 +6,6 @@ import java.awt.*;
 import java.util.Enumeration;
 
 public class UniprotGeneralMapperGui {
-    final UniprotGeneralMapper generalMapper;
     @Getter
     String selectedId;
     @Getter
@@ -15,8 +14,7 @@ public class UniprotGeneralMapperGui {
     @Getter
     private String selectedParticipantType;
 
-    public UniprotGeneralMapperGui(UniprotGeneralMapper generalMapper) {
-        this.generalMapper = generalMapper;
+    public UniprotGeneralMapperGui() {
     }
 
     public void getUniprotIdChoicePanel(ButtonGroup uniprotIdsGroup, String previousId) {

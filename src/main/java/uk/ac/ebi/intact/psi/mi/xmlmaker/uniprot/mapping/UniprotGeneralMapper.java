@@ -48,7 +48,7 @@ public class UniprotGeneralMapper {
      */
     public ArrayList<UniprotResult> fetchUniprotResult(String protein, String previousDb, String organism){
         try {
-            return getUniprotIds(getUniprotResponse(protein, previousDb, organism), protein, previousDb, organism);
+            return getUniprotIds(getUniprotResponse(protein, previousDb, organism));
         } catch (Exception e) {
             XmlMakerUtils.showErrorDialog("Error fetching UniProt results, please check your internet connection");
             LOGGER.error("Error fetching UniProt results for protein '{}': {}", protein, e.getMessage(), e);
@@ -109,7 +109,7 @@ public class UniprotGeneralMapper {
      * @param results The JSON response from the UniProt API.
      * @return A list of {@link UniprotResult} objects representing the UniProt entries.
      */
-    public ArrayList<UniprotResult> getUniprotIds(JsonObject results, String protein, String previousDb, String inputOrganism) {
+    public ArrayList<UniprotResult> getUniprotIds(JsonObject results) {
         ArrayList<UniprotResult> uniprotResults = new ArrayList<>();
 
         if (results.isJsonNull()) {

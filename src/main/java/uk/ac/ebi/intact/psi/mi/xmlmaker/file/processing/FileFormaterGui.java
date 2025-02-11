@@ -3,7 +3,6 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;

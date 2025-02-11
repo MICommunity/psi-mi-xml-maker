@@ -50,7 +50,7 @@ public class XmlMakerGui {
         this.fileFormaterGui = new FileFormaterGui(excelFileReader);
         this.interactionWriterGui = new InteractionWriterGui(excelFileReader);
         this.interactionsCreatorGui = new InteractionsCreatorGui(excelFileReader,
-                interactionWriterGui.getInteractionWriter(), uniprotMapperGui);
+                interactionWriterGui.getInteractionWriter());
         excelFileReader.registerInputSelectedEventHandler(event -> setUpSheets());
     }
 
@@ -284,11 +284,7 @@ public class XmlMakerGui {
 
         JTextField publicationDatabase = new JTextField("Publication database");
         publicationDatabase.setEditable(true);
-//        JButton textValidationButton = new JButton("Submit");
-//        textValidationButton.addActionListener(e -> excelFileReader.setPublicationId(publicationDatabase.getText()));
         pubmedInputPanel.add(publicationDatabase);
-//        pubmedInputPanel.add(textValidationButton);
-
 
         JTextField publicationTitleField = new JTextField("Publication ID");
         publicationTitleField.setEditable(true);

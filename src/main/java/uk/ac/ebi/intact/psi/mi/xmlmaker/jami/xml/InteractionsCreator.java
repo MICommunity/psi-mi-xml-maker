@@ -10,9 +10,8 @@ import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
+
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -30,7 +29,7 @@ public class InteractionsCreator {
     private static int MAX_INTERACTIONS_PER_FILE = 1_000;
     final ExcelFileReader excelFileReader;
     final InteractionWriter interactionWriter;
-    final UniprotMapperGui uniprotMapperGui;
+//    final UniprotMapperGui uniprotMapperGui;
     final XmlMakerUtils utils = new XmlMakerUtils();
     public final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
     public final List<Map<String, String>> dataList = new ArrayList<>();
@@ -55,13 +54,12 @@ public class InteractionsCreator {
      *
      * @param reader           the Excel file reader for fetching data from Excel files.
      * @param writer           the InteractionWriter
-     * @param uniprotMapperGui the Uniprot mapper GUI for mapping protein data.
      * @param columnAndIndex   the mapping of column names to their corresponding indices in the dataset.
      */
-    public InteractionsCreator(ExcelFileReader reader, InteractionWriter writer, UniprotMapperGui uniprotMapperGui, Map<String, Integer> columnAndIndex) {
+    public InteractionsCreator(ExcelFileReader reader, InteractionWriter writer, Map<String, Integer> columnAndIndex) {
         this.excelFileReader = reader;
         this.interactionWriter = writer;
-        this.uniprotMapperGui = uniprotMapperGui;
+//        this.uniprotMapperGui = uniprotMapperGui;
         this.columnAndIndex = columnAndIndex;
         this.publicationId = excelFileReader.publicationId;
     }
@@ -197,8 +195,7 @@ public class InteractionsCreator {
         if (numberOfFeature > 0) {
             for (int i = 0; i < numberOfFeature; i++) {
                 XmlFeatureEvidence feature = createFeature(i, data);
-
-                participantEvidence.addFeature(feature); //todo: add feature xref here
+                participantEvidence.addFeature(feature);
             }
         }
 

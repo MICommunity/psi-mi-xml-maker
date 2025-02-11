@@ -48,8 +48,8 @@ public class FileFormater {
     private List<Map<String, String>> preyFeatures = new ArrayList<>();
 
     private String[] header = {"Interaction Number", "Input Participant ID", "Input Participant Name",
-            "Experimental role", "Input Participant ID database",
-            "Interaction detection method", "Participant identification method", "Experimental preparation",
+            "Experimental role", "Input Participant ID database", "Interaction detection method",
+            "Participant identification method", "Experimental preparation",
             "Biological role", "Participant organism"};
 
     private final Map<String, Integer> participantCountMap = new HashMap<>();

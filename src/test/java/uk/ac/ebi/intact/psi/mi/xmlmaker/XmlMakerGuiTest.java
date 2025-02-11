@@ -38,7 +38,7 @@ public class XmlMakerGuiTest {
         reader = new ExcelFileReader();
         UniprotMapperGui uniprotMapperGui = new UniprotMapperGui(reader, new LoadingSpinner());
         interactionWriter = new InteractionWriter(reader);
-        interactionsCreator = new InteractionsCreator(reader, interactionWriter, uniprotMapperGui, mockColumnAndIndex());
+        interactionsCreator = new InteractionsCreator(reader, interactionWriter, mockColumnAndIndex());
     }
 
     @Test

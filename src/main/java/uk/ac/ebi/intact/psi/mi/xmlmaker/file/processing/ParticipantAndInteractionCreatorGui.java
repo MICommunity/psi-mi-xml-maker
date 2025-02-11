@@ -7,10 +7,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * The {@code ParticipantAndInteractionCreatorGui} class provides a graphical user interface
@@ -235,11 +232,6 @@ public class ParticipantAndInteractionCreatorGui {
         int numberExperiments = baitExperimentalPanel.getComponents().length;
 //        baitExperimentalPreparationList.clear();
 
-//        if (numberExperiments > count) {
-//            baitExperimentalPanel.removeAll();
-//            baitExperimentalPreparationList.clear();
-//        }
-
         for (int i = numberExperiments; i < count; i++) {
             JComboBox<String> comboBox = new JComboBox<>();
             comboBox.addItem("Experimental Preparation");
@@ -405,7 +397,6 @@ public class ParticipantAndInteractionCreatorGui {
 
     private JPanel createFeaturePanel(int featureNumber, boolean bait) {
         Map<String, JComboBox<String>> comboBoxMap = new HashMap<>();
-        Map<String, Map<String, String>> featureXrefs = new HashMap<>();
 
         JPanel featurePanel = new JPanel(new GridLayout(2, 1));
         featurePanel.setBorder(BorderFactory.createTitledBorder("Create feature " + (featureNumber + 1)));
@@ -423,8 +414,7 @@ public class ParticipantAndInteractionCreatorGui {
             featurePanel.add(XmlMakerUtils.setComboBoxDimension(comboBox, attribute.name));
         }
 
-        featurePanel.add(featureXrefPanel(featureNumber, bait));
-//        featureXrefs.put(featureNumber + )
+        featurePanel.add(featureXrefPanel(bait));
 
         setFeatureType(comboBoxMap.get(DataForRawFile.FEATURE_TYPE.name));
         setFeatureRangeType(comboBoxMap.get(DataForRawFile.FEATURE_RANGE_TYPE.name));
@@ -481,7 +471,7 @@ public class ParticipantAndInteractionCreatorGui {
         return featuresData;
     }
 
-    private JPanel featureXrefPanel(int featureNumber, boolean bait) {
+    private JPanel featureXrefPanel(boolean bait) {
         JPanel featureXrefPanel = new JPanel();
         featureXrefPanel.setBorder(BorderFactory.createTitledBorder("Feature Xref"));
         JSpinner numberOfXref = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
@@ -490,17 +480,17 @@ public class ParticipantAndInteractionCreatorGui {
 
         JPanel xrefContainerPanel = new JPanel();
         xrefContainerPanel.setLayout(new BoxLayout(xrefContainerPanel, BoxLayout.Y_AXIS));
-        xrefContainerPanel.add(oneFeatureXrefPanel(featureNumber, bait));
+        xrefContainerPanel.add(oneFeatureXrefPanel(bait));
 
         featureXrefPanel.add(xrefContainerPanel);
 
         numberOfXref.addChangeListener(e -> updateXrefPanel(xrefContainerPanel,
-                (int) numberOfXref.getValue(), featureNumber, bait));
+                (int) numberOfXref.getValue(), bait));
 
         return featureXrefPanel;
     }
 
-    private JPanel oneFeatureXrefPanel(int featureNumber, boolean bait) {
+    private JPanel oneFeatureXrefPanel(boolean bait) {
         JPanel xrefPanel = new JPanel();
 
         JComboBox<String> xrefComboBox = new JComboBox<>();
@@ -524,12 +514,12 @@ public class ParticipantAndInteractionCreatorGui {
         return xrefPanel;
     }
 
-    private void updateXrefPanel(JPanel xrefPanel, int numberOfXref, int featureNumber, boolean bait) {
+    private void updateXrefPanel(JPanel xrefPanel, int numberOfXref, boolean bait) {
 //        xrefPanel.removeAll(); //TODO: CHECK HOW TO NOT REMOVE EVERYTHING
         //todo: check for decreasing number
         int length = xrefPanel.getComponents().length;
         for (int i = length; i < numberOfXref; i++) {
-            xrefPanel.add(oneFeatureXrefPanel(featureNumber, bait));
+            xrefPanel.add(oneFeatureXrefPanel(bait));
         }
         xrefPanel.revalidate();
         xrefPanel.repaint();

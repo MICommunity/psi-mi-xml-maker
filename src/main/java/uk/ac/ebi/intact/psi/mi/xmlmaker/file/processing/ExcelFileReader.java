@@ -336,8 +336,8 @@ public class ExcelFileReader  {
 
                 String updatedOrganism = null;
                 String participantName = null;
-                String uniprotResult = null;
-                String uniprotResultDb = null;
+                String uniprotResult;
+                String uniprotResultDb;
 
                 if (previousId == null || previousId.isEmpty()) {
                     LOGGER.warning("Skipping row with null or empty ID: " + row);
@@ -528,7 +528,7 @@ public class ExcelFileReader  {
      * @return A {@link UniprotResult} object representing the selected UniProt ID, or {@code null} if no entries exist.
      */
     private UniprotResult getOneUniprotId(String previousId, String previousIdDb, String organism) {
-        UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui(uniprotGeneralMapper);
+        UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui();
         ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
         UniprotResult oneUniprotId = null;
 

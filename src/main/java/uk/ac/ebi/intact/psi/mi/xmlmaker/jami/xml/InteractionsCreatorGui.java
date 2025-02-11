@@ -54,12 +54,11 @@ public class InteractionsCreatorGui extends JPanel {
      *
      * @param excelFileReader  The Excel file reader used to read data.
      * @param writer Interaction writer
-     * @param uniprotMapperGui The Uniprot mapper GUI for integrating with Uniprot.
      */
-    public InteractionsCreatorGui(ExcelFileReader excelFileReader, InteractionWriter writer, UniprotMapperGui uniprotMapperGui) {
+    public InteractionsCreatorGui(ExcelFileReader excelFileReader, InteractionWriter writer) {
         this.excelFileReader = excelFileReader;
         this.participantCreatorPanel = new JPanel(new BorderLayout());
-        this.interactionsCreator = new InteractionsCreator(excelFileReader, writer, uniprotMapperGui, getDataAndIndexes());
+        this.interactionsCreator = new InteractionsCreator(excelFileReader, writer, getDataAndIndexes());
     }
 
     /**
