@@ -341,7 +341,8 @@ public class XmlMakerGui {
                     } catch (Exception ex) {
                         LOGGER.log(Level.SEVERE, "Error during save operation", ex);
                         SwingUtilities.invokeLater(() ->
-                                XmlMakerUtils.showErrorDialog("An error occurred while saving the file." + ex.getMessage())
+                                XmlMakerUtils.showErrorDialog("An error occurred while saving the file." +
+                                        " Please verify that all columns are associated correctly. " + ex)
                         );
                     }
                     return null;

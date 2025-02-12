@@ -204,7 +204,7 @@ public class InteractionsCreator {
             }
         }
 
-        if (xref != null) {
+        if (xref != null && xref.getShortName() != null) {
             Xref xmlXref = new XmlXref(xref, xref.getShortName());
             xmlXref.getDatabase().setFullName(xrefDb.getShortName());
             xmlXref.getDatabase().setMIIdentifier(xrefDb.getMIIdentifier());

@@ -6,6 +6,7 @@ public enum DataForRawFile {
 
     INTERACTION_DETECTION_METHOD("Interaction Detection Method", false, true, false),
     PARTICIPANT_DETECTION_METHOD("Participant Detection Method", false, true, false),
+    HOST_ORGANSIM("Host Organism", false, true, false),
 
     BAIT_EXPERIMENTAL_PREPARATION("Bait Experimental Preparation", true, false, false),
     PREY_EXPERIMENTAL_PREPARATION("Prey Experimental Preparation", false, false, false),

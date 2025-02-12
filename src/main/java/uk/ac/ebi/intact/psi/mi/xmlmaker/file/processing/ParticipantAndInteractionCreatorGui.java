@@ -1,6 +1,7 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
 import lombok.Getter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
@@ -30,6 +31,7 @@ import java.util.List;
 public class ParticipantAndInteractionCreatorGui {
     private final JComboBox<String> interactionDetectionMethodCombobox = new JComboBox<>();
     private final JComboBox<String> participantDetectionMethodCombobox = new JComboBox<>();
+    private final JComboBox<String> hostOrganism = new JComboBox<>();
 
     private final List<JComboBox<String>> baitExperimentalPreparationList = new ArrayList<>();
     private final List<String> baitExperimentalPreparationNames = new ArrayList<>();
@@ -143,9 +145,11 @@ public class ParticipantAndInteractionCreatorGui {
     public void setOrganisms() {
         baitOrganism.setEditable(true);
         preyOrganism.setEditable(true);
+        hostOrganism.setEditable(true);
         for (ParticipantOrganism participantOrganism : ParticipantOrganism.values()) {
             preyOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
             baitOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
+            hostOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
         }
     }
 
@@ -178,6 +182,7 @@ public class ParticipantAndInteractionCreatorGui {
                 checkValue(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()), DataForRawFile.BAIT_ORGANISM.name));
         participantDetails.put(DataForRawFile.PREY_ORGANISM.name,
                 checkValue(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), DataForRawFile.PREY_ORGANISM.name));
+        participantDetails.put(DataForRawFile.HOST_ORGANSIM.name, checkValue(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(hostOrganism.getSelectedItem()).toString()), DataForRawFile.HOST_ORGANSIM.name));
 
         return participantDetails;
     }
@@ -228,11 +233,9 @@ public class ParticipantAndInteractionCreatorGui {
     }
 
     private void updateBaitExperimentalPreparations(int count) {
-//        baitExperimentalPanel.removeAll(); //todo: check for decreasing number
-        int numberExperiments = baitExperimentalPanel.getComponents().length;
-//        baitExperimentalPreparationList.clear();
+        int currentCount = baitExperimentalPanel.getComponentCount();
 
-        for (int i = numberExperiments; i < count; i++) {
+        for (int i = currentCount; i < count; i++) {
             JComboBox<String> comboBox = new JComboBox<>();
             comboBox.addItem("Experimental Preparation");
 
@@ -244,9 +247,15 @@ public class ParticipantAndInteractionCreatorGui {
             baitExperimentalPanel.add(XmlMakerUtils.setComboBoxDimension(comboBox, "Bait Experimental Preparation " + (i + 1)));
         }
 
+        for (int i = currentCount - 1; i >= count; i--) {
+            baitExperimentalPanel.remove(i);
+            baitExperimentalPreparationList.remove(i);
+        }
+
         baitExperimentalPanel.revalidate();
         baitExperimentalPanel.repaint();
     }
+
 
     public String getBaitExperimentalPreparationsAsString() {
         List<String> selectedPreparations = new ArrayList<>();
@@ -348,6 +357,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(participantDetectionMethodCombobox, DataForRawFile.PARTICIPANT_DETECTION_METHOD.name));
         generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(interactionDetectionMethodCombobox, DataForRawFile.INTERACTION_DETECTION_METHOD.name));
+        generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(hostOrganism, DataForRawFile.HOST_ORGANSIM.name));
 
         return generalInformationPanel;
     }
@@ -384,11 +394,12 @@ public class ParticipantAndInteractionCreatorGui {
     }
 
     private void updateFeaturePanels(JPanel featureContainerPanel, int count, boolean bait) {
-//        featureContainerPanel.removeAll();
-        //todo: check for decreasing number
-        int numberOfFeatures = featureContainerPanel.getComponents().length;
-        for (int i = numberOfFeatures; i < count; i++) {
+        int currentCount = featureContainerPanel.getComponentCount();
+        for (int i = currentCount; i < count; i++) {
             featureContainerPanel.add(createFeaturePanel(i, bait));
+        }
+        for (int i = currentCount - 1; i >= count; i--) {
+            featureContainerPanel.remove(i);
         }
 
         featureContainerPanel.revalidate();
@@ -398,7 +409,7 @@ public class ParticipantAndInteractionCreatorGui {
     private JPanel createFeaturePanel(int featureNumber, boolean bait) {
         Map<String, JComboBox<String>> comboBoxMap = new HashMap<>();
 
-        JPanel featurePanel = new JPanel(new GridLayout(2, 1));
+        JPanel featurePanel = new JPanel();
         featurePanel.setBorder(BorderFactory.createTitledBorder("Create feature " + (featureNumber + 1)));
 
         List<DataForRawFile> featureAttributes = Arrays.asList(
@@ -411,7 +422,8 @@ public class ParticipantAndInteractionCreatorGui {
         for (DataForRawFile attribute : featureAttributes) {
             JComboBox<String> comboBox = new JComboBox<>();
             comboBoxMap.put(attribute.name, comboBox);
-            featurePanel.add(XmlMakerUtils.setComboBoxDimension(comboBox, attribute.name));
+            XmlMakerUtils.setComboBoxDimension(comboBox, attribute.name);
+            featurePanel.add(comboBox);
         }
 
         featurePanel.add(featureXrefPanel(bait));
@@ -473,8 +485,11 @@ public class ParticipantAndInteractionCreatorGui {
 
     private JPanel featureXrefPanel(boolean bait) {
         JPanel featureXrefPanel = new JPanel();
+        featureXrefPanel.setLayout(new BoxLayout(featureXrefPanel, BoxLayout.Y_AXIS));
         featureXrefPanel.setBorder(BorderFactory.createTitledBorder("Feature Xref"));
         JSpinner numberOfXref = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
+        numberOfXref.setPreferredSize(new Dimension(200, 50));
+        numberOfXref.setMaximumSize(new Dimension(200, 50));
         numberOfXref.setBorder(BorderFactory.createTitledBorder("Select number of xref"));
         featureXrefPanel.add(numberOfXref);
 
@@ -492,15 +507,14 @@ public class ParticipantAndInteractionCreatorGui {
 
     private JPanel oneFeatureXrefPanel(boolean bait) {
         JPanel xrefPanel = new JPanel();
-
         JComboBox<String> xrefComboBox = new JComboBox<>();
         xrefComboBox.setEditable(true);
-        xrefComboBox.addItem(DataForRawFile.FEATURE_XREF.name);
+        XmlMakerUtils.setComboBoxDimension(xrefComboBox, DataForRawFile.FEATURE_XREF.name);
         xrefPanel.add(xrefComboBox);
 
         JComboBox<String> xrefDbComboBox = new JComboBox<>();
         xrefDbComboBox.setEditable(true);
-        xrefDbComboBox.addItem(DataForRawFile.FEATURE_XREF_DB.name);
+        XmlMakerUtils.setComboBoxDimension(xrefDbComboBox, DataForRawFile.FEATURE_XREF_DB.name);
         setFeatureDb(xrefDbComboBox);
         xrefPanel.add(xrefDbComboBox);
 
@@ -515,12 +529,14 @@ public class ParticipantAndInteractionCreatorGui {
     }
 
     private void updateXrefPanel(JPanel xrefPanel, int numberOfXref, boolean bait) {
-//        xrefPanel.removeAll(); //TODO: CHECK HOW TO NOT REMOVE EVERYTHING
-        //todo: check for decreasing number
-        int length = xrefPanel.getComponents().length;
-        for (int i = length; i < numberOfXref; i++) {
+        int currentCount = xrefPanel.getComponentCount();
+        for (int i = currentCount; i < numberOfXref; i++) {
             xrefPanel.add(oneFeatureXrefPanel(bait));
         }
+        for (int i = currentCount - 1; i >= numberOfXref; i--) {
+            xrefPanel.remove(i);
+        }
+
         xrefPanel.revalidate();
         xrefPanel.repaint();
     }

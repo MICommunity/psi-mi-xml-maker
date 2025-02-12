@@ -261,6 +261,7 @@ public class XmlMakerUtils {
     public static JComboBox<String> setComboBoxDimension(JComboBox<String> comboBox, String defaultItem) {
         comboBox.addItem(defaultItem);
         comboBox.setPreferredSize(new Dimension(200, 50));
+        comboBox.setMaximumSize(new Dimension(200, 50));
         return comboBox;
     }
 

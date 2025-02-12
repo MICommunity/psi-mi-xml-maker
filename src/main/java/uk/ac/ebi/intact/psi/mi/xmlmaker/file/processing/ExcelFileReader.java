@@ -609,7 +609,7 @@ public class ExcelFileReader  {
             Row row = iteratorWorkbook.next();
             List<String> currentLine = new ArrayList<>();
             for (Cell cell : row) {
-                currentLine.add(cell.getStringCellValue());
+                currentLine.add(FileUtils.getCellValueAsString(cell));
             }
             firstLines.add(currentLine);
         }
