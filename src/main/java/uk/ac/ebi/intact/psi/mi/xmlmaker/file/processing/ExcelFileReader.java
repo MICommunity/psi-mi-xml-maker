@@ -431,11 +431,13 @@ public class ExcelFileReader  {
                 return;
             }
 
-            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant ID");
-            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant ID database");
-            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant organism");
-            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant name");
-            headerRow.createCell(headerRow.getLastCellNum()).setCellValue("Participant type");
+            int lastCellIndex = headerRow.getLastCellNum();
+
+            headerRow.createCell(lastCellIndex).setCellValue("Participant ID");
+            headerRow.createCell(lastCellIndex + 1).setCellValue("Participant ID database");
+            headerRow.createCell(lastCellIndex + 2).setCellValue("Participant organism");
+            headerRow.createCell(lastCellIndex + 3).setCellValue("Participant name");
+            headerRow.createCell(lastCellIndex + 4).setCellValue("Participant type");
 
             while (iterator.hasNext()) {
                 Row row = iterator.next();
@@ -446,7 +448,6 @@ public class ExcelFileReader  {
 
                 String previousId = FileUtils.getCellValueAsString(row.getCell(idColumnIndex));
                 String previousDb = idDbColumnIndex != -1 ? FileUtils.getCellValueAsString(row.getCell(idDbColumnIndex)) : null;
-
                 String organism = null;
 
                 if (organismColumnIndex != -1) {
@@ -490,11 +491,12 @@ public class ExcelFileReader  {
                     participantType = alreadyParsedParticipant.getParticipantType();
                 }
 
-                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(uniprotResult != null ? uniprotResult : previousId);
-                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(uniprotResultDb != null ? uniprotResultDb : "");
-                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(updatedOrganism != null ? updatedOrganism : "");
-                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(participantName != null ? participantName : "");
-                row.createCell(row.getLastCellNum(), CellType.STRING).setCellValue(participantType != null ? participantType : "");
+                // Use the lastCellIndex variable for added cells in each row
+                row.createCell(lastCellIndex).setCellValue(uniprotResult != null ? uniprotResult : previousId);
+                row.createCell(lastCellIndex + 1).setCellValue(uniprotResultDb != null ? uniprotResultDb : "");
+                row.createCell(lastCellIndex + 2).setCellValue(updatedOrganism != null ? updatedOrganism : "");
+                row.createCell(lastCellIndex + 3).setCellValue(participantName != null ? participantName : "");
+                row.createCell(lastCellIndex + 4).setCellValue(participantType != null ? participantType : "");
             }
 
             workbook.write(fileOut);

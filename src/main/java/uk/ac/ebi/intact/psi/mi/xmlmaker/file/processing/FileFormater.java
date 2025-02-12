@@ -49,8 +49,8 @@ public class FileFormater {
 
     private String[] header = {"Interaction Number", "Input Participant ID", "Input Participant Name",
             "Experimental role", "Input Participant ID database", "Interaction detection method",
-            "Participant identification method", "Experimental preparation",
-            "Biological role", "Participant organism", "Host organism"};
+            "Participant identification method", "Host organism", "Experimental preparation",
+            "Biological role", "Participant organism"};
 
     private final Map<String, Integer> participantCountMap = new HashMap<>();
 
@@ -368,14 +368,22 @@ public class FileFormater {
         }
     }
 
-    private void addFeatureToRow(List<String> row, List<Map<String, String>> baitFeatures) {
-        for (Map<String, String> feature : baitFeatures) {
+    private void addFeatureToRow(List<String> row, List<Map<String, String>> features) {
+        for (Map<String, String> feature : features) {
             row.add(feature.get(DataForRawFile.FEATURE_TYPE.name));
             row.add(feature.get(DataForRawFile.FEATURE_START_LOCATION.name));
             row.add(feature.get(DataForRawFile.FEATURE_END_LOCATION.name));
             row.add(feature.get(DataForRawFile.FEATURE_RANGE_TYPE.name));
             row.add(feature.get(DataForRawFile.FEATURE_XREF.name));
             row.add(feature.get(DataForRawFile.FEATURE_XREF_DB.name));
+        }
+        if (features.isEmpty()) {
+            int numberOfFeatures = Math.max(baitFeatures.size(), preyFeatures.size());
+            for (int i = 0; i < numberOfFeatures; i++) {
+                for (int j = 0; j < 6; j++) {
+                    row.add(" ");
+                }
+            }
         }
     }
 
