@@ -45,13 +45,13 @@ The user can select the corresponding options.
 
 #### 2.3 Selecting information concerning the baits
 The same way as for the general information, the user can select information about the baits thanks to the dropdown menus.
-The user can select multiple experimental preparations. To do so, it has to increase the number in the spinner. Then, multiple dropdown menu will appear.
-
-The following options can also be typed in:
-- the organism **Tax id**
-- the feature start and end locations
-- the feature xref
-
+The bait organism can be typed in by the user.
+The user can select multiple experimental preparations. To do so, it has to increase the number in the spinner.
+Then, multiple dropdown menu will appear.
+The user can create features by clicking on the corresponding button.
+This action will open a window where the user can create multiple features by increasing the number on the top of it.
+The user can input manually the start and end location of the feature. It can also create multiple cross-references for it (note that the feature xref has to be typed in).
+Once the feature(s) have been created, they will be applied to all the baits.
 
 #### 2.4 Selecting information concerning the preys
 The preys information selection is working the same way as the baits information selection.

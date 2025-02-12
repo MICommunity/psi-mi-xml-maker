@@ -29,7 +29,6 @@ public class InteractionsCreator {
     private static int MAX_INTERACTIONS_PER_FILE = 1_000;
     final ExcelFileReader excelFileReader;
     final InteractionWriter interactionWriter;
-//    final UniprotMapperGui uniprotMapperGui;
     final XmlMakerUtils utils = new XmlMakerUtils();
     public final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
     public final List<Map<String, String>> dataList = new ArrayList<>();
@@ -59,7 +58,6 @@ public class InteractionsCreator {
     public InteractionsCreator(ExcelFileReader reader, InteractionWriter writer, Map<String, Integer> columnAndIndex) {
         this.excelFileReader = reader;
         this.interactionWriter = writer;
-//        this.uniprotMapperGui = uniprotMapperGui;
         this.columnAndIndex = columnAndIndex;
         this.publicationId = excelFileReader.publicationId;
     }
@@ -149,7 +147,6 @@ public class InteractionsCreator {
         CvTerm xref= terms.get(PARTICIPANT_XREF);
         CvTerm xrefDb = terms.get(PARTICIPANT_XREF_DB);
         CvTerm participantIdentificationMethod = terms.get(PARTICIPANT_IDENTIFICATION_METHOD);
-//        CvTerm participantType = terms.get(PARTICIPANT_TYPE);
 
         String name = Objects.requireNonNull(data.get(PARTICIPANT_NAME.name), "The participant name cannot be null");
         String participantId = data.get(PARTICIPANT_ID.name);
@@ -173,7 +170,9 @@ public class InteractionsCreator {
                 break;
             case "nucleic acid":
                 participant = new XmlNucleicAcid(name, organism, uniqueId);
-                CvTerm rnaTerm = utils.fetchTerm("rna");
+                CvTerm rnaTerm = utils.fetchTerm("protein");
+                Annotation annotation = new XmlAnnotation(rnaTerm);
+                participant.getAnnotations().add(annotation);
                 participant.setInteractorType(rnaTerm); //todo: check here
                 break;
             case "molecule":
