@@ -265,6 +265,14 @@ public class XmlMakerUtils {
         return comboBox;
     }
 
+    /**
+     * Retrieves a list of term names from the OLS (Ontology Lookup Service) for a given MI (Molecular Interaction) ID.
+     * The method uses the provided MI ID to query the OLS and fetch the child terms associated with it.
+     * Only terms that do not have children are added to the result list.
+     *
+     * @param miId The MI identifier (in OBO format) used to retrieve the child terms from OLS.
+     * @return A sorted list of term names that are child terms of the provided MI ID, which do not have further children.
+     */
     public static List<String> getTermsFromOls(String miId){
         List<String> termsNames = new ArrayList<>();
 

@@ -5,18 +5,29 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Enumeration;
 
+/**
+ * This class provides a graphical user interface (GUI) for selecting Uniprot ID
+ * and participant type in a mapping process. It utilizes Swing components to
+ * display choices for Uniprot IDs and participant types.
+ */
+@Getter
 public class UniprotGeneralMapperGui {
-    @Getter
     String selectedId;
-    @Getter
     String selectedIdDb;
-
-    @Getter
     private String selectedParticipantType;
 
     public UniprotGeneralMapperGui() {
     }
 
+    /**
+     * Displays a panel to the user allowing them to select a UniProt ID from a list
+     * of options or enter a custom ID. This method uses a {@link ButtonGroup}
+     * to display the options and allows users to specify the ID and database.
+     * The method updates the {@code selectedId} and {@code selectedIdDb} fields.
+     *
+     * @param uniprotIdsGroup The {@link ButtonGroup} containing the possible UniProt IDs.
+     * @param previousId The previous UniProt ID, used in the title of the panel.
+     */
     public void getUniprotIdChoicePanel(ButtonGroup uniprotIdsGroup, String previousId) {
         JPanel buttonContainer = new JPanel();
         JTextField otherIdField = new JTextField("Other id");
@@ -62,6 +73,13 @@ public class UniprotGeneralMapperGui {
         }
     }
 
+    /**
+     * Displays a panel to the user allowing them to select the participant type
+     * (e.g., Gene, Molecule, Nucleic Acid, or Protein). The method updates the
+     * {@code selectedParticipantType} field based on the user's selection.
+     *
+     * @param previousId The previous ID, used in the title of the panel.
+     */
     public void getParticipantChoicePanel(String previousId) {
         JPanel participantPanel = new JPanel();
         participantPanel.setBorder(BorderFactory.createTitledBorder("No UniProt ID found for: " + previousId));

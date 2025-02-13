@@ -597,7 +597,7 @@ public class InteractionsCreator {
      * @param guiColumnName the column name from the GUI to which similarity is calculated
      * @return the column name from the list that is most similar to the GUI column name
      */
-    public String mostSimilarColumn(List<String> columns, String guiColumnName) {
+    public String getMostSimilarColumn(List<String> columns, String guiColumnName) {
         String mostSimilarColumn = null;
         double mostSimilarColumnScore = 0;
         for (String column : columns) {

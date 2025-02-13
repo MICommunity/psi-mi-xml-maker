@@ -54,6 +54,34 @@ public class XmlMakerGui {
         excelFileReader.registerInputSelectedEventHandler(event -> setUpSheets());
     }
 
+    /**
+     * Initializes and sets up the main user interface (UI) frame and its components.
+     * The method performs the following tasks:
+     * <ul>
+     *     <li>Creates and configures the main frame window using {@link #createMainFrame()}.</li>
+     *     <li>Sets up the layout for the content panel with a vertical {@link BoxLayout}.</li>
+     *     <li>Creates a restart button, positions it centrally, and adds it to the content panel.</li>
+     *     <li>Adds various UI panels to the content panel for handling file selection, formatting, UniProt mapping, and file processing.</li>
+     *     <li>Creates and positions a save button with a spinner at the bottom of the content panel.</li>
+     *     <li>Registers an event handler for input selection, triggering the setup of sheets.</li>
+     *     <li>Configures a scroll pane to contain the content panel and adds vertical and horizontal scrollbars as needed.</li>
+     *     <li>Sets up drag-and-drop functionality for the main frame.</li>
+     *     <li>Sets a loading glass pane over the frame to indicate processing.</li>
+     *     <li>Maximizes the window size and makes it visible.</li>
+     * </ul>
+     *
+     * @see #createMainFrame()
+     * @see #createRestartButton(JFrame)
+     * @see #createFileLabel()
+     * @see #createFileFetcherPanel()
+     * @see #createFileFormaterPanel()
+     * @see #createUniprotMapperPanel()
+     * @see #createFileProcessingPanel()
+     * @see #createSaveOptionsPanel()
+     * @see #createSaveButtonWithSpinner()
+     * @see #setUpSheets()
+     * @see #makeFrameDragAndDrop(JFrame)
+     */
     public void initialize() {
         JFrame frame = createMainFrame();
 
@@ -82,7 +110,7 @@ public class XmlMakerGui {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         frame.setContentPane(scrollPane);
 
-        makeFrameDnD(frame);
+        makeFrameDragAndDrop(frame);
         frame.setGlassPane(loadingSpinner.createLoadingGlassPane(frame));
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setVisible(true);
@@ -164,7 +192,7 @@ public class XmlMakerGui {
      *
      * @param frame The JFrame to enable drag-and-drop on.
      */
-    private void makeFrameDnD(JFrame frame) {
+    private void makeFrameDragAndDrop(JFrame frame) {
         frame.setTransferHandler(new TransferHandler() {
             @Override
             public boolean canImport(TransferSupport support) {
@@ -386,6 +414,14 @@ public class XmlMakerGui {
         return restartButton;
     }
 
+    /**
+     * Creates and returns a panel for file formatting.
+     * This panel is retrieved from the `fileFormaterGui` instance, with additional configurations applied:
+     * - The panel is set to allow auto-scrolling.
+     * - A border with the title "2. Format raw file" is added to the panel for better visual separation and description.
+     *
+     * @return The formatted JPanel containing file formatting UI elements.
+     */
     private JPanel createFileFormaterPanel(){
         JPanel fileFormaterPanel = fileFormaterGui.getFileFormaterPanel();
         fileFormaterPanel.setAutoscrolls(true);
@@ -402,6 +438,17 @@ public class XmlMakerGui {
         SwingUtilities.invokeLater(() -> new XmlMakerGui().initialize());
     }
 
+    /**
+     * Sets up the sheets for the UI by clearing the current list of sheets and retrieving
+     * the updated sheet list from the Excel file. It then triggers the setup of sheets in
+     * different components of the application, ensuring that all relevant UI elements are
+     * updated to reflect the available sheets.
+     * This method performs the following steps:
+     * - Clears the existing sheet list in the `excelFileReader`.
+     * - Retrieves the updated list of sheets from the Excel file using the `getSheets()` method.
+     * - Calls the `setUpSheets()` method in the `fileFormaterGui`, `uniprotMapperGui`, and
+     *   `interactionsCreatorGui` components to ensure that all related parts of the UI are updated.
+     */
     private void setUpSheets() {
         excelFileReader.sheets.clear();
         excelFileReader.getSheets();

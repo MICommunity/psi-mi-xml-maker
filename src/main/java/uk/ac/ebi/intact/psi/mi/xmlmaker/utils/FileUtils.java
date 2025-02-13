@@ -13,6 +13,15 @@ public class FileUtils {
         return fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
     }
 
+    /**
+     * Extracts the file name (without extension) from a given file name with extension.
+     * If the input file name contains an extension (denoted by a period), the method returns
+     * the part of the string before the last period. If there is no extension, the method returns
+     * the original file name.
+     *
+     * @param fileNameWithExtension The full file name, including its extension.
+     * @return The file name without the extension, or the original file name if no extension is found.
+     */
     public static String getFileName(String fileNameWithExtension) {
         if (fileNameWithExtension != null && fileNameWithExtension.contains(".")) {
             return fileNameWithExtension.substring(0, fileNameWithExtension.lastIndexOf("."));

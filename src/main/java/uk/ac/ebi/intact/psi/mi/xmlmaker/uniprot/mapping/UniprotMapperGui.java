@@ -79,6 +79,15 @@ public class UniprotMapperGui extends JPanel {
 
     private boolean isUpdatingSheets = false;
 
+    /**
+     * Sets up the sheet selection for the UI, updating the available options in a combo box
+     * based on the sheets present in an Excel file. This method disables events while
+     * updating the combo box to prevent unnecessary triggers and updates the sheet list accordingly.
+     * - If the Excel file does not contain any sheets, it adds a placeholder item ("Select sheet")
+     *   and disables the combo box.
+     * - If the Excel file contains sheets, it populates the combo box with the available sheet names
+     *   and enables the selection.
+     */
     public void setUpSheets() {
         isUpdatingSheets = true; // Suppress events
         setupComboBoxDefaults();
@@ -98,9 +107,6 @@ public class UniprotMapperGui extends JPanel {
         }
         isUpdatingSheets = false;
     }
-
-
-
 
     /**
      * Populates the columns in the combo boxes based on the selected sheet.

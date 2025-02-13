@@ -27,14 +27,13 @@ public class LoadingSpinner {
             }
         };
 
-        glassPane.setOpaque(false);  // Make sure the glass pane is transparent
-        glassPane.setPreferredSize(frame.getSize());  // Ensure glass pane covers entire frame
+        glassPane.setOpaque(false);
+        glassPane.setPreferredSize(frame.getSize());
 
-        // Load the GIF using getResource to ensure it's properly located in the JAR or DMG
         ImageIcon loadingIcon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/LoadingSpinner.gif")));
 
         JLabel loadingLabel = new JLabel(loadingIcon, JLabel.CENTER);
-        glassPane.add(loadingLabel, BorderLayout.CENTER);  // Centre the spinner
+        glassPane.add(loadingLabel, BorderLayout.CENTER);
         frame.setGlassPane(glassPane);
 
         return glassPane;
@@ -47,7 +46,7 @@ public class LoadingSpinner {
     public void showSpinner() {
         SwingUtilities.invokeLater(() -> {
             if (glassPane != null) {
-                glassPane.setVisible(true);  // Show the glass pane with the spinner
+                glassPane.setVisible(true);
             }
         });
     }

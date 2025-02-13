@@ -90,8 +90,8 @@ public class FileFormater {
                 LOGGER.info("Reading xlsx file: " + fileName);
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXlsx = new XSSFWorkbook();
-                postProcessInteractions();
-                postProcessFeatures();
+                addInteractionType();
+                addAllFeatures();
                 writeToExcel(newFormat, modifiedFileName + ".xlsx", workbookXlsx);
                 newFileName = modifiedFileName + ".xlsx";
                 break;
@@ -99,24 +99,24 @@ public class FileFormater {
                 LOGGER.info("Reading xls file: " + fileName);
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXls = new HSSFWorkbook();
-                postProcessInteractions();
-                postProcessFeatures();
+                addInteractionType();
+                addAllFeatures();
                 writeToExcel(newFormat, modifiedFileName + ".xls", workbookXls);
                 newFileName = modifiedFileName + ".xls";
                 break;
             case "csv":
                 LOGGER.info("Reading csv file: " + fileName);
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
-                postProcessInteractions();
-                postProcessFeatures();
+                addInteractionType();
+                addAllFeatures();
                 writeToFile(newFormat, modifiedFileName + ".csv", ',');
                 newFileName = modifiedFileName + ".csv";
                 break;
             case "tsv":
                 LOGGER.info("Reading tsv file: " + fileName);
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
-                postProcessInteractions();
-                postProcessFeatures();
+                addInteractionType();
+                addAllFeatures();
                 writeToFile(newFormat, modifiedFileName + ".tsv", '\t');
                 newFileName = modifiedFileName + ".tsv";
                 break;
@@ -325,7 +325,7 @@ public class FileFormater {
      * If an interaction involves more than two participants, it is classified as an "association";
      * otherwise, it is classified as a "physical interaction."
      */
-    public void postProcessInteractions() {
+    public void addInteractionType() {
         String[] extendedHeader = Arrays.copyOf(header, header.length + 1);
         extendedHeader[extendedHeader.length - 1] = "Interaction Type";
         header = extendedHeader;
@@ -347,8 +347,12 @@ public class FileFormater {
         }
     }
 
-    private void postProcessFeatures() {
-        int numberOfColumnsToAdd = numberOfFeaturesColumns() * 6;
+    /**
+     * Adds feature-related information to the formatted data.
+     * This method includes adding feature columns for each participant (bait or prey) based on available features.
+     */
+    private void addAllFeatures() {
+        int numberOfColumnsToAdd = getNumberOfFeaturesColumns() * 6;
         ArrayList<String> featuresHeader = getFeaturesHeader();
         String[] extendedHeader = Arrays.copyOf(header, header.length + numberOfColumnsToAdd);
 
@@ -361,14 +365,20 @@ public class FileFormater {
         for (List<String> row : newFormat) {
             String participantExperimentalRole = row.get(3);
             if (participantExperimentalRole.trim().equals("prey")){
-                addFeatureToRow(row, preyFeatures);
+                addOneFeature(row, preyFeatures);
             } else if (participantExperimentalRole.trim().equals("bait")){
-                addFeatureToRow(row, baitFeatures);
+                addOneFeature(row, baitFeatures);
             }
         }
     }
 
-    private void addFeatureToRow(List<String> row, List<Map<String, String>> features) {
+    /**
+     * Adds feature information to a specific row based on the provided list of features.
+     *
+     * @param row The row to which feature information will be added.
+     * @param features The list of feature data to be added to the row.
+     */
+    private void addOneFeature(List<String> row, List<Map<String, String>> features) {
         for (Map<String, String> feature : features) {
             row.add(feature.get(DataForRawFile.FEATURE_TYPE.name));
             row.add(feature.get(DataForRawFile.FEATURE_START_LOCATION.name));
@@ -387,15 +397,25 @@ public class FileFormater {
         }
     }
 
-    private int numberOfFeaturesColumns() {
+    /**
+     * Retrieves the number of columns needed for features based on the maximum number of bait or prey features.
+     *
+     * @return The number of columns required for features.
+     */
+    private int getNumberOfFeaturesColumns() {
         int numberOfBaitFeatures = baitFeatures.size();
         int numberOfPreyFeatures = preyFeatures.size();
         return Math.max(numberOfBaitFeatures, numberOfPreyFeatures);
     }
 
+    /**
+     * Retrieves the header names for feature columns.
+     *
+     * @return A list of feature column headers.
+     */
     private ArrayList<String> getFeaturesHeader(){
         ArrayList<String> header = new ArrayList<>();
-        for (int i = 0; i < numberOfFeaturesColumns(); i++) {
+        for (int i = 0; i < getNumberOfFeaturesColumns(); i++) {
             for (DataForRawFile data : DataForRawFile.values()) {
                 if (data.isFeature){
                     header.add(data.name + "_" + i);

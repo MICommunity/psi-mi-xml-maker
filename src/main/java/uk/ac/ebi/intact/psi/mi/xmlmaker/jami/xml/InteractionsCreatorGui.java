@@ -118,7 +118,6 @@ public class InteractionsCreatorGui extends JPanel {
             for (String sheetName : excelFileReader.sheets) {
                 sheets.addItem(sheetName);
             }
-//            setUpColumns();
         }
         isUpdatingSheets = false;
         addSpinnerListener();
@@ -192,7 +191,7 @@ public class InteractionsCreatorGui extends JPanel {
         tableColumn.setPreferredWidth(150);
 
         JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
-        String defaultValue = interactionsCreator.mostSimilarColumn(columnNames, headerValue);
+        String defaultValue = interactionsCreator.getMostSimilarColumn(columnNames, headerValue);
 
         if (columnNames.contains(defaultValue)) {
             comboBox.setSelectedItem(defaultValue);
@@ -302,7 +301,7 @@ public class InteractionsCreatorGui extends JPanel {
             tableColumn.setPreferredWidth(150);
 
             JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
-            String defaultValue = interactionsCreator.mostSimilarColumn(columnNames, columnName);
+            String defaultValue = interactionsCreator.getMostSimilarColumn(columnNames, columnName);
 
             if (columnNames.contains(defaultValue)) {
                 comboBox.setSelectedItem(defaultValue);
@@ -381,6 +380,16 @@ public class InteractionsCreatorGui extends JPanel {
         }
     }
 
+    /**
+     * Adds a change listener to the number of features spinner.
+     * When the spinner value changes, this method performs the following actions:
+     * <ul>
+     *     <li>Invokes the `createInteractionDataTable` method to create or refresh the interaction data table.</li>
+     *     <li>Calls the `addFeatureCells` method to add or update feature cells based on the new spinner value.</li>
+     *     <li>Sets the number of features in the interactions creator using the updated spinner value.</li>
+     * </ul>
+     * This method ensures that all relevant UI components and data are updated when the user adjusts the number of features.
+     */
     private void addSpinnerListener() {
         numberOfFeatures.addChangeListener(e -> {
             int value = (int) numberOfFeatures.getValue();

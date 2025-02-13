@@ -157,6 +157,14 @@ public class FileFormaterGui {
         }
     }
 
+    /**
+     * Creates a panel for selecting various options in the file, such as selecting the sheet, bait column,
+     * bait name column, prey column, and prey name column.
+     * The panel also contains dropdowns for each selection, making it user-friendly for selecting
+     * relevant columns for file processing.
+     *
+     * @return A {@link JPanel} containing combo boxes for sheet and column selections.
+     */
     public JPanel createSheetPanel() {
         JPanel sheetsPanel = new JPanel();
         sheetsPanel.setLayout(new GridLayout(5, 1));
@@ -177,6 +185,13 @@ public class FileFormaterGui {
         return sheetsPanel;
     }
 
+    /**
+     * Creates a panel for file processing which includes a checkbox for creating binary interactions
+     * and a button to trigger the file formatting process. When the button is clicked, it uses the
+     * user-selected features and interaction data to format the file accordingly.
+     *
+     * @return A {@link JPanel} containing a checkbox and button for file processing.
+     */
     public JPanel createFileProcessingPanel() {
         JCheckBox fileFormaterCheckBox = new JCheckBox("Create binary interactions");
 
