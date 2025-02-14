@@ -142,7 +142,14 @@ public class InteractionsCreator {
         }
 
         addFeatures(participantEvidence, data);
-        addXrefs(participantEvidence, xref, xrefDb, authorName);
+
+
+        //TODO: see this part :
+
+        Xref inputParticipantName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
+        participantEvidence.getXrefs().add(inputParticipantName);
+//        addXrefs(participantEvidence, xref, xrefDb, authorName);
+
         addExperimentalPreparations(participantEvidence, experimentalPreparations);
 
         if (participantIdentificationMethod != null) {
@@ -161,7 +168,7 @@ public class InteractionsCreator {
     }
 
     private void addXrefs(ParticipantEvidence participantEvidence, CvTerm xref, CvTerm xrefDb, Xref authorName) {
-        if (xref != null && xref.getShortName() != null) {
+        if (xref != null && xref.getShortName() != null && xrefDb != null) {
             Xref xmlXref = new XmlXref(xref, xref.getShortName());
             xmlXref.getDatabase().setFullName(xrefDb.getShortName());
             xmlXref.getDatabase().setMIIdentifier(xrefDb.getMIIdentifier());
@@ -538,6 +545,11 @@ public class InteractionsCreator {
         String featureXrefDb = data.get(FEATURE_XREF_DB.name + featureIndexString);
 
         XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureType);
+
+        if (featureEvidence.getType().getMIIdentifier() == null || featureEvidence.getType().getMIIdentifier().isEmpty()) {
+            return null;
+        }
+
 
         Position position = getRangePosition(featureStart, featureRangeType);
         XmlRange featureRange = getFeatureRange(position, position);

@@ -6,6 +6,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GUIUtils;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.io.File;
 
@@ -68,13 +69,13 @@ public class InteractionWriterGui {
         dateSelectionPanel.setLayout(new FlowLayout());
         dateSelectionPanel.setBorder(BorderFactory.createTitledBorder("5.1 Select the publication Date"));
 
-        JLabel dateLabel = new JLabel("Date:");
         SpinnerDateModel dateModel = new SpinnerDateModel();
         JSpinner dateSpinner = new JSpinner(dateModel);
         JSpinner.DateEditor editor = new JSpinner.DateEditor(dateSpinner, "dd/MM/yyyy");
         dateSpinner.setEditor(editor);
 
-        dateSelectionPanel.add(dateLabel);
+        dateSpinner.setBorder(new TitledBorder("Publication release date"));
+        dateSpinner.setPreferredSize(new Dimension(200, 50));
         dateSelectionPanel.add(dateSpinner);
         return dateSelectionPanel;
     }
