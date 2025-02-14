@@ -110,9 +110,7 @@ public class InteractionsCreator {
         }
 
         Map<DataTypeAndColumn, CvTerm> terms = fetchCvTermsFromData(data);
-
         List<CvTerm> experimentalPreparations = getExperimentalPreparations(data.get(EXPERIMENTAL_PREPARATION.name));
-
         CvTerm participantIdDb = terms.get(PARTICIPANT_ID_DB);
         CvTerm experimentalRole = terms.get(EXPERIMENTAL_ROLE);
         CvTerm xref= terms.get(PARTICIPANT_XREF);
@@ -143,6 +141,36 @@ public class InteractionsCreator {
             participantEvidence.setExperimentalRole(experimentalRole);
         }
 
+        addFeatures(participantEvidence, data);
+        addXrefs(participantEvidence, xref, xrefDb, authorName);
+        addExperimentalPreparations(participantEvidence, experimentalPreparations);
+
+        if (participantIdentificationMethod != null) {
+            participantEvidence.getIdentificationMethods().add(participantIdentificationMethod);
+        }
+
+        return participantEvidence;
+    }
+
+    private void addExperimentalPreparations(XmlParticipantEvidence participantEvidence, List<CvTerm> experimentalPreparations) {
+        for (CvTerm experimentalPreparation : experimentalPreparations) {
+            if (experimentalPreparation != null) {
+                participantEvidence.getExperimentalPreparations().add(experimentalPreparation);
+            }
+        }
+    }
+
+    private void addXrefs(ParticipantEvidence participantEvidence, CvTerm xref, CvTerm xrefDb, Xref authorName) {
+        if (xref != null && xref.getShortName() != null) {
+            Xref xmlXref = new XmlXref(xref, xref.getShortName());
+            xmlXref.getDatabase().setFullName(xrefDb.getShortName());
+            xmlXref.getDatabase().setMIIdentifier(xrefDb.getMIIdentifier());
+            participantEvidence.getXrefs().add(xmlXref);
+            participantEvidence.getXrefs().add(authorName);
+        }
+    }
+
+    private void addFeatures(XmlParticipantEvidence participantEvidence, Map<String, String> data) {
         if (numberOfFeature > 0) {
             for (int i = 0; i < numberOfFeature; i++) {
                 XmlFeatureEvidence feature = createFeature(i, data);
@@ -151,26 +179,6 @@ public class InteractionsCreator {
                 }
             }
         }
-
-        for (CvTerm experimentalPreparation : experimentalPreparations) {
-            if (experimentalPreparation != null) {
-                participantEvidence.getExperimentalPreparations().add(experimentalPreparation);
-            }
-        }
-
-        if (xref != null && xref.getShortName() != null) {
-            Xref xmlXref = new XmlXref(xref, xref.getShortName());
-            xmlXref.getDatabase().setFullName(xrefDb.getShortName());
-            xmlXref.getDatabase().setMIIdentifier(xrefDb.getMIIdentifier());
-            participantEvidence.getXrefs().add(xmlXref);
-            participantEvidence.getXrefs().add(authorName);
-        }
-
-        if (participantIdentificationMethod != null) {
-            participantEvidence.getIdentificationMethods().add(participantIdentificationMethod);
-        }
-
-        return participantEvidence;
     }
 
     private void setParticipantExpressedInOrganism(ParticipantEvidence participantEvidence, String participantExpressedInOrganism) {
