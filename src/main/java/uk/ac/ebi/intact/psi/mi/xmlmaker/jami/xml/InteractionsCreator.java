@@ -144,10 +144,9 @@ public class InteractionsCreator {
         addFeatures(participantEvidence, data);
 
 
-        //TODO: see this part :
-
-        Xref inputParticipantName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
-        participantEvidence.getXrefs().add(inputParticipantName);
+        //TODO: see the commented part for psi-mi verification:
+//        Xref inputParticipantName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
+//        participantEvidence.getXrefs().add(inputParticipantName);
 //        addXrefs(participantEvidence, xref, xrefDb, authorName);
 
         addExperimentalPreparations(participantEvidence, experimentalPreparations);

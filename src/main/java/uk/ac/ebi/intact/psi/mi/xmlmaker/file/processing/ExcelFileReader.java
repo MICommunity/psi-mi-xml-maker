@@ -295,6 +295,8 @@ public class ExcelFileReader  {
         Iterator<List<String>> iterator = readFileWithSeparator();
         String tmpFilePath = currentFilePath;
 
+        //todo: refactor?
+
         if (fileData == null || fileData.isEmpty()) {
             LOGGER.severe("Header row is missing or invalid.");
             XmlMakerUtils.showErrorDialog("Header row is missing or invalid.");
@@ -332,10 +334,9 @@ public class ExcelFileReader  {
                 }
 
                 String previousId = row.get(idColumnIndex);
-                String previousDb = null;
-
-                String updatedOrganism = null;
-                String participantName = null;
+                String previousDb = row.get(previousIdDbColumnIndex);
+                String updatedOrganism = row.get(organismColumnIndex);
+                String participantName = idColumnName;
                 String uniprotResult;
                 String uniprotResultDb;
 
@@ -361,7 +362,9 @@ public class ExcelFileReader  {
                     if (result == null) {
                         LOGGER.warning("No UniProt results for ID: " + previousId);
                         uniprotResult = previousId;
-                        uniprotResultDb = previousDb; //todo: add previous organism and name
+                        uniprotResultDb = previousDb;
+                        updatedOrganism = row.get(organismColumnIndex);
+//                        participantName = participantName;
 
                     } else {
                         uniprotResult = result.getUniprotAc();
