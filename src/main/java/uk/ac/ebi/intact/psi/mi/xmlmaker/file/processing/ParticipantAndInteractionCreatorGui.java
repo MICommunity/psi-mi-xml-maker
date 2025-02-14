@@ -43,6 +43,8 @@ public class ParticipantAndInteractionCreatorGui {
     private final JComboBox<String> preyOrganism = new JComboBox<>();
     private final JComboBox<String> preyIdDatabase = new JComboBox<>();
 
+    private final JComboBox<String> preyExpressedInOrganism = new JComboBox<>();
+
     @Getter
     private final JSpinner numberOfExperimentalPrep = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
 
@@ -143,10 +145,12 @@ public class ParticipantAndInteractionCreatorGui {
         baitOrganism.setEditable(true);
         preyOrganism.setEditable(true);
         hostOrganism.setEditable(true);
+        preyExpressedInOrganism.setEditable(true);
         for (ParticipantOrganism participantOrganism : ParticipantOrganism.values()) {
             preyOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
             baitOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
             hostOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
+            preyExpressedInOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
         }
     }
 
@@ -180,6 +184,7 @@ public class ParticipantAndInteractionCreatorGui {
         participantDetails.put(DataForRawFile.PREY_ORGANISM.name,
                 isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), DataForRawFile.PREY_ORGANISM.name));
         participantDetails.put(DataForRawFile.HOST_ORGANSIM.name, isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(hostOrganism.getSelectedItem()).toString()), DataForRawFile.HOST_ORGANSIM.name));
+        participantDetails.put(DataForRawFile.PREY_EXPRESSED_IN_ORGANISM.name, isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyExpressedInOrganism.getSelectedItem()).toString()), DataForRawFile.PREY_EXPRESSED_IN_ORGANISM.name));
 
         return participantDetails;
     }
@@ -388,6 +393,7 @@ public class ParticipantAndInteractionCreatorGui {
         preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyExperimentalPreparation, DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
         preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyBiologicalRole, DataForRawFile.PREY_BIOLOGICAL_ROLE.name));
         preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyOrganism, DataForRawFile.PREY_ORGANISM.name));
+        preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyExpressedInOrganism, DataForRawFile.PREY_EXPRESSED_IN_ORGANISM.name));
         preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyExperimentalPreparation, DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
 
         JButton createFeatureButton = new JButton("Create feature(s)");

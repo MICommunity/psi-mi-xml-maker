@@ -16,6 +16,7 @@ public enum DataForRawFile {
 
     BAIT_ORGANISM("Bait Organism", true, false, false),
     PREY_ORGANISM("Prey Organism", false, false, false),
+    PREY_EXPRESSED_IN_ORGANISM("Prey Expressed In Organism", false, false, false),
 
     FEATURE_TYPE("Feature type", false, false, true),
     FEATURE_START_LOCATION("Feature Start Location", false, false, true),

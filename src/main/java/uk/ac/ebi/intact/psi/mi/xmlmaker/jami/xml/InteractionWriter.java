@@ -16,6 +16,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 
 import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
@@ -143,10 +144,15 @@ public class InteractionWriter {
      * @return the default release date as an {@link XMLGregorianCalendar}.
      * @throws RuntimeException if an error occurs while creating the release date.
      */
+
     private XMLGregorianCalendar createDefaultReleaseDate() {
         try {
             GregorianCalendar calendar = new GregorianCalendar();
-            return DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
+            XMLGregorianCalendar xmlGregorianCalendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
+            xmlGregorianCalendar.setTimezone(DatatypeConstants.FIELD_UNDEFINED);
+            xmlGregorianCalendar.setTime(DatatypeConstants.FIELD_UNDEFINED, DatatypeConstants.FIELD_UNDEFINED, DatatypeConstants.FIELD_UNDEFINED);
+
+            return xmlGregorianCalendar;
         } catch (DatatypeConfigurationException e) {
             LOGGER.error("Error while creating default release date", e);
             throw new RuntimeException(e);

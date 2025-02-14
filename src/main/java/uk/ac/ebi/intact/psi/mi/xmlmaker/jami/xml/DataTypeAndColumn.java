@@ -18,6 +18,7 @@ public enum DataTypeAndColumn {
     PARTICIPANT_ID_DB("Participant ID database"),
     PARTICIPANT_TYPE("Participant type"),
     PARTICIPANT_ORGANISM("Participant organism"),
+    PARTICIPANT_EXPRESSED_IN_ORGANISM("Participant expressed in organism"),
     EXPERIMENTAL_ROLE("Experimental role"),
     PARTICIPANT_IDENTIFICATION_METHOD("Participant identification method"),
 

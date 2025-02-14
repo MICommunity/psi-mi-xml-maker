@@ -281,10 +281,10 @@ public class XmlMakerUtils {
 
         for (Term term : terms) {
             XmlCvTerm xmlTerm = new XmlCvTerm(term.getLabel(), term.getOboId().getIdentifier());
-            if (!term.isHasChildren()){
+//            if (!term.isHasChildren()){
                 nameToCvTerm.put(term.getName(), xmlTerm);
                 termsNames.add(term.getName());
-            }
+//            }
         }
         termsNames.sort(String::compareTo);
         return termsNames;

@@ -109,38 +109,9 @@ public class InteractionsCreator {
             }
         }
 
-        Map<DataTypeAndColumn, CompletableFuture<CvTerm>> futureTerms = Stream.of(PARTICIPANT_TYPE, PARTICIPANT_ID_DB,
-                        EXPERIMENTAL_ROLE, EXPERIMENTAL_PREPARATION, PARTICIPANT_IDENTIFICATION_METHOD,
-                        PARTICIPANT_XREF, PARTICIPANT_XREF_DB)
-                .map(type -> Map.entry(type, data.get(type.name)))
-                .filter(e -> e.getValue() != null)
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        e -> CompletableFuture.supplyAsync(() -> utils.fetchTerm(e.getValue()))
-                ));
+        Map<DataTypeAndColumn, CvTerm> terms = fetchCvTermsFromData(data);
 
-        Map<DataTypeAndColumn, CvTerm> terms = futureTerms
-                .entrySet()
-                .stream()
-                .filter(e -> e.getValue().join() != null)
-                .collect(Collectors
-                        .toMap(
-                                Map.Entry::getKey,
-                                e -> e.getValue().join()
-                        ));
-
-        List<CvTerm> experimentalPreparations = new ArrayList<>();
-
-        if (data.get(EXPERIMENTAL_PREPARATION.name) != null) {
-            if (!data.get(EXPERIMENTAL_PREPARATION.name).contains(";")) {
-                experimentalPreparations.add(utils.fetchTerm(data.get(EXPERIMENTAL_PREPARATION.name)));
-            } else {
-                String[] preparations = data.get(EXPERIMENTAL_PREPARATION.name).split(";");
-                for (String preparation : preparations) {
-                    experimentalPreparations.add(utils.fetchTerm(preparation.trim()));
-                }
-            }
-        }
+        List<CvTerm> experimentalPreparations = getExperimentalPreparations(data.get(EXPERIMENTAL_PREPARATION.name));
 
         CvTerm participantIdDb = terms.get(PARTICIPANT_ID_DB);
         CvTerm experimentalRole = terms.get(EXPERIMENTAL_ROLE);
@@ -153,7 +124,7 @@ public class InteractionsCreator {
         String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
         Xref uniqueId = new XmlXref(participantIdDb, participantId);
 
-        Xref authorName = new XmlXref(participantIdDb, name, utils.fetchTerm("author input"));
+        Xref authorName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
 
         if (participantOrganism == null || participantOrganism.isEmpty()) {
             LOGGER.warning("Missing or invalid participant organism for participant: " + name);
@@ -162,30 +133,11 @@ public class InteractionsCreator {
 
         Organism organism = createOrganism(participantOrganism);
 
-        Interactor participant = new XmlPolymer(name, organism, uniqueId);
-
-        switch (data.get(PARTICIPANT_TYPE.name).toLowerCase().trim()){
-            case "protein":
-                participant = new XmlProtein(name, organism, uniqueId);
-                break;
-            case "nucleic acid":
-                participant = new XmlNucleicAcid(name, organism, uniqueId);
-                CvTerm rnaTerm = utils.fetchTerm("protein");
-                Annotation annotation = new XmlAnnotation(rnaTerm);
-                participant.getAnnotations().add(annotation);
-                participant.setInteractorType(rnaTerm); //todo: check here
-                break;
-            case "molecule":
-                participant = new XmlMolecule(name, organism, uniqueId);
-                break;
-            case "gene":
-                participant = new XmlGene(name, organism, uniqueId);
-                break;
-            default:
-                break;
-        }
-
+        Interactor participant = createParticipantByType(data.get(PARTICIPANT_TYPE.name), name, organism, uniqueId);
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
+
+        String participantExpressedInOrganism = data.get(PARTICIPANT_EXPRESSED_IN_ORGANISM.name);
+        setParticipantExpressedInOrganism(participantEvidence, participantExpressedInOrganism);
 
         if (experimentalRole != null) {
             participantEvidence.setExperimentalRole(experimentalRole);
@@ -194,7 +146,9 @@ public class InteractionsCreator {
         if (numberOfFeature > 0) {
             for (int i = 0; i < numberOfFeature; i++) {
                 XmlFeatureEvidence feature = createFeature(i, data);
-                participantEvidence.addFeature(feature);
+                if (feature != null) {
+                    participantEvidence.addFeature(feature);
+                }
             }
         }
 
@@ -217,6 +171,67 @@ public class InteractionsCreator {
         }
 
         return participantEvidence;
+    }
+
+    private void setParticipantExpressedInOrganism(ParticipantEvidence participantEvidence, String participantExpressedInOrganism) {
+        if (!participantExpressedInOrganism.trim().isEmpty()) {
+            Organism participantExpressedIn = createOrganism(participantExpressedInOrganism);
+            participantEvidence.setExpressedInOrganism(participantExpressedIn);
+        }
+    }
+
+    private Interactor createParticipantByType(String participantType, String name, Organism organism, Xref uniqueId) {
+        Interactor participant = new XmlPolymer();
+
+        switch (participantType.toLowerCase().trim()){
+            case "protein":
+                participant = new XmlProtein(name, organism, uniqueId);
+                break;
+            case "nucleic acid":
+                participant = new XmlNucleicAcid(name, organism, uniqueId);
+                break;
+            case "molecule":
+                participant = new XmlMolecule(name, organism, uniqueId);
+                break;
+            case "gene":
+                participant = new XmlGene(name, organism, uniqueId);
+                break;
+            default:
+                break;
+        }
+
+        return participant;
+    }
+
+    private List<CvTerm> getExperimentalPreparations(String experimentalPreparation){
+        List<CvTerm> experimentalPreparations = new ArrayList<>();
+        if (experimentalPreparation != null) {
+            if (!experimentalPreparation.contains(";")) {
+                experimentalPreparations.add(utils.fetchTerm(experimentalPreparation));
+            } else {
+                String[] preparations = experimentalPreparation.split(";");
+                for (String preparation : preparations) {
+                    experimentalPreparations.add(utils.fetchTerm(preparation.trim()));
+                }
+            }
+        }
+        return experimentalPreparations;
+    }
+
+    private Map<DataTypeAndColumn, CvTerm> fetchCvTermsFromData(Map<String, String> data) {
+        Map<DataTypeAndColumn, CompletableFuture<CvTerm>> futureTerms = Stream.of(PARTICIPANT_TYPE, PARTICIPANT_ID_DB,
+                        EXPERIMENTAL_ROLE, EXPERIMENTAL_PREPARATION, PARTICIPANT_IDENTIFICATION_METHOD,
+                        PARTICIPANT_XREF, PARTICIPANT_XREF_DB)
+                .map(type -> Map.entry(type, data.get(type.name)))
+                .filter(e -> e.getValue() != null)
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> CompletableFuture.supplyAsync(() -> utils.fetchTerm(e.getValue()))
+                ));
+
+        return futureTerms.entrySet().stream()
+                .filter(e -> e.getValue().join() != null)
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().join()));
     }
 
     /**
@@ -507,63 +522,79 @@ public class InteractionsCreator {
      */
     private XmlFeatureEvidence createFeature(int featureIndex, Map<String, String> data) {
         String featureIndexString = "_" + featureIndex;
-        FeatureXrefContainer featureXrefContainer = new FeatureXrefContainer();
 
-        String featureType = data.get(DataTypeAndColumn.FEATURE_TYPE.name + featureIndexString);
-        String featureStartRange = data.get(DataTypeAndColumn.FEATURE_START.name + featureIndexString);
-        String featureEndRange = data.get(DataTypeAndColumn.FEATURE_END.name + featureIndexString);
-        String featureRangeType = data.get(DataTypeAndColumn.FEATURE_RANGE_TYPE.name + featureIndexString);
-        String featureXref = data.get(DataTypeAndColumn.FEATURE_XREF.name + featureIndexString);
-        String featureXrefDb = data.get(DataTypeAndColumn.FEATURE_XREF_DB.name + featureIndexString);
+        String featureType = data.get(FEATURE_TYPE.name + featureIndexString);
+        String featureStart = data.get(FEATURE_START.name + featureIndexString);
+        String featureRangeType = data.get(FEATURE_RANGE_TYPE.name + featureIndexString);
+        String featureXref = data.get(FEATURE_XREF.name + featureIndexString);
+        String featureXrefDb = data.get(FEATURE_XREF_DB.name + featureIndexString);
 
-        if (featureType == null || featureStartRange == null || featureEndRange == null) {
-            return null;
-        }
+        XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureType);
 
-        String featureTypeMiId = utils.fetchMiId(featureType);
-        CvTerm featureTypeCv = new XmlCvTerm(featureType, featureTypeMiId);
-        XmlFeatureEvidence featureEvidence = new XmlFeatureEvidence(featureTypeCv);
+        Position position = getRangePosition(featureStart, featureRangeType);
+        XmlRange featureRange = getFeatureRange(position, position);
 
-        XmlRange featureRange = new XmlRange();
-        Position startPosition = checkFeatureRangeType(featureStartRange, featureRangeType);
-        Position endPosition = checkFeatureRangeType(featureEndRange, featureRangeType);
-        featureRange.setPositions(startPosition, endPosition);
+        FeatureXrefContainer featureXrefContainer = getFeatureXrefContainer(featureXref, featureXrefDb);
 
-        if (featureXref != null && featureXrefDb != null) {
-            List<String> featuresXrefs = new ArrayList<>();
-            List<CvTerm> featuresXrefsDb = new ArrayList<>();
-
-            if (!featureXref.contains(";")) {
-                featuresXrefs.add(featureXref);
-            } else {
-                String[] xrefs = featureXref.split(";");
-                for (String oneXref : xrefs) {
-                    featuresXrefs.add(oneXref.trim());
-                }
-            }
-
-            if (!featureXrefDb.contains(";")) {
-                featuresXrefsDb.add(utils.fetchTerm(featureXrefDb));
-            } else {
-                String[] xrefsDbs = featureXrefDb.split(";");
-                for (String oneXrefDb : xrefsDbs) {
-                    featuresXrefsDb.add(utils.fetchTerm(oneXrefDb.trim()));
-                }
-            }
-
-            for (int i = 0; i < featuresXrefsDb.size(); i++) {
-                Xref featureXrefXml = new XmlXref(featuresXrefsDb.get(i), featuresXrefs.get(i));
-                featureXrefContainer.getXrefs().add(featureXrefXml);
-
-            }
-
-        }
         featureEvidence.setJAXBXref(featureXrefContainer);
         featureEvidence.setJAXBRangeWrapper(new AbstractXmlFeature.JAXBRangeWrapper());
         featureEvidence.getRanges().add(featureRange);
 
         return featureEvidence;
+    }
 
+    private FeatureXrefContainer getFeatureXrefContainer(String featureXref, String featureXrefDb) {
+        FeatureXrefContainer featureXrefContainer = new FeatureXrefContainer();
+
+        if (featureXref != null && featureXrefDb != null) {
+            List<String> featuresXrefs = getFeatureXrefs(featureXref);
+            List<CvTerm> featuresXrefsDb = getFeatureXrefsDb(featureXrefDb);
+
+            // Ensure both lists are the same size before proceeding
+            int size = Math.min(featuresXrefs.size(), featuresXrefsDb.size());
+
+            for (int i = 0; i < size; i++) {
+                String xref = featuresXrefs.get(i);
+                CvTerm xrefDb = featuresXrefsDb.get(i);
+                if (xref != null && xrefDb != null) {
+                    Xref featureXrefXml = new XmlXref(xrefDb, xref);
+                    featureXrefContainer.getXrefs().add(featureXrefXml);
+                }
+            }
+        }
+
+        return featureXrefContainer;
+    }
+
+    private List<CvTerm> getFeatureXrefsDb(String featureXrefDb) {
+        if (featureXrefDb == null || featureXrefDb.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(featureXrefDb.split(";"))
+                .map(String::trim)
+                .map(utils::fetchTerm)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> getFeatureXrefs(String featureXref) {
+        if (featureXref == null || featureXref.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(featureXref.split(";"))
+                .map(String::trim)
+                .collect(Collectors.toList());
+    }
+
+    private XmlFeatureEvidence getFeatureEvidence(String featureType) {
+        String featureTypeMiId = utils.fetchMiId(featureType);
+        CvTerm featureTypeCv = new XmlCvTerm(featureType, featureTypeMiId);
+        return new XmlFeatureEvidence(featureTypeCv);
+    }
+
+    private XmlRange getFeatureRange(Position startPosition, Position endPosition) {
+        XmlRange featureRange = new XmlRange();
+        featureRange.setPositions(startPosition, endPosition);
+        return featureRange;
     }
 
     /**
@@ -621,7 +652,7 @@ public class InteractionsCreator {
      * @return A {@code Position} object representing the determined range type.
      * @throws RuntimeException If an invalid numeric range is encountered.
      */
-    public Position checkFeatureRangeType(String range, String featureRangeType) {
+    public Position getRangePosition(String range, String featureRangeType) {
         if (featureRangeType.contains("c-term")) return PositionUtils.createCTerminalRangePosition();
 
         if (featureRangeType.contains("n-term")) return PositionUtils.createNTerminalRangePosition();
@@ -636,4 +667,5 @@ public class InteractionsCreator {
 
         return PositionUtils.createUndeterminedPosition();
     }
+
 }

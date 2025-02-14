@@ -50,7 +50,7 @@ public class FileFormater {
     private String[] header = {"Interaction Number", "Input Participant ID", "Input Participant Name",
             "Experimental role", "Input Participant ID database", "Interaction detection method",
             "Participant identification method", "Host organism", "Experimental preparation",
-            "Biological role", "Participant organism"};
+            "Biological role", "Participant organism", "Participant Expressed in organism",};
 
     private final Map<String, Integer> participantCountMap = new HashMap<>();
 
@@ -342,7 +342,7 @@ public class FileFormater {
             if (count > 2) {
                 row.add("association");
             } else {
-                row.add("physical interaction");
+                row.add("physical association"); //todo: check with kalpana
             }
         }
     }
