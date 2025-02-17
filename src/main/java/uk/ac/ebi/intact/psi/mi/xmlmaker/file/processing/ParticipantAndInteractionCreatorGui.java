@@ -44,6 +44,7 @@ public class ParticipantAndInteractionCreatorGui {
     private final JComboBox<String> preyIdDatabase = new JComboBox<>();
 
     private final JComboBox<String> preyExpressedInOrganism = new JComboBox<>();
+    private final JComboBox<String> baitExpressedInOrganism = new JComboBox<>();
 
     @Getter
     private final JSpinner numberOfExperimentalPrep = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
@@ -146,11 +147,13 @@ public class ParticipantAndInteractionCreatorGui {
         preyOrganism.setEditable(true);
         hostOrganism.setEditable(true);
         preyExpressedInOrganism.setEditable(true);
+        baitExpressedInOrganism.setEditable(true);
         for (ParticipantOrganism participantOrganism : ParticipantOrganism.values()) {
             preyOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
             baitOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
             hostOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
             preyExpressedInOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
+            baitExpressedInOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
         }
     }
 
@@ -185,6 +188,8 @@ public class ParticipantAndInteractionCreatorGui {
                 isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), DataForRawFile.PREY_ORGANISM.name));
         participantDetails.put(DataForRawFile.HOST_ORGANSIM.name, isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(hostOrganism.getSelectedItem()).toString()), DataForRawFile.HOST_ORGANSIM.name));
         participantDetails.put(DataForRawFile.PREY_EXPRESSED_IN_ORGANISM.name, isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyExpressedInOrganism.getSelectedItem()).toString()), DataForRawFile.PREY_EXPRESSED_IN_ORGANISM.name));
+        participantDetails.put(DataForRawFile.BAIT_EXPRESSED_IN_ORGANISM.name, isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(baitExpressedInOrganism.getSelectedItem()).toString()), DataForRawFile.BAIT_EXPRESSED_IN_ORGANISM.name));
+
 
         return participantDetails;
     }
@@ -349,7 +354,7 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public JPanel createBaitPanel() {
         JPanel baitPanel = new JPanel();
-        baitPanel.setLayout(new GridLayout(6, 1));
+        baitPanel.setLayout(new GridLayout(4, 1));
         baitPanel.setPreferredSize(panelDimension);
 
         baitPanel.setBorder(BorderFactory.createTitledBorder(" 2.3 Select baits information"));
@@ -359,6 +364,7 @@ public class ParticipantAndInteractionCreatorGui {
         baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitIdDatabase, DataForRawFile.BAIT_ID_DB.name));
         baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitBiologicalRole, DataForRawFile.BAIT_BIOLOGICAL_ROLE.name));
         baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitOrganism, DataForRawFile.BAIT_ORGANISM.name));
+        baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitExpressedInOrganism, DataForRawFile.BAIT_EXPRESSED_IN_ORGANISM.name));
 
         numberOfExperimentalPrep.setPreferredSize(new Dimension(200, 100));
         numberOfExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Select number of experimental preparations"));
@@ -384,7 +390,7 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public JPanel createPreyPanel() {
         JPanel preyPanel = new JPanel();
-        preyPanel.setLayout(new GridLayout(5, 1));
+        preyPanel.setLayout(new GridLayout(4, 1));
         preyPanel.setPreferredSize(panelDimension);
         preyPanel.setBorder(BorderFactory.createTitledBorder(" 2.4 Select preys information"));
         preyPanel.setMaximumSize(panelDimension);

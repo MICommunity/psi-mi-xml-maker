@@ -342,7 +342,7 @@ public class FileFormater {
             if (count > 2) {
                 row.add("association");
             } else {
-                row.add("physical association"); //todo: check with kalpana
+                row.add("physical association");
             }
         }
     }

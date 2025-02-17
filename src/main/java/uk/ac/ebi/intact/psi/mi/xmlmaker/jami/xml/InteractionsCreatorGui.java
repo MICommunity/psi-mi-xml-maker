@@ -6,6 +6,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -252,16 +254,23 @@ public class InteractionsCreatorGui extends JPanel {
         List<String> tableColumnsNames = getTableColumnNames();
         if (excelFileReader.workbook == null) {
             for (int i = 0; i < table.getColumnCount(); i++) {
-                int index = excelFileReader.fileData.indexOf(table.getValueAt(0, i).toString());
-                dataAndIndexes.put(tableColumnsNames.get(i), index);
+                if (Objects.equals(table.getValueAt(0, i).toString(), "No data")){
+                    dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
+                } else {
+                    int index = excelFileReader.fileData.indexOf(table.getValueAt(0, i).toString());
+                    dataAndIndexes.put(tableColumnsNames.get(i), index);
+                }
             }
         } else {
             Sheet sheet = excelFileReader.workbook.getSheetAt(sheets.getSelectedIndex()-1);
             for (int i = 0; i < table.getColumnCount(); i++) {
                 Row row = sheet.getRow(0); // get the header
                 for (Cell cell : row) {
-                    if (cell.getCellType() == STRING && cell.getStringCellValue()
-                            .equals(table.getValueAt(0, i).toString())) {
+                    if (table.getValueAt(0, i).equals("No data")) {
+                        dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
+//                        System.out.println(tableColumnsNames.get(i) + " " + excelFileReader.fileData.size() + 1);
+                    }
+                    if (FileUtils.getCellValueAsString(cell).equals(table.getValueAt(0, i).toString())) {
                         dataAndIndexes.put(tableColumnsNames.get(i), cell.getColumnIndex());
                     }
                 }

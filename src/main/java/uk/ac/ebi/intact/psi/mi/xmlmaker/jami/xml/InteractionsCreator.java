@@ -69,6 +69,8 @@ public class InteractionsCreator {
     public void createParticipantsWithFileFormat() {
         xmlModelledInteractions.clear();
         dataList.clear();
+        System.out.println(columnAndIndex);
+
         if (excelFileReader.workbook == null) {
             fetchDataFileWithSeparator(columnAndIndex);
         } else {
@@ -400,7 +402,11 @@ public class InteractionsCreator {
         Map<String, String> dataMap = new HashMap<>();
         for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
             if (column.initial) {
-                dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
+                if (columnAndIndex.get(column.name) < datum.size()) {
+                    dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
+                } else {
+                    dataMap.put(column.name, "");
+                }
             }
             for (int i = 0; i < numberOfFeature; i++) {
                 if (!column.initial) {

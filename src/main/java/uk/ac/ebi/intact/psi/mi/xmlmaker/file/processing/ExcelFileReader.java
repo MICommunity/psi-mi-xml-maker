@@ -243,6 +243,7 @@ public class ExcelFileReader  {
             }
             columns.addAll(fileData);
         }
+        columns.add("No data");
         return columns;
     }
 
