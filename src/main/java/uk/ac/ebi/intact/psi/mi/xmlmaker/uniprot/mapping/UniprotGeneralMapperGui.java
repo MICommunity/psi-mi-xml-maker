@@ -1,9 +1,12 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 
 import lombok.Getter;
+import psidev.psi.mi.jami.model.CvTerm;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.Enumeration;
+import java.util.Objects;
 
 /**
  * This class provides a graphical user interface (GUI) for selecting Uniprot ID
@@ -30,10 +33,15 @@ public class UniprotGeneralMapperGui {
      */
     public void getUniprotIdChoicePanel(ButtonGroup uniprotIdsGroup, String previousId) {
         JPanel buttonContainer = new JPanel();
+        buttonContainer.setPreferredSize(new Dimension(1000, 700));
+
         JTextField otherIdField = new JTextField("Other id");
         JTextField otherIdDbField = new JTextField("Other id database");
         buttonContainer.add(otherIdField);
         buttonContainer.add(otherIdDbField);
+        JComboBox<String> otherParticipantTypeComboBox = createParticipantTypeComboBox();
+        buttonContainer.add(otherParticipantTypeComboBox);
+
         buttonContainer.setBorder(BorderFactory.createTitledBorder("Select Uniprot ID for: " + previousId));
         buttonContainer.setLayout(new BoxLayout(buttonContainer, BoxLayout.Y_AXIS));
         Enumeration<AbstractButton> buttons = uniprotIdsGroup.getElements();
@@ -47,17 +55,22 @@ public class UniprotGeneralMapperGui {
                 JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.YES_OPTION) {
-            if (!"Other id".equals(otherIdField.getText().trim())
-                    && !otherIdField.getText().trim().isEmpty()) {
+//            if (!"Other id".equals(otherIdField.getText().trim())
+//                    && !otherIdField.getText().trim().isEmpty()) {
+
                 selectedId = otherIdField.getText().trim();
+
 
                 if (otherIdDbField.getText().trim().isEmpty()) {
                     selectedIdDb = "CustomDatabase";
                 } else {
                     selectedIdDb = otherIdDbField.getText().trim();
                 }
-                return;
-            }
+                if (!Objects.requireNonNull(otherParticipantTypeComboBox.getSelectedItem()).toString().equals("Participant Type")) {
+                    selectedParticipantType = otherParticipantTypeComboBox.getSelectedItem().toString();
+                }
+//                return;
+//            }
 
             buttons = uniprotIdsGroup.getElements();
             while (buttons.hasMoreElements()) {
@@ -68,9 +81,24 @@ public class UniprotGeneralMapperGui {
                     break;
                 }
             }
-        } else {
-            selectedId = null;
         }
+
+        System.out.println("selectedId: " + selectedId);
+        System.out.println("selectedDb: " + selectedIdDb);
+        System.out.println("participantType: " + selectedParticipantType);
+
+//        else {
+//            selectedId = null;
+//        }
+    }
+
+    private JComboBox<String> createParticipantTypeComboBox() {
+        JComboBox<String> comboBox = new JComboBox<>();
+        String[] buttons = {"Participant type", "Gene", "Molecule", "Nucleic Acid", "Protein"};
+        for (String button : buttons) {
+            comboBox.addItem(button);
+        }
+        return comboBox;
     }
 
     /**
@@ -110,8 +138,6 @@ public class UniprotGeneralMapperGui {
                     break;
                 }
             }
-        } else {
-            selectedParticipantType = null;
         }
     }
 }

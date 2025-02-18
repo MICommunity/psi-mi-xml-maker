@@ -123,8 +123,6 @@ public class InteractionsCreator {
         String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
         Xref uniqueId = new XmlXref(participantIdDb, participantId);
 
-//        Xref authorName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
-
         if (participantOrganism == null || participantOrganism.isEmpty()) {
             LOGGER.warning("Missing or invalid participant organism for participant: " + name);
             return null;
@@ -144,11 +142,11 @@ public class InteractionsCreator {
 
         addFeatures(participantEvidence, data);
 
+        addXrefs(participantEvidence, xref, xrefDb);
 
         //TODO: see the commented part for psi-mi verification:
-//        Xref inputParticipantName = new XmlXref(participantIdDb, participantId, utils.fetchTerm("inferred by author"));
-//        participantEvidence.getXrefs().add(inputParticipantName);
-        addXrefs(participantEvidence, xref, xrefDb);
+//        Xref authorName = new XmlXref(xrefDb, xref.getShortName(), utils.fetchTerm("inferred by author"));
+//        participantEvidence.getXrefs().add(authorName);
 
         addExperimentalPreparations(participantEvidence, experimentalPreparations);
 
@@ -558,7 +556,6 @@ public class InteractionsCreator {
         if (featureEvidence.getType().getMIIdentifier() == null || featureEvidence.getType().getMIIdentifier().isEmpty()) {
             return null;
         }
-
 
         Position position = getRangePosition(featureStart, featureRangeType);
         XmlRange featureRange = getFeatureRange(position, position);

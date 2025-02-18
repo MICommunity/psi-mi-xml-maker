@@ -504,12 +504,17 @@ public class ExcelFileReader  {
                     }
                 }
             }
+
             for (UniprotResult uniprotResult : swissProtEntries) {
                 if (uniprotResult.getUniprotAc().equals(mapperGui.getSelectedId())) {
                     oneUniprotId = uniprotResult;
                     return oneUniprotId;
                 }
             }
+            oneUniprotId = new UniprotResult(mapperGui.getSelectedId(), mapperGui.getSelectedId(),
+                    organism, null, null, mapperGui.getSelectedIdDb(),
+                    -1, mapperGui.getSelectedParticipantType());
+
         } else if (!tremblEntries.isEmpty()) {
             tremblEntries.sort(Comparator.comparingInt(UniprotResult::getSequenceSize).reversed());
             oneUniprotId = tremblEntries.get(0);

@@ -34,7 +34,7 @@ public class InteractionsCreatorGui extends JPanel {
     private List<List<String>> firstLines = new ArrayList<>();
     private boolean isUpdatingSheets = false;
 
-    private final JSpinner numberOfFeatures = new JSpinner(new SpinnerNumberModel(0, 0, 10, 1));
+    private final JSpinner numberOfFeatures = new JSpinner(new SpinnerNumberModel(1, 0, 10, 1));
 
 
     @Getter
