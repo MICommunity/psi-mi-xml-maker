@@ -104,8 +104,10 @@ public class XmlMakerUtils {
     public static String fetchTaxIdForOrganism(String organismName) {
         String taxId = nameToTaxIdCache.get(organismName);
         if (taxId != null) return taxId;
-        if (organismName.matches("\\d+")) return organismName; // already a taxId
+        if (organismName.matches("\\d+") || organismName.equals("-1") || organismName.equals("-2")) return organismName; // already a taxId
         if (organismName.toLowerCase().contains("organism") || organismName.isEmpty()) {return null;}
+
+        //todo: in vitro or chemical synthesis
 
         String apiResponse = fetchTaxIdWithApi(organismName);
         String oboId = apiResponse != null ? extractOboId(apiResponse) : null;
@@ -281,10 +283,8 @@ public class XmlMakerUtils {
 
         for (Term term : terms) {
             XmlCvTerm xmlTerm = new XmlCvTerm(term.getLabel(), term.getOboId().getIdentifier());
-//            if (!term.isHasChildren()){
                 nameToCvTerm.put(term.getName(), xmlTerm);
                 termsNames.add(term.getName());
-//            }
         }
         termsNames.sort(String::compareTo);
         return termsNames;

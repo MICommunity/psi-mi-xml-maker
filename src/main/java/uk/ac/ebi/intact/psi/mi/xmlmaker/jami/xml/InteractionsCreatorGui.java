@@ -7,7 +7,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -15,8 +14,6 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.apache.poi.ss.usermodel.CellType.STRING;
 
 /**
  * This class provides a graphical user interface for creating interaction participants
@@ -253,27 +250,35 @@ public class InteractionsCreatorGui extends JPanel {
     public Map<String, Integer> getDataAndIndexes() {
         List<String> tableColumnsNames = getTableColumnNames();
         if (excelFileReader.workbook == null) {
-            for (int i = 0; i < table.getColumnCount(); i++) {
-                if (Objects.equals(table.getValueAt(0, i).toString(), "No data")){
-                    dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
-                } else {
-                    int index = excelFileReader.fileData.indexOf(table.getValueAt(0, i).toString());
-                    dataAndIndexes.put(tableColumnsNames.get(i), index);
-                }
-            }
+            getDataAndIndexesSeparatedFile(tableColumnsNames);
         } else {
             Sheet sheet = excelFileReader.workbook.getSheetAt(sheets.getSelectedIndex()-1);
-            for (int i = 0; i < table.getColumnCount(); i++) {
-                Row row = sheet.getRow(0); // get the header
-                for (Cell cell : row) {
-                    if (table.getValueAt(0, i).equals("No data")) {
-                        dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
-//                        System.out.println(tableColumnsNames.get(i) + " " + excelFileReader.fileData.size() + 1);
-                    }
-                    if (FileUtils.getCellValueAsString(cell).equals(table.getValueAt(0, i).toString())) {
-                        dataAndIndexes.put(tableColumnsNames.get(i), cell.getColumnIndex());
-                    }
+            getDataAndIndexesWorkbook(tableColumnsNames, sheet);
+        }
+        return dataAndIndexes;
+    }
+
+    private void getDataAndIndexesWorkbook(List<String> tableColumnsNames, Sheet sheet) {
+        Row row = sheet.getRow(0); // get the header
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            for (Cell cell : row) {
+                if (table.getValueAt(0, i).equals("No data")) {
+                    dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
                 }
+                if (FileUtils.getCellValueAsString(cell).equals(table.getValueAt(0, i).toString())) {
+                    dataAndIndexes.put(tableColumnsNames.get(i), cell.getColumnIndex());
+                }
+            }
+        }
+    }
+
+    private Map<String, Integer> getDataAndIndexesSeparatedFile(List<String> tableColumnsNames){
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            if (Objects.equals(table.getValueAt(0, i).toString(), "No data")){
+                dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
+            } else {
+                int index = excelFileReader.fileData.indexOf(table.getValueAt(0, i).toString());
+                dataAndIndexes.put(tableColumnsNames.get(i), index);
             }
         }
         return dataAndIndexes;

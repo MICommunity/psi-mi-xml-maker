@@ -15,10 +15,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * This class is responsible for fetching and processing UniProt results based on a given protein, previous database,
@@ -37,6 +34,7 @@ public class UniprotGeneralMapper {
     @Setter
     private UniprotResult selectedUniprot;
     private ButtonGroup buttonGroup  = new ButtonGroup();
+    private final List<String> uniprotIdNotFound = new ArrayList<>();
 
     /**
      * Fetches UniProt results for the given protein, previous database, and organism.
@@ -48,6 +46,9 @@ public class UniprotGeneralMapper {
      */
     public ArrayList<UniprotResult> fetchUniprotResult(String protein, String previousDb, String organism){
         try {
+            if (!uniprotIdNotFound.isEmpty()){
+                XmlMakerUtils.showInfoDialog("Uniprot IDs deleted from uniprot database: " + uniprotIdNotFound);
+            }
             return getUniprotIds(getUniprotResponse(protein, previousDb, organism));
         } catch (Exception e) {
             XmlMakerUtils.showErrorDialog("Error fetching UniProt results, please check your internet connection");
@@ -65,17 +66,7 @@ public class UniprotGeneralMapper {
      * @return A {@link JsonObject} representing the response from the UniProt API.
      */
     public JsonObject getUniprotResponse(String protein, String previousDb, String organism){
-        StringBuilder urlBuilder = new StringBuilder("https://rest.uniprot.org/uniprotkb/search?query=(xref:");
-        urlBuilder.append(protein);
-        if (organism != null) {
-            urlBuilder.append("%20AND%20organism_id:").append(organism);
-        }
-        if (previousDb != null && !previousDb.equalsIgnoreCase("uniprotkb")) {
-            urlBuilder.append("%20AND%20database:").append(previousDb);
-        }
-        urlBuilder.append(")");
-
-        String urlString = urlBuilder.toString();
+        String urlString = buildUrl(protein, previousDb, organism);
 
         try {
             URL url = new URL(urlString);
@@ -93,14 +84,33 @@ public class UniprotGeneralMapper {
                 return JsonParser.parseString(content.toString()).getAsJsonObject();
             } catch (Exception e) {
                 LOGGER.error("Error fetching Uniprot response: {}", e.getMessage(), e);
+                return null;
             } finally {
                 connection.disconnect();
             }
         } catch (Exception e) {
             LOGGER.error("Error fetching Uniprot response: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private String buildUrl(String protein, String previousDb, String organism) {
+        String baseUrl = "https://rest.uniprot.org/uniprotkb/search?query=";
+        if (organism.equals("-2") || organism.equals("-1") || previousDb.trim().equalsIgnoreCase("uniprotkb")){
+            return baseUrl + protein;
         }
 
-        return null;
+        StringBuilder urlBuilder = new StringBuilder(baseUrl + "(xref:");
+        urlBuilder.append(protein);
+        if (organism != null) {
+            urlBuilder.append("%20AND%20organism_id:").append(organism);
+        }
+        if (previousDb != null && !previousDb.equalsIgnoreCase("uniprotkb")) { //todo: handle better
+            urlBuilder.append("%20AND%20database:").append(previousDb);
+        }
+        urlBuilder.append(")");
+
+        return urlBuilder.toString();
     }
 
     /**
@@ -112,7 +122,7 @@ public class UniprotGeneralMapper {
     public ArrayList<UniprotResult> getUniprotIds(JsonObject results) {
         ArrayList<UniprotResult> uniprotResults = new ArrayList<>();
 
-        if (results.isJsonNull()) {
+        if (results.isJsonNull()){
             return uniprotResults;
         }
 
@@ -120,34 +130,52 @@ public class UniprotGeneralMapper {
 
         for (JsonElement element : resultsAsJson) {
             JsonObject result = element.getAsJsonObject();
-
-            String uniprotAc;
-            String name;
             String entryType = result.get("entryType").getAsString();
-            String uniprotLink;
-            String organism;
-            int sequenceSize;
+            UniprotResult oneResult;
 
             if (!Objects.equals(entryType, "Inactive")){
-                uniprotAc = result.get("primaryAccession").getAsString();
-                name = result.get("uniProtkbId").getAsString();
-                organism = result.get("organism").getAsJsonObject().get("taxonId").getAsString();
-                sequenceSize = result.get("sequence").getAsJsonObject().get("length").getAsInt();
+                oneResult = getUniprotResultFromActiveID(result);
             } else {
-                uniprotAc = result.get("inactiveReason").getAsJsonObject().get("mergeDemergeTo").getAsString();
-                name = uniprotAc;
-                organism = "";
-                sequenceSize = 0;
+                oneResult = getUniprotResultFromInactiveID(result);
             }
-            uniprotLink = "https://www.uniprot.org/uniprotkb/" + uniprotAc;
 
-            UniprotResult oneResult = new UniprotResult(uniprotAc, name, organism,
-                    entryType, uniprotLink, "UniprotKB", sequenceSize, "protein");
-            uniprotResults.add(oneResult);
+            if (oneResult != null) {
+                uniprotResults.add(oneResult);
+            }
         }
 
         setButtonGroup(uniprotResults);
+        System.out.println(uniprotIdNotFound);
         return uniprotResults;
+    }
+
+    private UniprotResult getUniprotResultFromInactiveID(JsonObject result) {
+        JsonObject inactiveResult = result.get("inactiveReason").getAsJsonObject();
+        if (inactiveResult.get("inactiveReasonType").getAsString().equals("DELETED")) {
+            uniprotIdNotFound.add(result.get("primaryAccession").getAsString());
+            return null;
+        } else if (inactiveResult.get("inactiveReasonType").getAsString().equals("MERGED")) {
+            if (inactiveResult.get("mergeDemergeTo").getAsString() != null) {
+                String name = inactiveResult.get("mergeDemergeTo").getAsString();
+                String organism = "";
+                JsonObject newResult = getUniprotResponse(name, "uniprotkb", organism);
+                JsonArray resultsAsJson = newResult.get("results").getAsJsonArray();
+                return getUniprotResultFromActiveID(resultsAsJson.get(0).getAsJsonObject());
+            }
+        }
+        return null;
+    }
+
+    private UniprotResult getUniprotResultFromActiveID(JsonObject result) {
+        String uniprotAc = result.get("primaryAccession").getAsString();
+        String name = result.get("uniProtkbId").getAsString();
+        String organism = result.get("organism").getAsJsonObject().get("taxonId").getAsString();
+        int sequenceSize = result.get("sequence").getAsJsonObject().get("length").getAsInt();
+        String uniprotLink = "https://www.uniprot.org/uniprotkb/" + uniprotAc;
+        String entryType = result.get("entryType").getAsString();
+
+        return new UniprotResult(uniprotAc, name, organism,
+                entryType, uniprotLink, "UniprotKB", sequenceSize, "protein");
     }
 
     /**

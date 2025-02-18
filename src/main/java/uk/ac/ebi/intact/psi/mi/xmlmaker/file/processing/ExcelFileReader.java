@@ -483,7 +483,7 @@ public class ExcelFileReader  {
         List<UniprotResult> tremblEntries = new ArrayList<>();
         List<UniprotResult> noEntryTypes = new ArrayList<>();
 
-        if (uniprotResults.isEmpty()) {
+        if (uniprotResults.isEmpty() || uniprotResults == null) {
             mapperGui.getParticipantChoicePanel(previousId);
             oneUniprotId = new UniprotResult(previousId, previousId, organism, null, null,
                     previousIdDb, -1, mapperGui.getSelectedParticipantType());

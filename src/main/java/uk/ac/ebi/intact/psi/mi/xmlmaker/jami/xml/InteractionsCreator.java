@@ -10,7 +10,6 @@ import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
@@ -147,9 +146,9 @@ public class InteractionsCreator {
 
 
         //TODO: see the commented part for psi-mi verification:
-//        Xref inputParticipantName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
-//        participantEvidence.getXrefs().add(inputParticipantName);
-//        addXrefs(participantEvidence, xref, xrefDb, authorName);
+        Xref inputParticipantName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
+        participantEvidence.getXrefs().add(inputParticipantName);
+        addXrefs(participantEvidence, xref, xrefDb, authorName);
 
         addExperimentalPreparations(participantEvidence, experimentalPreparations);
 
@@ -354,6 +353,7 @@ public class InteractionsCreator {
         while (data.hasNext()) {
             isFileFinished = false;
             Row row = data.next();
+
             List<String> datum = new ArrayList<>();
             int firstCellNum = row.getFirstCellNum();
             int lastCellNum = row.getLastCellNum();
@@ -692,5 +692,4 @@ public class InteractionsCreator {
 
         return PositionUtils.createUndeterminedPosition();
     }
-
 }

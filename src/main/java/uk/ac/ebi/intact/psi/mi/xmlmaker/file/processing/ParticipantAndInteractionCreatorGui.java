@@ -30,6 +30,7 @@ import java.util.List;
 public class ParticipantAndInteractionCreatorGui {
     private final JComboBox<String> interactionDetectionMethodCombobox = new JComboBox<>();
     private final JComboBox<String> participantDetectionMethodCombobox = new JComboBox<>();
+
     private final JComboBox<String> hostOrganism = new JComboBox<>();
 
     private final List<JComboBox<String>> baitExperimentalPreparationList = new ArrayList<>();
@@ -186,7 +187,7 @@ public class ParticipantAndInteractionCreatorGui {
                 isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()), DataForRawFile.BAIT_ORGANISM.name));
         participantDetails.put(DataForRawFile.PREY_ORGANISM.name,
                 isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), DataForRawFile.PREY_ORGANISM.name));
-        participantDetails.put(DataForRawFile.HOST_ORGANSIM.name, isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(hostOrganism.getSelectedItem()).toString()), DataForRawFile.HOST_ORGANSIM.name));
+        participantDetails.put(DataForRawFile.HOST_ORGANISM.name, isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(hostOrganism.getSelectedItem()).toString()), DataForRawFile.HOST_ORGANISM.name));
         participantDetails.put(DataForRawFile.PREY_EXPRESSED_IN_ORGANISM.name, isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(preyExpressedInOrganism.getSelectedItem()).toString()), DataForRawFile.PREY_EXPRESSED_IN_ORGANISM.name));
         participantDetails.put(DataForRawFile.BAIT_EXPRESSED_IN_ORGANISM.name, isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(baitExpressedInOrganism.getSelectedItem()).toString()), DataForRawFile.BAIT_EXPRESSED_IN_ORGANISM.name));
 
@@ -428,7 +429,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(participantDetectionMethodCombobox, DataForRawFile.PARTICIPANT_DETECTION_METHOD.name));
         generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(interactionDetectionMethodCombobox, DataForRawFile.INTERACTION_DETECTION_METHOD.name));
-        generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(hostOrganism, DataForRawFile.HOST_ORGANSIM.name));
+        generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(hostOrganism, DataForRawFile.HOST_ORGANISM.name));
 
         return generalInformationPanel;
     }
