@@ -60,6 +60,9 @@ public class ExcelFileReader  {
     public final List<String> proteinsPartOfMoleculeSet = new ArrayList<>();
     public final Map<String, UniprotResult> alreadyParsed = new HashMap<>();
 
+    @Getter
+    private List<String> uniprotIdNotFound = new ArrayList<>();
+
     public ExcelFileReader() {
         this.fileName = null;
         this.currentFileLabel = new JLabel("No file selected");
@@ -364,20 +367,6 @@ public class ExcelFileReader  {
         selectFileOpener(currentFilePath);
     }
 
-//    private boolean validateFileData(String idColumnName) {
-//        if (fileData == null || fileData.isEmpty()) {
-//            LOGGER.severe("Header row is missing or invalid.");
-//            XmlMakerUtils.showErrorDialog("Header row is missing or invalid.");
-//            return true;
-//        }
-//        if (!fileData.contains(idColumnName)) {
-//            LOGGER.severe("Invalid column name: " + idColumnName);
-//            XmlMakerUtils.showErrorDialog("Invalid column name: " + idColumnName);
-//            return true;
-//        }
-//        return false;
-//    }
-
     private UniprotResult getUpdatedUniprotData(String previousId, String previousDb, String updatedOrganism) {
         if (previousId == null || previousId.isEmpty()) {
             return null;
@@ -477,13 +466,15 @@ public class ExcelFileReader  {
     private UniprotResult getOneUniprotId(String previousId, String previousIdDb, String organism) {
         UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui();
         ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
+        uniprotIdNotFound = uniprotGeneralMapper.getUniprotIdNotFound();
+
         UniprotResult oneUniprotId = null;
 
         List<UniprotResult> swissProtEntries = new ArrayList<>();
         List<UniprotResult> tremblEntries = new ArrayList<>();
         List<UniprotResult> noEntryTypes = new ArrayList<>();
 
-        if (uniprotResults.isEmpty() || uniprotResults == null) {
+        if (uniprotResults == null || uniprotResults.isEmpty()) {
             mapperGui.getParticipantChoicePanel(previousId);
             oneUniprotId = new UniprotResult(previousId, previousId, organism, null, null,
                     previousIdDb, -1, mapperGui.getSelectedParticipantType());

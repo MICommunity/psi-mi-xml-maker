@@ -104,10 +104,9 @@ public class XmlMakerUtils {
     public static String fetchTaxIdForOrganism(String organismName) {
         String taxId = nameToTaxIdCache.get(organismName);
         if (taxId != null) return taxId;
-        if (organismName.matches("\\d+") || organismName.equals("-1") || organismName.equals("-2")) return organismName; // already a taxId
+        if (organismName.matches("\\d+") || organismName.equals("-1") || organismName.equals("-2")) return organismName;
+        // already a taxId or an in-vitro/chemical synthesis
         if (organismName.toLowerCase().contains("organism") || organismName.isEmpty()) {return null;}
-
-        //todo: in vitro or chemical synthesis
 
         String apiResponse = fetchTaxIdWithApi(organismName);
         String oboId = apiResponse != null ? extractOboId(apiResponse) : null;

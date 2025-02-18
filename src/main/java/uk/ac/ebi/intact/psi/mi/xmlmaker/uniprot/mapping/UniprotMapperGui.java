@@ -175,7 +175,6 @@ public class UniprotMapperGui extends JPanel {
                 @Override
                 protected void done() {
                     loadingSpinner.hideSpinner();
-                    XmlMakerUtils.showInfoDialog("Participants identifier updated successfully.");
                     showMoleculeSetDialog();
                 }
             };
@@ -194,6 +193,8 @@ public class UniprotMapperGui extends JPanel {
     private void processSheet(String sheetSelected, String idColumn, int idDbColumnIndex, int organismColumnIndex) {
         try {
             excelFileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
+            XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
+            XmlMakerUtils.showInfoDialog("Successfully updated the UniProt IDs");
         } catch (Exception ex) {
             handleProcessingError(ex);
         }
@@ -208,6 +209,8 @@ public class UniprotMapperGui extends JPanel {
     private void processFileWithoutSheet(String idColumn, int idDbColumn, int organismColumn) {
         try {
             excelFileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
+            XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
+            XmlMakerUtils.showInfoDialog("Successfully updated the UniProt IDs");
         } catch (Exception ex) {
             handleProcessingError(ex);
         }

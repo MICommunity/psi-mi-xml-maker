@@ -34,6 +34,7 @@ public class UniprotGeneralMapper {
     @Setter
     private UniprotResult selectedUniprot;
     private ButtonGroup buttonGroup  = new ButtonGroup();
+    @Getter
     private final List<String> uniprotIdNotFound = new ArrayList<>();
 
     /**
@@ -46,9 +47,6 @@ public class UniprotGeneralMapper {
      */
     public ArrayList<UniprotResult> fetchUniprotResult(String protein, String previousDb, String organism){
         try {
-            if (!uniprotIdNotFound.isEmpty()){
-                XmlMakerUtils.showInfoDialog("Uniprot IDs deleted from uniprot database: " + uniprotIdNotFound);
-            }
             return getUniprotIds(getUniprotResponse(protein, previousDb, organism));
         } catch (Exception e) {
             XmlMakerUtils.showErrorDialog("Error fetching UniProt results, please check your internet connection");
@@ -96,21 +94,21 @@ public class UniprotGeneralMapper {
 
     private String buildUrl(String protein, String previousDb, String organism) {
         String baseUrl = "https://rest.uniprot.org/uniprotkb/search?query=";
-        if (organism.equals("-2") || organism.equals("-1") || previousDb.trim().equalsIgnoreCase("uniprotkb")){
+
+        if (organism == null
+            || previousDb == null
+            ||organism.trim().isEmpty()
+            || previousDb.trim().isEmpty()
+            || organism.equals("-2")
+            || organism.equals("-1")
+            || previousDb.trim().equalsIgnoreCase("uniprotkb")) {
             return baseUrl + protein;
         }
 
-        StringBuilder urlBuilder = new StringBuilder(baseUrl + "(xref:");
-        urlBuilder.append(protein);
-        if (organism != null) {
-            urlBuilder.append("%20AND%20organism_id:").append(organism);
-        }
-        if (previousDb != null && !previousDb.equalsIgnoreCase("uniprotkb")) { //todo: handle better
-            urlBuilder.append("%20AND%20database:").append(previousDb);
-        }
-        urlBuilder.append(")");
-
-        return urlBuilder.toString();
+        return baseUrl + "(xref:" + protein +
+                "%20AND%20organism_id:" + organism +
+                "%20AND%20database:" + previousDb +
+                ")";
     }
 
     /**
@@ -145,7 +143,6 @@ public class UniprotGeneralMapper {
         }
 
         setButtonGroup(uniprotResults);
-        System.out.println(uniprotIdNotFound);
         return uniprotResults;
     }
 

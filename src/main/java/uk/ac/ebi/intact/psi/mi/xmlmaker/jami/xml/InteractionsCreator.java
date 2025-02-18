@@ -123,7 +123,7 @@ public class InteractionsCreator {
         String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
         Xref uniqueId = new XmlXref(participantIdDb, participantId);
 
-        Xref authorName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
+//        Xref authorName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
 
         if (participantOrganism == null || participantOrganism.isEmpty()) {
             LOGGER.warning("Missing or invalid participant organism for participant: " + name);
@@ -146,9 +146,9 @@ public class InteractionsCreator {
 
 
         //TODO: see the commented part for psi-mi verification:
-        Xref inputParticipantName = new XmlXref(participantIdDb, name, utils.fetchTerm("inferred by author"));
-        participantEvidence.getXrefs().add(inputParticipantName);
-        addXrefs(participantEvidence, xref, xrefDb, authorName);
+//        Xref inputParticipantName = new XmlXref(participantIdDb, participantId, utils.fetchTerm("inferred by author"));
+//        participantEvidence.getXrefs().add(inputParticipantName);
+        addXrefs(participantEvidence, xref, xrefDb);
 
         addExperimentalPreparations(participantEvidence, experimentalPreparations);
 
@@ -167,13 +167,12 @@ public class InteractionsCreator {
         }
     }
 
-    private void addXrefs(ParticipantEvidence participantEvidence, CvTerm xref, CvTerm xrefDb, Xref authorName) {
+    private void addXrefs(ParticipantEvidence participantEvidence, CvTerm xref, CvTerm xrefDb) {
         if (xref != null && xref.getShortName() != null && xrefDb != null) {
-            Xref xmlXref = new XmlXref(xref, xref.getShortName());
+            Xref xmlXref = new XmlXref(xrefDb, xref.getShortName());
             xmlXref.getDatabase().setFullName(xrefDb.getShortName());
             xmlXref.getDatabase().setMIIdentifier(xrefDb.getMIIdentifier());
             participantEvidence.getXrefs().add(xmlXref);
-            participantEvidence.getXrefs().add(authorName);
         }
     }
 
@@ -204,17 +203,22 @@ public class InteractionsCreator {
                 break;
             case "nucleic acid":
                 participant = new XmlNucleicAcid(name, organism, uniqueId);
+                CvTerm nucleicAcidType = utils.fetchTerm("nucleic acid");
+                participant.setInteractorType(nucleicAcidType); // needed as the type is not set automatically by jami here
                 break;
             case "molecule":
                 participant = new XmlMolecule(name, organism, uniqueId);
+                CvTerm moleculeType = utils.fetchTerm("small molecule");
+                participant.setInteractorType(moleculeType); // needed as the type is not set automatically by jami here
                 break;
             case "gene":
                 participant = new XmlGene(name, organism, uniqueId);
+                CvTerm geneType = utils.fetchTerm("gene");
+                participant.setInteractorType(geneType); // needed as the type is not set automatically by jami here
                 break;
             default:
                 break;
         }
-
         return participant;
     }
 
