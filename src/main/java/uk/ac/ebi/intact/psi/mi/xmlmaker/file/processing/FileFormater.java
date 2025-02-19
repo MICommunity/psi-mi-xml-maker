@@ -352,7 +352,7 @@ public class FileFormater {
      * This method includes adding feature columns for each participant (bait or prey) based on available features.
      */
     private void addAllFeatures() {
-        int numberOfColumnsToAdd = getNumberOfFeaturesColumns() * 6;
+        int numberOfColumnsToAdd = getNumberOfFeaturesColumns() * 7;
         ArrayList<String> featuresHeader = getFeaturesHeader();
         String[] extendedHeader = Arrays.copyOf(header, header.length + numberOfColumnsToAdd);
 
@@ -380,6 +380,7 @@ public class FileFormater {
      */
     private void addOneFeature(List<String> row, List<Map<String, String>> features) {
         for (Map<String, String> feature : features) {
+            row.add(feature.get(DataForRawFile.FEATURE_SHORT_NAME.name));
             row.add(feature.get(DataForRawFile.FEATURE_TYPE.name));
             row.add(feature.get(DataForRawFile.FEATURE_START_LOCATION.name));
             row.add(feature.get(DataForRawFile.FEATURE_END_LOCATION.name));

@@ -559,13 +559,14 @@ public class InteractionsCreator {
     private XmlFeatureEvidence createFeature(int featureIndex, Map<String, String> data) {
         String featureIndexString = "_" + featureIndex;
 
+        String featureShortName = data.get(FEATURE_SHORT_NAME.name + featureIndexString);
         String featureType = data.get(FEATURE_TYPE.name + featureIndexString);
         String featureStart = data.get(FEATURE_START.name + featureIndexString);
         String featureRangeType = data.get(FEATURE_RANGE_TYPE.name + featureIndexString);
         String featureXref = data.get(FEATURE_XREF.name + featureIndexString);
         String featureXrefDb = data.get(FEATURE_XREF_DB.name + featureIndexString);
 
-        XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureType);
+        XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureType, featureShortName);
 
         if (featureEvidence.getType().getMIIdentifier() == null || featureEvidence.getType().getMIIdentifier().isEmpty()) {
             return null;
@@ -625,10 +626,13 @@ public class InteractionsCreator {
                 .collect(Collectors.toList());
     }
 
-    private XmlFeatureEvidence getFeatureEvidence(String featureType) {
+    private XmlFeatureEvidence getFeatureEvidence(String featureType, String featureShortLabel) {
         String featureTypeMiId = utils.fetchMiId(featureType);
         CvTerm featureTypeCv = new XmlCvTerm(featureType, featureTypeMiId);
-        return new XmlFeatureEvidence(featureTypeCv);
+
+        XmlFeatureEvidence featureEvidence = new XmlFeatureEvidence(featureTypeCv);
+        featureEvidence.setShortName(featureShortLabel);
+        return featureEvidence;
     }
 
     private XmlRange getFeatureRange(Position startPosition, Position endPosition) {

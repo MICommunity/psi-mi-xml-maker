@@ -63,12 +63,15 @@ public class ParticipantAndInteractionCreatorGui {
     private final int HEIGHT = 300;
     private final Dimension panelDimension = new Dimension(500, HEIGHT);
 
+
     private final List<String> featureRangeTypeCache = new ArrayList<>();
     private final List<String> featureTypeCache = new ArrayList<>();
     private final List<String> dbCache = new ArrayList<>();
 
     private final List<Map<String, JComboBox<String>>> preyFeaturesComboBoxes = new ArrayList<>();
     private final List<Map<String, JComboBox<String>>> baitFeaturesComboBoxes = new ArrayList<>();
+    private final List<JTextField> baitFeatureShortName = new ArrayList<>();
+    private final List<JTextField> preyFeatureShortName = new ArrayList<>();
 
     private final List<JComboBox<String>> baitFeatureXrefs = new ArrayList<>();
     private final List<JComboBox<String>> preyFeatureXrefs = new ArrayList<>();
@@ -554,16 +557,21 @@ public class ParticipantAndInteractionCreatorGui {
             featurePanel.add(comboBox);
         }
 
-        featurePanel.add(createFeatureXrefPanel(bait));
+        JTextField featureShortLabel = new JTextField("Feature short label");
+        featureShortLabel.setEditable(true);
+        featurePanel.add(featureShortLabel);
 
+        featurePanel.add(createFeatureXrefPanel(bait));
         setFeatureType(comboBoxMap.get(DataForRawFile.FEATURE_TYPE.name));
         setFeatureRangeType(comboBoxMap.get(DataForRawFile.FEATURE_RANGE_TYPE.name));
         setFeatureLocation(comboBoxMap.get(DataForRawFile.FEATURE_START_LOCATION.name));
         setFeatureLocation(comboBoxMap.get(DataForRawFile.FEATURE_END_LOCATION.name));
 
         if (bait) {
+            baitFeatureShortName.add(featureShortLabel);
             baitFeaturesComboBoxes.add(comboBoxMap);
         } else {
+            preyFeatureShortName.add(featureShortLabel);
             preyFeaturesComboBoxes.add(comboBoxMap);
         }
 
@@ -626,6 +634,15 @@ public class ParticipantAndInteractionCreatorGui {
 
             featuresData.add(featureData);
         }
+
+        for (int i = 0 ; i < featuresData.size(); i++) {
+            if (bait){
+                featuresData.get(i).put(DataForRawFile.FEATURE_SHORT_NAME.name, baitFeatureShortName.get(i).getText());
+            } else {
+                featuresData.get(i).put(DataForRawFile.FEATURE_SHORT_NAME.name, preyFeatureShortName.get(i).getText());
+            }
+        }
+
         return featuresData;
     }
 
@@ -676,6 +693,7 @@ public class ParticipantAndInteractionCreatorGui {
         XmlMakerUtils.setComboBoxDimension(xrefDbComboBox, DataForRawFile.FEATURE_XREF_DB.name);
         setFeatureDb(xrefDbComboBox);
         xrefPanel.add(xrefDbComboBox);
+
 
         if (bait) {
             baitFeatureXrefs.add(xrefComboBox);
