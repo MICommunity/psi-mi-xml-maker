@@ -35,11 +35,16 @@ public class ParticipantAndInteractionCreatorGui {
 
     private final List<JComboBox<String>> baitExperimentalPreparationList = new ArrayList<>();
     private final List<String> baitExperimentalPreparationNames = new ArrayList<>();
+
+
     private final JComboBox<String> baitBiologicalRole = new JComboBox<>();
     private final JComboBox<String> baitOrganism = new JComboBox<>();
     private final JComboBox<String> baitIdDatabase = new JComboBox<>();
 
-    private final JComboBox<String> preyExperimentalPreparation = new JComboBox<>();
+//    private final JComboBox<String> preyExperimentalPreparation = new JComboBox<>();
+    private final List<JComboBox<String>> preyExperimentalPreparationList = new ArrayList<>();
+    private final List<String> preyExperimentalPreparationNames = new ArrayList<>();
+
     private final JComboBox<String> preyBiologicalRole = new JComboBox<>();
     private final JComboBox<String> preyOrganism = new JComboBox<>();
     private final JComboBox<String> preyIdDatabase = new JComboBox<>();
@@ -48,9 +53,11 @@ public class ParticipantAndInteractionCreatorGui {
     private final JComboBox<String> baitExpressedInOrganism = new JComboBox<>();
 
     @Getter
-    private final JSpinner numberOfExperimentalPrep = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
+    private final JSpinner numberOfBaitExperimentalPrep = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
+    private final JSpinner numberOfPreyExperimentalPrep = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
 
-    private final JPanel baitExperimentalPanel = new JPanel(new GridLayout(2, 1));
+    private final JPanel baitExperimentalPreparationPanel = new JPanel(new GridLayout(2, 1));
+    private final JPanel preyExperimentalPreparationPanel = new JPanel(new GridLayout(2, 1));
 
     private final int HEIGHT = 300;
     private final Dimension panelDimension = new Dimension(500, HEIGHT);
@@ -96,9 +103,11 @@ public class ParticipantAndInteractionCreatorGui {
         setBiologicalRole();
         setDatabases();
 
-        updateBaitExperimentalPreparations((int) numberOfExperimentalPrep.getValue());
+        updateExperimentalPreparations((int) numberOfBaitExperimentalPrep.getValue(), baitExperimentalPreparationPanel, baitExperimentalPreparationList);
+        addSpinnerListener(numberOfBaitExperimentalPrep, baitExperimentalPreparationPanel, baitExperimentalPreparationList);
 
-        addSpinnerListener();
+        updateExperimentalPreparations((int) numberOfPreyExperimentalPrep.getValue(), preyExperimentalPreparationPanel, preyExperimentalPreparationList);
+        addSpinnerListener(numberOfPreyExperimentalPrep, preyExperimentalPreparationPanel, preyExperimentalPreparationList);
     }
 
     /**
@@ -116,7 +125,7 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public void setExperimentalPreparations() {
         for (String termName : XmlMakerUtils.getTermsFromOls(DataAndMiID.EXPERIMENTAL_PREPARATION.miId)) {
-            preyExperimentalPreparation.addItem(termName);
+            preyExperimentalPreparationNames.add(termName);
             baitExperimentalPreparationNames.add(termName);
         }
     }
@@ -175,7 +184,7 @@ public class ParticipantAndInteractionCreatorGui {
         participantDetails.put(DataForRawFile.BAIT_EXPERIMENTAL_PREPARATION.name,
                 isValueNull(getBaitExperimentalPreparationsAsString(), DataForRawFile.BAIT_EXPERIMENTAL_PREPARATION.name));
         participantDetails.put(DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name,
-                isValueNull(preyExperimentalPreparation.getSelectedItem(), DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
+                isValueNull(getPreyExperimentalPreparationsAsString(), DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
         participantDetails.put(DataForRawFile.PARTICIPANT_DETECTION_METHOD.name,
                 isValueNull(participantDetectionMethodCombobox.getSelectedItem(), DataForRawFile.PARTICIPANT_DETECTION_METHOD.name));
         participantDetails.put(DataForRawFile.BAIT_BIOLOGICAL_ROLE.name,
@@ -257,10 +266,10 @@ public class ParticipantAndInteractionCreatorGui {
      * Adds a change listener to the number of experimental preparations spinner, which updates the
      * bait experimental preparations when the value changes.
      */
-    private void addSpinnerListener() {
-        numberOfExperimentalPrep.addChangeListener(e -> {
-            int value = (int) numberOfExperimentalPrep.getValue();
-            SwingUtilities.invokeLater(() -> updateBaitExperimentalPreparations(value));
+    private void addSpinnerListener(JSpinner spinner, JPanel panelToUpdate, List<JComboBox<String>> listToUpdate) {
+        spinner.addChangeListener(e -> {
+            int value = (int) spinner.getValue();
+            SwingUtilities.invokeLater(() -> updateExperimentalPreparations(value, panelToUpdate, listToUpdate));
         });
     }
 
@@ -270,10 +279,11 @@ public class ParticipantAndInteractionCreatorGui {
      *
      * @param count The number of bait experimental preparations to display.
      */
-    private void updateBaitExperimentalPreparations(int count) {
-        int currentCount = baitExperimentalPanel.getComponentCount();
+    private void updateExperimentalPreparations(int count, JPanel experimentalPreparationsPanel, List<JComboBox<String>> listToUpdate) {
+        experimentalPreparationsPanel.removeAll();  // Ensure old components are removed
+        listToUpdate.clear();
 
-        for (int i = currentCount; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             JComboBox<String> comboBox = new JComboBox<>();
             comboBox.addItem("Experimental Preparation");
 
@@ -281,18 +291,15 @@ public class ParticipantAndInteractionCreatorGui {
                 comboBox.addItem(termName);
             }
 
-            baitExperimentalPreparationList.add(comboBox);
-            baitExperimentalPanel.add(XmlMakerUtils.setComboBoxDimension(comboBox, "Bait Experimental Preparation " + (i + 1)));
+            listToUpdate.add(comboBox);
+            experimentalPreparationsPanel.add(XmlMakerUtils.setComboBoxDimension(comboBox, "Experimental Preparation " + (i + 1)));
         }
 
-        for (int i = currentCount - 1; i >= count; i--) {
-            baitExperimentalPanel.remove(i);
-            baitExperimentalPreparationList.remove(i);
-        }
-
-        baitExperimentalPanel.revalidate();
-        baitExperimentalPanel.repaint();
+        experimentalPreparationsPanel.revalidate();
+        experimentalPreparationsPanel.repaint();
     }
+
+
 
     /**
      * Retrieves the selected bait experimental preparations as a semicolon-separated string.
@@ -303,6 +310,19 @@ public class ParticipantAndInteractionCreatorGui {
         List<String> selectedPreparations = new ArrayList<>();
 
         for (JComboBox<String> comboBox : baitExperimentalPreparationList) {
+            String selectedValue = isValueNull(comboBox.getSelectedItem(), DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name);
+            if (selectedValue != null && !selectedValue.isEmpty()) {
+                selectedPreparations.add(selectedValue);
+            }
+        }
+
+        return String.join(" ; ", selectedPreparations);
+    }
+
+    public String getPreyExperimentalPreparationsAsString() {
+        List<String> selectedPreparations = new ArrayList<>();
+
+        for (JComboBox<String> comboBox : preyExperimentalPreparationList) {
             String selectedValue = isValueNull(comboBox.getSelectedItem(), DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name);
             if (selectedValue != null && !selectedValue.isEmpty()) {
                 selectedPreparations.add(selectedValue);
@@ -367,11 +387,11 @@ public class ParticipantAndInteractionCreatorGui {
         baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitOrganism, DataForRawFile.BAIT_ORGANISM.name));
         baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitExpressedInOrganism, DataForRawFile.BAIT_EXPRESSED_IN_ORGANISM.name));
 
-        numberOfExperimentalPrep.setPreferredSize(new Dimension(200, 100));
-        numberOfExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Select number of experimental preparations"));
-        numberOfExperimentalPrep.add(baitExperimentalPanel);
-        baitPanel.add(numberOfExperimentalPrep);
-        baitPanel.add(baitExperimentalPanel);
+        numberOfBaitExperimentalPrep.setPreferredSize(new Dimension(200, 100));
+        numberOfBaitExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Select number of experimental preparations"));
+        numberOfBaitExperimentalPrep.add(baitExperimentalPreparationPanel);
+        baitPanel.add(numberOfBaitExperimentalPrep);
+        baitPanel.add(baitExperimentalPreparationPanel);
 
         JButton createFeatureButton = new JButton("Create feature(s)");
         createFeatureButton.addActionListener(e -> {
@@ -397,11 +417,15 @@ public class ParticipantAndInteractionCreatorGui {
         preyPanel.setMaximumSize(panelDimension);
 
         preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyIdDatabase, DataForRawFile.PREY_ID_DB.name));
-        preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyExperimentalPreparation, DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
         preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyBiologicalRole, DataForRawFile.PREY_BIOLOGICAL_ROLE.name));
         preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyOrganism, DataForRawFile.PREY_ORGANISM.name));
         preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyExpressedInOrganism, DataForRawFile.PREY_EXPRESSED_IN_ORGANISM.name));
-        preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyExperimentalPreparation, DataForRawFile.PREY_EXPERIMENTAL_PREPARATION.name));
+
+        numberOfPreyExperimentalPrep.setPreferredSize(new Dimension(200, 100));
+        numberOfPreyExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Select number of experimental preparations"));
+        numberOfPreyExperimentalPrep.add(preyExperimentalPreparationPanel);
+        preyPanel.add(numberOfPreyExperimentalPrep);
+        preyPanel.add(preyExperimentalPreparationPanel);
 
         JButton createFeatureButton = new JButton("Create feature(s)");
         createFeatureButton.addActionListener(e -> {

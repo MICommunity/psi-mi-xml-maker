@@ -1,8 +1,6 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 
 import lombok.Getter;
-import psidev.psi.mi.jami.model.CvTerm;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.Enumeration;
@@ -55,22 +53,23 @@ public class UniprotGeneralMapperGui {
                 JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.YES_OPTION) {
-//            if (!"Other id".equals(otherIdField.getText().trim())
-//                    && !otherIdField.getText().trim().isEmpty()) {
+            selectedId = previousId;
+            selectedIdDb = "inferred by author";
 
+            if (!"Other id".equals(otherIdField.getText().trim())
+                    && !otherIdField.getText().trim().isEmpty()) {
                 selectedId = otherIdField.getText().trim();
 
-
                 if (otherIdDbField.getText().trim().isEmpty()) {
-                    selectedIdDb = "CustomDatabase";
+                    selectedIdDb = "inferred by author";
                 } else {
                     selectedIdDb = otherIdDbField.getText().trim();
                 }
                 if (!Objects.requireNonNull(otherParticipantTypeComboBox.getSelectedItem()).toString().equals("Participant Type")) {
                     selectedParticipantType = otherParticipantTypeComboBox.getSelectedItem().toString();
                 }
-//                return;
-//            }
+                return;
+            }
 
             buttons = uniprotIdsGroup.getElements();
             while (buttons.hasMoreElements()) {
@@ -82,14 +81,6 @@ public class UniprotGeneralMapperGui {
                 }
             }
         }
-
-        System.out.println("selectedId: " + selectedId);
-        System.out.println("selectedDb: " + selectedIdDb);
-        System.out.println("participantType: " + selectedParticipantType);
-
-//        else {
-//            selectedId = null;
-//        }
     }
 
     private JComboBox<String> createParticipantTypeComboBox() {
@@ -130,6 +121,7 @@ public class UniprotGeneralMapperGui {
                 JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.YES_OPTION) {
+            selectedParticipantType = "none";
             Enumeration<AbstractButton> elements = typeGroup.getElements();
             while (elements.hasMoreElements()) {
                 AbstractButton button = elements.nextElement();
