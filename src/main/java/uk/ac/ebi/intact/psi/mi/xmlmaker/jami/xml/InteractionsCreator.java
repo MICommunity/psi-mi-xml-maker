@@ -68,7 +68,6 @@ public class InteractionsCreator {
     public void createParticipantsWithFileFormat() {
         xmlModelledInteractions.clear();
         dataList.clear();
-        System.out.println(columnAndIndex);
 
         if (excelFileReader.workbook == null) {
             fetchDataFileWithSeparator(columnAndIndex);
@@ -104,7 +103,7 @@ public class InteractionsCreator {
         DataTypeAndColumn[] required = {PARTICIPANT_NAME, PARTICIPANT_ID, PARTICIPANT_ID_DB, PARTICIPANT_ORGANISM};
 
         for (DataTypeAndColumn requiredColumn : required) {
-            if (data.get(requiredColumn.name) == null || data.get(requiredColumn.name).isBlank()) {
+            if (data.get(requiredColumn.name) == null || data.get(requiredColumn.name).trim().isBlank()) {
                 LOGGER.warning(requiredColumn.name + " is required but missing or empty.");
                 return null;
             }
