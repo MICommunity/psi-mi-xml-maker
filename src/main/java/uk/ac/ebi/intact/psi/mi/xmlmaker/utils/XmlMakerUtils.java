@@ -30,7 +30,6 @@ public class XmlMakerUtils {
     private static final Map<String, CvTerm> nameToCvTerm = new ConcurrentHashMap<>();
     private static final Map<String, String> nameToTaxIdCache = new ConcurrentHashMap<>();
     static final OLSClient olsClient = new OLSClient(new OLSWsConfig());
-
     static {
         try {
             FileHandler fileHandler = new FileHandler("xmlmakerutils.log", true);

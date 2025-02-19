@@ -32,6 +32,7 @@ public class InteractionsCreator {
     public final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
     public final List<Map<String, String>> dataList = new ArrayList<>();
 
+
     @Setter
     Map<String, Integer> columnAndIndex;
     public String sheetSelected;
@@ -105,6 +106,14 @@ public class InteractionsCreator {
         for (DataTypeAndColumn requiredColumn : required) {
             if (data.get(requiredColumn.name) == null || data.get(requiredColumn.name).trim().isBlank()) {
                 LOGGER.warning(requiredColumn.name + " is required but missing or empty.");
+
+                if (!(data.get(PARTICIPANT_NAME.name) == null) || !data.get(PARTICIPANT_NAME.name).trim().isBlank()) {
+                    interactionWriter.skippedParticipants.add(data.get(PARTICIPANT_NAME.name));
+                }
+                else if (!(data.get(PARTICIPANT_ID.name) == null) || !data.get(PARTICIPANT_ID.name).trim().isBlank()) {
+                    interactionWriter.skippedParticipants.add(data.get(PARTICIPANT_ID.name));
+                }
+
                 return null;
             }
         }
@@ -210,8 +219,6 @@ public class InteractionsCreator {
                 break;
             case "gene":
                 participant = new XmlGene(name, organism, uniqueId);
-                CvTerm geneType = utils.fetchTerm("gene");
-                participant.setInteractorType(geneType); // needed as the type is not set automatically by jami here
                 break;
             default:
                 break;

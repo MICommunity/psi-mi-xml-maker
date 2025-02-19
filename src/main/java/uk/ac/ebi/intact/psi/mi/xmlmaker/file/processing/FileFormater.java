@@ -352,6 +352,8 @@ public class FileFormater {
      * This method includes adding feature columns for each participant (bait or prey) based on available features.
      */
     private void addAllFeatures() {
+        System.out.println("prey features: " + preyFeatures.size());
+        System.out.println("bait features: " + baitFeatures.size());
         int numberOfColumnsToAdd = getNumberOfFeaturesColumns() * 6;
         ArrayList<String> featuresHeader = getFeaturesHeader();
         String[] extendedHeader = Arrays.copyOf(header, header.length + numberOfColumnsToAdd);

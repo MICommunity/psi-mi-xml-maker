@@ -53,6 +53,8 @@ public class InteractionWriter {
     @Getter @Setter
     private String name;
 
+    public final List<String> skippedParticipants = new ArrayList<>();
+
     /**
      * Constructs a InteractionWriter instance with the given dependencies.
      *
@@ -226,6 +228,7 @@ public class InteractionWriter {
             LOGGER.error("Error during PSI-XML writing", e);
         } finally {
             closeWriter(xmlInteractionWriter);
+            XmlMakerUtils.showInfoDialog("Participant skipped because of missing data: " + skippedParticipants);
             XmlMakerUtils.showInfoDialog("PSI-XML writing completed successfully. File saved at: " + saveLocation);
         }
     }

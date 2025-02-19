@@ -41,7 +41,6 @@ public class ParticipantAndInteractionCreatorGui {
     private final JComboBox<String> baitOrganism = new JComboBox<>();
     private final JComboBox<String> baitIdDatabase = new JComboBox<>();
 
-//    private final JComboBox<String> preyExperimentalPreparation = new JComboBox<>();
     private final List<JComboBox<String>> preyExperimentalPreparationList = new ArrayList<>();
     private final List<String> preyExperimentalPreparationNames = new ArrayList<>();
 
@@ -299,8 +298,6 @@ public class ParticipantAndInteractionCreatorGui {
         experimentalPreparationsPanel.repaint();
     }
 
-
-
     /**
      * Retrieves the selected bait experimental preparations as a semicolon-separated string.
      *
@@ -480,11 +477,11 @@ public class ParticipantAndInteractionCreatorGui {
         numberOfFeature.addChangeListener(e -> {
             int value = (int) numberOfFeature.getValue();
             SwingUtilities.invokeLater(() -> {
-                if (bait){
-                    baitFeaturesComboBoxes.clear();
-                } else {
-                    preyFeaturesComboBoxes.clear();
-                }
+//                if (bait){
+//                    baitFeaturesComboBoxes.clear();
+//                } else {
+//                    preyFeaturesComboBoxes.clear();
+//                }
                 updateFeaturePanel(featureContainerPanel, value, bait);
             });
         });
@@ -512,6 +509,11 @@ public class ParticipantAndInteractionCreatorGui {
         }
         for (int i = currentCount - 1; i >= count; i--) {
             featureContainerPanel.remove(i);
+            if (bait){
+                baitFeaturesComboBoxes.remove(i);
+            } else {
+                preyFeaturesComboBoxes.remove(i);
+            }
         }
 
         featureContainerPanel.revalidate();
@@ -572,8 +574,12 @@ public class ParticipantAndInteractionCreatorGui {
         List<Map<String, String>> featuresData;
         if (bait) {
             featuresData = getFeaturesDataFromCombobox(baitFeaturesComboBoxes, true);
+            System.out.println("comboboxes: " + baitFeaturesComboBoxes.size());
+            System.out.println("features data:" + featuresData.size());
         } else {
             featuresData = getFeaturesDataFromCombobox(preyFeaturesComboBoxes, false);
+            System.out.println("comboboxes: " + preyFeaturesComboBoxes.size());
+            System.out.println("features data:" + featuresData.size());
         }
 
         return featuresData;
