@@ -291,6 +291,7 @@ public class InteractionsCreatorGui extends JPanel {
      */
     public void addFeatureCells(int featureIndex) {
         List<String> featureCells = List.of(
+                DataTypeAndColumn.FEATURE_SHORT_NAME.name + "_" + featureIndex,
                 DataTypeAndColumn.FEATURE_TYPE.name + "_" + featureIndex,
                 DataTypeAndColumn.FEATURE_START.name + "_" + featureIndex,
                 DataTypeAndColumn.FEATURE_END.name + "_" + featureIndex,
