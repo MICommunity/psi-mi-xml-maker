@@ -31,6 +31,8 @@ public class ParticipantAndInteractionCreatorGui {
     private final JComboBox<String> interactionDetectionMethodCombobox = new JComboBox<>();
     private final JComboBox<String> participantDetectionMethodCombobox = new JComboBox<>();
 
+    private final JTextField interactionFigureLegend = new JTextField("Interaction Figure Legend");
+
     private final JComboBox<String> hostOrganism = new JComboBox<>();
 
     private final List<JComboBox<String>> baitExperimentalPreparationList = new ArrayList<>();
@@ -190,6 +192,8 @@ public class ParticipantAndInteractionCreatorGui {
                 isValueNull(baitBiologicalRole.getSelectedItem(), DataForRawFile.BAIT_BIOLOGICAL_ROLE.name));
         participantDetails.put(DataForRawFile.PREY_BIOLOGICAL_ROLE.name,
                 isValueNull(preyBiologicalRole.getSelectedItem(), DataForRawFile.PREY_BIOLOGICAL_ROLE.name));
+
+        participantDetails.put(DataForRawFile.INTERACTION_FIGURE_LEGEND.name, interactionFigureLegend.getText());
 
         participantDetails.put(DataForRawFile.BAIT_ORGANISM.name,
                 isValueNull(XmlMakerUtils.fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()), DataForRawFile.BAIT_ORGANISM.name));
@@ -444,13 +448,15 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public JPanel createGeneralInformationPanel() {
         JPanel generalInformationPanel = new JPanel();
-        generalInformationPanel.setLayout(new GridLayout(3, 1));
+        generalInformationPanel.setLayout(new GridLayout(4, 1));
         generalInformationPanel.setPreferredSize(new Dimension(200, HEIGHT));
         generalInformationPanel.setBorder(BorderFactory.createTitledBorder(" 2.2 Select general information"));
 
         generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(participantDetectionMethodCombobox, DataForRawFile.PARTICIPANT_DETECTION_METHOD.name));
         generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(interactionDetectionMethodCombobox, DataForRawFile.INTERACTION_DETECTION_METHOD.name));
         generalInformationPanel.add(XmlMakerUtils.setComboBoxDimension(hostOrganism, DataForRawFile.HOST_ORGANISM.name));
+        interactionFigureLegend.setPreferredSize(new Dimension(200, 50));
+        generalInformationPanel.add(interactionFigureLegend);
 
         return generalInformationPanel;
     }
@@ -574,12 +580,8 @@ public class ParticipantAndInteractionCreatorGui {
         List<Map<String, String>> featuresData;
         if (bait) {
             featuresData = getFeaturesDataFromCombobox(baitFeaturesComboBoxes, true);
-            System.out.println("comboboxes: " + baitFeaturesComboBoxes.size());
-            System.out.println("features data:" + featuresData.size());
         } else {
             featuresData = getFeaturesDataFromCombobox(preyFeaturesComboBoxes, false);
-            System.out.println("comboboxes: " + preyFeaturesComboBoxes.size());
-            System.out.println("features data:" + featuresData.size());
         }
 
         return featuresData;

@@ -10,6 +10,7 @@ public enum DataTypeAndColumn {
     INTERACTION_NUMBER("Interaction number", cell -> String.valueOf(cell.getNumericCellValue())),
     INTERACTION_TYPE("Interaction type"),
     INTERACTION_DETECTION_METHOD("Interaction detection method"),
+    INTERACTION_FIGURE_LEGEND("Interaction feature legend"),
     HOST_ORGANISM("Host organism"),
     EXPERIMENTAL_PREPARATION("Experimental Preparation"),
 

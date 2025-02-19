@@ -528,6 +528,7 @@ public class InteractionsCreator {
         String participantIdentificationMethod = null;
         String hostOrganism = null;
         String interactionType = null;
+        String interactionFigureLegend = null;
 
         for (Map<String, String> participant : dataList) {
             XmlParticipantEvidence newParticipant = createParticipant(participant);
@@ -537,7 +538,14 @@ public class InteractionsCreator {
             participantIdentificationMethod = participant.get(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name);
             hostOrganism = participant.get(DataTypeAndColumn.HOST_ORGANISM.name);
             interactionType = participant.get(DataTypeAndColumn.INTERACTION_TYPE.name);
+            interactionFigureLegend = participant.get(DataTypeAndColumn.INTERACTION_FIGURE_LEGEND.name);
         }
+        if (interactionFigureLegend != null) {
+            CvTerm annotationType = utils.fetchTerm("figure legend");
+            Annotation annotation = new XmlAnnotation(annotationType, interactionFigureLegend);
+            interaction.getAnnotations().add(annotation);
+        }
+
         processInteractionCreation(interaction, interactionDetectionMethod, participantIdentificationMethod, hostOrganism, interactionType);
     }
 
