@@ -475,9 +475,28 @@ public class ExcelFileReader  {
         List<UniprotResult> noEntryTypes = new ArrayList<>();
 
         if (uniprotResults == null || uniprotResults.isEmpty()) {
-            mapperGui.getParticipantChoicePanel(previousId);
-            oneUniprotId = new UniprotResult(previousId, previousId, organism, null, null,
-                    previousIdDb, -1, mapperGui.getSelectedParticipantType());
+//            mapperGui.getParticipantChoicePanel(previousId);
+            mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup(), previousId);
+            synchronized (this) {
+                while (mapperGui.getSelectedId() == null) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        LOGGER.warning("Error fetching uniprot ID: " + e);
+                    }
+                }
+            }
+
+//            for (UniprotResult uniprotResult : swissProtEntries) {
+//                if (uniprotResult.getUniprotAc().equals(mapperGui.getSelectedId())) {
+//                    oneUniprotId = uniprotResult;
+//                    return oneUniprotId;
+//                }
+//            }
+            oneUniprotId = new UniprotResult(mapperGui.getSelectedId(), mapperGui.getSelectedId(),
+                    organism, null, null, mapperGui.getSelectedIdDb(),
+                    -1, mapperGui.getSelectedParticipantType());
+
             return oneUniprotId;
         }
 
