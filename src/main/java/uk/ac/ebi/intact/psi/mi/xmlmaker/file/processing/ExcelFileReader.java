@@ -310,7 +310,7 @@ public class ExcelFileReader  {
 
         fileData.addAll(Arrays.asList("Participant ID", "Participant ID database", "Participant organism", "Participant name", "Participant type"));
         try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(new FileOutputStream(tmpFilePath), StandardCharsets.UTF_8),
-                separator, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\n")) {
+                separator, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END)) {
 
             csvWriter.writeNext(fileData.toArray(new String[0]));
 
@@ -321,7 +321,6 @@ public class ExcelFileReader  {
                     continue;
                 }
 
-                // Ensure that the added data is under the right header
                 while (row.size() < originalColumnCount) {
                     row.add("");
                 }
@@ -401,10 +400,10 @@ public class ExcelFileReader  {
     }
 
     private void processRow(List<String> row, int idColumnIndex, int previousIdDbColumnIndex, int organismColumnIndex, CSVWriter csvWriter) {
-        if (row == null || row.size() <= fileData.size()) {
-            LOGGER.warning("Skipping null or incomplete row: " + row);
-            return;
-        }
+//        if (row == null || row.size() < fileData.size()) {
+//            LOGGER.warning("Skipping null or incomplete row: " + row);
+//            return;
+//        }
 
         String previousId = row.get(idColumnIndex).trim();
         String previousDb = (previousIdDbColumnIndex >= 0 && previousIdDbColumnIndex < row.size()) ? row.get(previousIdDbColumnIndex).trim() : "";

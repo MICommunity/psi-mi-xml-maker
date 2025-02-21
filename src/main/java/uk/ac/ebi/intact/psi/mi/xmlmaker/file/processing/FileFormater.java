@@ -13,10 +13,8 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -266,9 +264,9 @@ public class FileFormater {
      * @param delimiter The character used to separate values (e.g., ',' for CSV or '\t' for TSV).
      */
     public void writeToFile(List<List<String>> data, String filePath, char delimiter) {
-        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath),
+        try (CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(filePath), StandardCharsets.UTF_8),
                 delimiter,
-                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_QUOTE_CHARACTER,
                 CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END)) {
             writer.writeNext(header);
@@ -424,4 +422,19 @@ public class FileFormater {
         }
         return header;
     }
+
+    private String formatToCSV(String text) {
+        if (text == null) {
+            return "";
+        }
+
+        String escapedText = text.replace("\"", "\"\"");
+
+        if (escapedText.contains(",") || escapedText.contains("\"") || escapedText.contains("\n") || escapedText.contains("\r")) {
+            return "\"" + escapedText + "\"";
+        }
+
+        return escapedText;
+    }
+
 }
