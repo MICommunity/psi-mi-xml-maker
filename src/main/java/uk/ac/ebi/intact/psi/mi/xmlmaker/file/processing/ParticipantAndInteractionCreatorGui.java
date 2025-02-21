@@ -38,7 +38,6 @@ public class ParticipantAndInteractionCreatorGui {
     private final List<JComboBox<String>> baitExperimentalPreparationList = new ArrayList<>();
     private final List<String> baitExperimentalPreparationNames = new ArrayList<>();
 
-
     private final JComboBox<String> baitBiologicalRole = new JComboBox<>();
     private final JComboBox<String> baitOrganism = new JComboBox<>();
     private final JComboBox<String> baitIdDatabase = new JComboBox<>();
@@ -341,11 +340,14 @@ public class ParticipantAndInteractionCreatorGui {
      * Adds "uniprotKB" and "geneid" as options, followed by other terms fetched from the OLS.
      */
     private void setDatabases() {
-        baitIdDatabase.addItem("uniprotKB");
-        preyIdDatabase.addItem("uniprotKB");
+        baitIdDatabase.addItem("UniProtKB");
+        preyIdDatabase.addItem("UniProtKB");
 
         baitIdDatabase.addItem("geneid");
         preyIdDatabase.addItem("geneid");
+
+        baitIdDatabase.addItem("gene name");
+        preyIdDatabase.addItem("gene name");
 
         for (String termName : XmlMakerUtils.getTermsFromOls(DataAndMiID.DATABASES.miId)) {
             baitIdDatabase.addItem(termName);
@@ -485,14 +487,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         numberOfFeature.addChangeListener(e -> {
             int value = (int) numberOfFeature.getValue();
-            SwingUtilities.invokeLater(() -> {
-//                if (bait){
-//                    baitFeaturesComboBoxes.clear();
-//                } else {
-//                    preyFeaturesComboBoxes.clear();
-//                }
-                updateFeaturePanel(featureContainerPanel, value, bait);
-            });
+            SwingUtilities.invokeLater(() -> updateFeaturePanel(featureContainerPanel, value, bait));
         });
 
         updateFeaturePanel(featureContainerPanel, (int) numberOfFeature.getValue(), bait);
@@ -646,6 +641,20 @@ public class ParticipantAndInteractionCreatorGui {
         return featuresData;
     }
 
+    private String getFeatureXref(String featureXref) {
+        if (featureXref != null && !featureXref.isEmpty() && !featureXref.trim().equals(DataTypeAndColumn.FEATURE_XREF.name)) {
+            return featureXref;
+        }
+        return "";
+    }
+
+    private String getFeatureXrefDb(String featureXrefDb) {
+        if (featureXrefDb != null && !featureXrefDb.isEmpty() && !featureXrefDb.trim().equals(DataTypeAndColumn.FEATURE_XREF_DB.name)) {
+            return featureXrefDb;
+        }
+        return "";
+    }
+
     /**
      * Creates a panel for selecting feature xrefs, allowing the user to add multiple xrefs for each feature.
      * The number of xrefs can be adjusted with a spinner.
@@ -674,6 +683,8 @@ public class ParticipantAndInteractionCreatorGui {
 
         return featureXrefPanel;
     }
+
+
 
     /**
      * Creates a single xref panel for selecting a feature xref and its associated database.
@@ -735,11 +746,15 @@ public class ParticipantAndInteractionCreatorGui {
         StringBuilder xrefBuilder = new StringBuilder();
         if (bait) {
             for (JComboBox<String> comboBox : baitFeatureXrefs) {
-                xrefBuilder.append(comboBox.getSelectedItem()).append(";");
+                String baitFeatureXref = (String) comboBox.getSelectedItem();
+                baitFeatureXref = getFeatureXref(baitFeatureXref);
+                xrefBuilder.append(baitFeatureXref).append(";");
             }
         } else {
             for (JComboBox<String> comboBox : preyFeatureXrefs) {
-                xrefBuilder.append(comboBox.getSelectedItem()).append(";");
+                String preyFeatureXref = (String) comboBox.getSelectedItem();
+                preyFeatureXref = getFeatureXref(preyFeatureXref);
+                xrefBuilder.append(preyFeatureXref).append(";");
             }
         }
         return xrefBuilder.toString();
@@ -755,11 +770,15 @@ public class ParticipantAndInteractionCreatorGui {
         StringBuilder xrefBuilder = new StringBuilder();
         if (bait) {
             for (JComboBox<String> comboBox : baitFeatureXrefDb) {
-                xrefBuilder.append(comboBox.getSelectedItem()).append(";");
+                String baitFeatureXrefDb = (String) comboBox.getSelectedItem();
+                baitFeatureXrefDb = getFeatureXrefDb(baitFeatureXrefDb);
+                xrefBuilder.append(baitFeatureXrefDb).append(";");
             }
         } else {
             for (JComboBox<String> comboBox : preyFeatureXrefDb) {
-                xrefBuilder.append(comboBox.getSelectedItem()).append(";");
+                String preyFeatureXrefDb = (String) comboBox.getSelectedItem();
+                preyFeatureXrefDb = getFeatureXrefDb(preyFeatureXrefDb);
+                xrefBuilder.append(preyFeatureXrefDb).append(";");
             }
         }
         return xrefBuilder.toString();

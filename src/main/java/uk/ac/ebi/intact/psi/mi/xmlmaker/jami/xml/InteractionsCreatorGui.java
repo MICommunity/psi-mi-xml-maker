@@ -144,7 +144,7 @@ public class InteractionsCreatorGui extends JPanel {
      */
     private void createInteractionDataTable() {
         int rows = 5;
-        int cols = dataNeededForInteractor.size() + (int) numberOfFeatures.getValue() * 6;
+        int cols = dataNeededForInteractor.size() + (int) numberOfFeatures.getValue() * 7;
         String defaultCellValue = "Select from file";
         String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
@@ -272,7 +272,7 @@ public class InteractionsCreatorGui extends JPanel {
         }
     }
 
-    private Map<String, Integer> getDataAndIndexesSeparatedFile(List<String> tableColumnsNames){
+    private void getDataAndIndexesSeparatedFile(List<String> tableColumnsNames){
         for (int i = 0; i < table.getColumnCount(); i++) {
             if (Objects.equals(table.getValueAt(0, i).toString(), "No data")){
                 dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
@@ -281,7 +281,6 @@ public class InteractionsCreatorGui extends JPanel {
                 dataAndIndexes.put(tableColumnsNames.get(i), index);
             }
         }
-        return dataAndIndexes;
     }
 
     /**

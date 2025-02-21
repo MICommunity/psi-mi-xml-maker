@@ -92,24 +92,42 @@ public class UniprotGeneralMapper {
         }
     }
 
-    private String buildUrl(String protein, String previousDb, String organism) {
+    private String buildUrl(String previousParticipantId, String previousDb, String organism) {
         String baseUrl = "https://rest.uniprot.org/uniprotkb/search?query=";
+
+        if (previousDb != null && previousDb.equals("gene name")) {
+            return buildUrlForGene(previousParticipantId, organism);
+        }
 
         if (organism == null
             || previousDb == null
-            ||organism.trim().isEmpty()
+            || organism.trim().isEmpty()
             || previousDb.trim().isEmpty()
             || organism.equals("-2")
             || organism.equals("-1")
             || previousDb.trim().equalsIgnoreCase("uniprotkb")) {
-            return baseUrl + protein;
+            return baseUrl + previousParticipantId;
         }
 
-        return baseUrl + "(xref:" + protein +
+        return baseUrl + "(xref:" + previousParticipantId +
                 "%20AND%20organism_id:" + organism +
                 "%20AND%20database:" + previousDb +
                 ")";
     }
+
+    private String buildUrlForGene(String previousParticipantId, String organism){
+        String baseUrl = "https://rest.uniprot.org/uniprotkb/search?query=gene:" + previousParticipantId;
+
+        if (organism != null
+            && !organism.trim().isEmpty()
+            && !organism.equals("-2")
+            && !organism.equals("-1")) {
+            return baseUrl + "%20AND%20organism_id:" + organism;
+        }
+
+        return baseUrl;
+    }
+
 
     /**
      * Extracts UniProt results from the JSON response and returns a list of {@link UniprotResult} objects.
