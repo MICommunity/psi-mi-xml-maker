@@ -91,45 +91,4 @@ public class UniprotGeneralMapperGui {
         }
         return comboBox;
     }
-
-    /**
-     * Displays a panel to the user allowing them to select the participant type
-     * (e.g., Gene, Molecule, Nucleic Acid, or Protein). The method updates the
-     * {@code selectedParticipantType} field based on the user's selection.
-     *
-     * @param previousId The previous ID, used in the title of the panel.
-     */
-    public void getParticipantChoicePanel(String previousId) {
-        JPanel participantPanel = new JPanel();
-        participantPanel.setBorder(BorderFactory.createTitledBorder("No UniProt ID found for: " + previousId));
-        participantPanel.setLayout(new BoxLayout(participantPanel, BoxLayout.Y_AXIS));
-        participantPanel.setPreferredSize(new Dimension(300, 150));
-
-        JLabel typeLabel = new JLabel("Select the participant type:");
-        participantPanel.add(typeLabel);
-
-        ButtonGroup typeGroup = new ButtonGroup();
-        String[] buttons = {"Gene", "Molecule", "Nucleic Acid", "Protein"};
-
-        for (String button : buttons) {
-            JRadioButton radioButton = new JRadioButton(button);
-            typeGroup.add(radioButton);
-            participantPanel.add(radioButton);
-        }
-
-        int result = JOptionPane.showConfirmDialog(null, participantPanel, "Choose Participant Type",
-                JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-        if (result == JOptionPane.YES_OPTION) {
-            selectedParticipantType = "none";
-            Enumeration<AbstractButton> elements = typeGroup.getElements();
-            while (elements.hasMoreElements()) {
-                AbstractButton button = elements.nextElement();
-                if (button.isSelected()) {
-                    selectedParticipantType = button.getText();
-                    break;
-                }
-            }
-        }
-    }
 }

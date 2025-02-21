@@ -296,26 +296,44 @@ public class ExcelFileReader  {
      * @param idColumnName      the name of the column containing the ID.
      */
     public void checkAndInsertUniprotResultsSeparatedFormat(String idColumnName, int previousIdDbColumnIndex, int organismColumnIndex) {
-//        if (validateFileData(idColumnName)) return;
-
         Iterator<List<String>> iterator = readFileWithSeparator();
         String tmpFilePath = currentFilePath;
         int idColumnIndex = fileData.indexOf(idColumnName);
 
-        fileData.addAll(Arrays.asList("Participant input ID", "Participant input ID database", "Participant organism", "Participant input name"));
+        if (idColumnIndex == -1) {
+            XmlMakerUtils.showErrorDialog("ID column not found: " + idColumnName);
+            LOGGER.severe("ID column not found: " + idColumnName);
+            return;
+        }
 
+        int originalColumnCount = fileData.size();
+
+        fileData.addAll(Arrays.asList("Participant ID", "Participant ID database", "Participant organism", "Participant name", "Participant type"));
         try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(new FileOutputStream(tmpFilePath), StandardCharsets.UTF_8),
                 separator, CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, "\n")) {
+
             csvWriter.writeNext(fileData.toArray(new String[0]));
 
             while (iterator.hasNext()) {
-                processRow(iterator.next(), idColumnIndex, previousIdDbColumnIndex, organismColumnIndex, csvWriter);
+                List<String> row = iterator.next();
+
+                if (row == null || row.isEmpty() || row.stream().allMatch(String::isEmpty)) {
+                    continue;
+                }
+
+                // Ensure that the added data is under the right header
+                while (row.size() < originalColumnCount) {
+                    row.add("");
+                }
+                processRow(row, idColumnIndex, previousIdDbColumnIndex, organismColumnIndex, csvWriter);
             }
+
             alreadyParsed.clear();
         } catch (IOException e) {
             XmlMakerUtils.showErrorDialog("Error reading file: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error writing file", e);
         }
+
         selectFileOpener(currentFilePath);
     }
 
@@ -383,32 +401,34 @@ public class ExcelFileReader  {
     }
 
     private void processRow(List<String> row, int idColumnIndex, int previousIdDbColumnIndex, int organismColumnIndex, CSVWriter csvWriter) {
-        if (row == null || row.size() <= idColumnIndex) {
+        if (row == null || row.size() <= fileData.size()) {
             LOGGER.warning("Skipping null or incomplete row: " + row);
             return;
         }
 
-        String previousId = row.get(idColumnIndex);
-        String previousDb = row.get(previousIdDbColumnIndex);
-        String updatedOrganism = row.get(organismColumnIndex);
+        String previousId = row.get(idColumnIndex).trim();
+        String previousDb = (previousIdDbColumnIndex >= 0 && previousIdDbColumnIndex < row.size()) ? row.get(previousIdDbColumnIndex).trim() : "";
+        String updatedOrganism = (organismColumnIndex >= 0 && organismColumnIndex < row.size()) ? row.get(organismColumnIndex).trim() : "";
 
-        if (previousId == null || previousId.isEmpty()) {
+        if (previousId.isEmpty()) {
             LOGGER.warning("Skipping row with null or empty ID: " + row);
             return;
         }
 
         UniprotResult result = getUpdatedUniprotData(previousId, previousDb, updatedOrganism);
 
-        String uniprotResult = (result != null) ? result.getUniprotAc() : previousId;
-        String uniprotResultDb = (result != null) ? result.getIdDb() : previousDb;
-        updatedOrganism = (result != null) ? result.getOrganism() : updatedOrganism;
-        String participantName = (result != null) ? result.getName() : previousId;
+        String uniprotResult = (result != null && result.getUniprotAc() != null) ? result.getUniprotAc() : previousId;
+        String uniprotResultDb = (result != null && result.getIdDb() != null) ? result.getIdDb() : previousDb;
+        updatedOrganism = (result != null && result.getOrganism() != null) ? result.getOrganism() : updatedOrganism;
+        String participantName = (result != null && result.getName() != null) ? result.getName() : previousId;
+        String participantType = (result != null && result.getParticipantType() != null) ? result.getParticipantType() : "Unknown";
 
         List<String> data = new ArrayList<>(row);
         data.add(uniprotResult);
         data.add(uniprotResultDb);
-        data.add(updatedOrganism != null ? updatedOrganism : "");
+        data.add(updatedOrganism);
         data.add(participantName);
+        data.add(participantType);
 
         csvWriter.writeNext(data.toArray(new String[0]));
     }
@@ -475,7 +495,6 @@ public class ExcelFileReader  {
         List<UniprotResult> noEntryTypes = new ArrayList<>();
 
         if (uniprotResults == null || uniprotResults.isEmpty()) {
-//            mapperGui.getParticipantChoicePanel(previousId);
             mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup(), previousId);
             synchronized (this) {
                 while (mapperGui.getSelectedId() == null) {
@@ -486,13 +505,6 @@ public class ExcelFileReader  {
                     }
                 }
             }
-
-//            for (UniprotResult uniprotResult : swissProtEntries) {
-//                if (uniprotResult.getUniprotAc().equals(mapperGui.getSelectedId())) {
-//                    oneUniprotId = uniprotResult;
-//                    return oneUniprotId;
-//                }
-//            }
             oneUniprotId = new UniprotResult(mapperGui.getSelectedId(), mapperGui.getSelectedId(),
                     organism, null, null, mapperGui.getSelectedIdDb(),
                     -1, mapperGui.getSelectedParticipantType());

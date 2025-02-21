@@ -155,7 +155,6 @@ public class FileFormater {
                 String baitName = baitNameColumnIndex == -1 ? "" : row.get(baitNameColumnIndex);
                 String preyName = preyNameColumnIndex == -1 ? "" : row.get(preyNameColumnIndex);
 
-
                 interactionNumber++;
                 addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait");
                 addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey");
@@ -165,10 +164,10 @@ public class FileFormater {
         while (iterator.hasNext()) {
             List<String> row = iterator.next();
             String bait = row.get(baitColumnIndex);
-            String baitName = row.get(baitNameColumnIndex);
             String prey = row.get(preyColumnIndex);
-            String preyName = row.get(preyNameColumnIndex);
 
+            String baitName = baitNameColumnIndex == -1 ? "" : row.get(baitNameColumnIndex);
+            String preyName = preyNameColumnIndex == -1 ? "" : row.get(preyNameColumnIndex);
 
             if (lastBait == null || !lastBait.equals(bait)) {
                 interactionNumber++;

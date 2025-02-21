@@ -24,11 +24,11 @@ public enum DataForRawFile {
 
     FEATURE_SHORT_NAME("Feature short name", false, false, true),
     FEATURE_TYPE("Feature type", false, false, true),
-    FEATURE_START_LOCATION("Feature Start Location", false, false, true),
-    FEATURE_END_LOCATION("Feature End Location", false, false, true),
-    FEATURE_RANGE_TYPE("Feature Range Type", false, false, true),
+    FEATURE_START_LOCATION("Feature start", false, false, true),
+    FEATURE_END_LOCATION("Feature end", false, false, true),
+    FEATURE_RANGE_TYPE("Feature range type", false, false, true),
     FEATURE_XREF("Feature xref", false, false, true),
-    FEATURE_XREF_DB("Feature XRef database", false, false, true),
+    FEATURE_XREF_DB("Feature xref database", false, false, true),
     ;
 
     public final String name;
