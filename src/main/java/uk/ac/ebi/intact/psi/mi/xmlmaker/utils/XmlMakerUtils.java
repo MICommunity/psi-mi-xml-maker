@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.*;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for XML creation and management tasks in the PSI-MI context.
@@ -284,7 +285,10 @@ public class XmlMakerUtils {
                 nameToCvTerm.put(term.getName(), xmlTerm);
                 termsNames.add(term.getName());
         }
+
+        termsNames = termsNames.stream().distinct().collect(Collectors.toList());
         termsNames.sort(String::compareTo);
+
         return termsNames;
     }
 }

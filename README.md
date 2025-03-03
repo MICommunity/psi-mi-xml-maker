@@ -28,8 +28,8 @@ There are three ways to import a file into the PSI-MI XML Maker:
 
 > **Note:** A **Publication ID** must be provided before an XML file can be created.
 
-### 2. Formatting the Raw File
-If the imported file does not conform to the Interactome template, it must be formatted.
+### 2. Formatting the input File
+If the imported file is not constituted of one participant per row, it must be formatted.
 
 #### 2.1 Selecting the columns to process
 If the file format is **XLSX** or **XLS**, the user has to select the sheet to access. In other cases it is not necessary.
@@ -38,8 +38,9 @@ The user can now select the corresponding columns for the **Bait ID** and the **
 If it is present in the file it can also select the name columns.
 
 #### 2.2 Selecting general information
-The general information panel contains the participant identification method and the interaction detection method.
-The user can select the corresponding options.
+The general information panel contains the participant identification method, the interaction detection method,
+the host organism and the Interaction figure legend.
+The user can select the corresponding options and they will be applied to **all** participants.
 
 > **Note:** The options available for the dropdown menus are directly fetched on OLS.
 
@@ -50,7 +51,8 @@ The user can select multiple experimental preparations. To do so, it has to incr
 Then, multiple dropdown menu will appear.
 The user can create features by clicking on the corresponding button.
 This action will open a window where the user can create multiple features by increasing the number on the top of it.
-The user can input manually the start and end location of the feature. It can also create multiple cross-references for it (note that the feature xref has to be typed in).
+The user can input manually the start and end location of the feature. It can also create multiple cross-references for it
+(note that the feature cross-reference has to be typed in).
 Once the feature(s) have been created, they will be applied to all the baits.
 
 #### 2.4 Selecting information concerning the preys
@@ -75,13 +77,13 @@ Once done, the user has to select the corresponding columns in the file:
 - the **Participant ID** column must be specified.
 - the **Organism** and **Database** columns are optional but can refine Uniprot mapping.
 - Clicking **Update the Uniprot IDs** will start the process.
-- If multiple reviewed Uniprot IDs are found, the user can choose one or manually enter the ID and database.
+- If multiple reviewed Uniprot IDs or no results are found, the user can choose one or manually enter the ID and database.
 - Additional columns will be added to the file with the updated ID, organism, and database.
 
 ### 4. Creating Participants
 Before creating interactions, participants must be defined.
 - For **XLSX** or **XLS** files, select the correct sheet.
-- The user can select the number of features per participant present in the file, by default this number is set to 0;
+- The user can select the number of features per participant present in the file, by default this number is set to 1;
   - Once increased, the corresponding number of feature cells will be added in the selection table.
 - Map the participant elements to the correct file columns.
 - The application suggests columns based on similarity but requires user verification.
@@ -97,7 +99,4 @@ Before creating interactions, participants must be defined.
 - Click **Create XML File** to generate and save the XML file(s).
 
 ---
-
-### Contact & Support
-For questions or troubleshooting, please refer to the official documentation or contact the development team.
 
