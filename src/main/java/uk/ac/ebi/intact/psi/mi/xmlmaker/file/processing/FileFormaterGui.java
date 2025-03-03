@@ -152,7 +152,7 @@ public class FileFormaterGui {
                     binary);
 
         } catch (Exception e) {
-            XmlMakerUtils.showErrorDialog("Error during file formatting: " + e.getMessage());
+            XmlMakerUtils.showErrorDialog("Error during file formatting, please check that the columns are correctly selected. \n" + e.getMessage());
             LOGGER.warning("Error during file formatting: " + e);
         }
     }

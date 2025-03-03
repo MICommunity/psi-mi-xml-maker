@@ -329,7 +329,7 @@ public class ExcelFileReader  {
 
             alreadyParsed.clear();
         } catch (IOException e) {
-            XmlMakerUtils.showErrorDialog("Error reading file: " + e.getMessage());
+            XmlMakerUtils.showErrorDialog("Error writing file: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error writing file", e);
         }
 

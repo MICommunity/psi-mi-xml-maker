@@ -224,11 +224,14 @@ public class InteractionWriter {
             LOGGER.info("PSI-XML writing completed successfully. File saved at: {}", saveLocation);
 
         } catch (Exception e) {
-            XmlMakerUtils.showErrorDialog("Error during PSI-XML writing: " + e.getMessage());
+            XmlMakerUtils.showErrorDialog("Error during PSI-XML writing, please check that the columns are correctly associated" +
+                    "and that the file is correctly formatted. \n" + e.getMessage());
             LOGGER.error("Error during PSI-XML writing", e);
         } finally {
             closeWriter(xmlInteractionWriter);
-            XmlMakerUtils.showInfoDialog("Participant skipped because of missing data: " + skippedParticipants);
+            if (!skippedParticipants.isEmpty()) {
+                XmlMakerUtils.showInfoDialog("Participant skipped because of missing data: " + skippedParticipants);
+            }
             XmlMakerUtils.showInfoDialog("PSI-XML writing completed successfully. File saved at: " + saveLocation);
         }
     }
