@@ -159,10 +159,10 @@ public class ExcelFileReader  {
         if (iterator.hasNext()) {
             Row row = iterator.next();
             List<String> rowData = new ArrayList<>();
-            for (Cell cell : row) {
-                rowData.add(formatter.formatCellValue(cell));
-            }
+            for (int i = 0; i < row.getLastCellNum(); i++) {
+                rowData.add(formatter.formatCellValue(row.getCell(i)));
 
+            }
             fileData = rowData;
         }
 
@@ -581,9 +581,18 @@ public class ExcelFileReader  {
         while (iteratorWorkbook.hasNext() && i < numberOfRows) {
             Row row = iteratorWorkbook.next();
             List<String> currentLine = new ArrayList<>();
-            for (Cell cell : row) {
-                currentLine.add(FileUtils.getCellValueAsString(cell));
+            System.out.println(row.getPhysicalNumberOfCells());
+            for (int j = 0; j < row.getLastCellNum(); j++) {
+                currentLine.add(FileUtils.getCellValueAsString(row.getCell(j)));
             }
+
+//            for (Cell cell : row) {
+//                if (cell != null && cell.getCellType() != CellType.BLANK) {
+//                    currentLine.add(FileUtils.getCellValueAsString(cell));
+//                } else {
+//                    currentLine.add(null);
+//                }
+//            }
             firstLines.add(currentLine);
         }
         return firstLines;

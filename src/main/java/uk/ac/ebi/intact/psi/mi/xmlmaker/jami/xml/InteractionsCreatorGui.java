@@ -261,7 +261,8 @@ public class InteractionsCreatorGui extends JPanel {
     private void getDataAndIndexesWorkbook(List<String> tableColumnsNames, Sheet sheet) {
         Row row = sheet.getRow(0); // get the header
         for (int i = 0; i < table.getColumnCount(); i++) {
-            for (Cell cell : row) {
+            for (int j = 0; j < row.getLastCellNum(); j++) {
+                Cell cell = row.getCell(j);
                 if (table.getValueAt(0, i).equals("No data")) {
                     dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
                 }
