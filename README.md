@@ -98,9 +98,5 @@ Before creating interactions, participants must be defined.
 - Click **Browse...** to change the save location.
 - Click **Create XML File** to generate and save the XML file(s).
 
-
-### 6. Common errors 
-- "Cell index must be >= 0" -> please check that the mandatory fields are correctly associated
-
 ---
 

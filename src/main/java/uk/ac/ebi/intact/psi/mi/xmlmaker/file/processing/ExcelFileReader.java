@@ -343,9 +343,8 @@ public class ExcelFileReader  {
      * @param idColumnName      the name of the column containing the ID.
      */
     public void checkAndInsertUniprotResultsWorkbook(String sheetSelected, String idColumnName, int idDbColumnIndex, int organismColumnIndex) {
-//        if (validateFileData(idColumnName)) return;
-
-        try (FileOutputStream fileOut = new FileOutputStream(currentFilePath)) {
+        FileOutputStream fileOut = null;
+        try {
             Iterator<Row> iterator = readWorkbookSheet(sheetSelected);
             int idColumnIndex = fileData.indexOf(idColumnName);
 
@@ -374,13 +373,27 @@ public class ExcelFileReader  {
                 processWorkbookRow(iterator.next(), idColumnIndex, idDbColumnIndex, organismColumnIndex, lastCellIndex);
             }
 
+            // Ensure writing happens only after processing
+            fileOut = new FileOutputStream(currentFilePath);
             workbook.write(fileOut);
-            workbook.close();
-            alreadyParsed.clear();
+
         } catch (IOException e) {
             XmlMakerUtils.showErrorDialog("Error processing workbook: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error processing workbook", e);
+        } finally {
+            try {
+                if (fileOut != null) {
+                    fileOut.close();
+                }
+                if (workbook != null) {
+                    workbook.close();
+                }
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Error closing workbook", e);
+            }
+            alreadyParsed.clear();
         }
+
         selectFileOpener(currentFilePath);
     }
 

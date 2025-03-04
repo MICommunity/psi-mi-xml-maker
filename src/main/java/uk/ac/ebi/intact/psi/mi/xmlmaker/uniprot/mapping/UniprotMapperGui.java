@@ -193,8 +193,10 @@ public class UniprotMapperGui extends JPanel {
     private void processSheet(String sheetSelected, String idColumn, int idDbColumnIndex, int organismColumnIndex) {
         try {
             excelFileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
-            XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
-            XmlMakerUtils.showInfoDialog("Successfully updated the UniProt IDs");
+            if (!excelFileReader.getUniprotIdNotFound().isEmpty()) {
+                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
+            }
+            XmlMakerUtils.showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
         }
@@ -209,8 +211,10 @@ public class UniprotMapperGui extends JPanel {
     private void processFileWithoutSheet(String idColumn, int idDbColumn, int organismColumn) {
         try {
             excelFileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
-            XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
-            XmlMakerUtils.showInfoDialog("Successfully updated the UniProt IDs");
+            if (!excelFileReader.getUniprotIdNotFound().isEmpty()) {
+                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
+            }
+            XmlMakerUtils.showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
         }
