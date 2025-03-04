@@ -581,18 +581,9 @@ public class ExcelFileReader  {
         while (iteratorWorkbook.hasNext() && i < numberOfRows) {
             Row row = iteratorWorkbook.next();
             List<String> currentLine = new ArrayList<>();
-            System.out.println(row.getPhysicalNumberOfCells());
             for (int j = 0; j < row.getLastCellNum(); j++) {
                 currentLine.add(FileUtils.getCellValueAsString(row.getCell(j)));
             }
-
-//            for (Cell cell : row) {
-//                if (cell != null && cell.getCellType() != CellType.BLANK) {
-//                    currentLine.add(FileUtils.getCellValueAsString(cell));
-//                } else {
-//                    currentLine.add(null);
-//                }
-//            }
             firstLines.add(currentLine);
         }
         return firstLines;
