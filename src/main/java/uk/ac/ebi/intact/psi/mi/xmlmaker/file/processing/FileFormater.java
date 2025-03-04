@@ -422,19 +422,4 @@ public class FileFormater {
         }
         return header;
     }
-
-    private String formatToCSV(String text) {
-        if (text == null) {
-            return "";
-        }
-
-        String escapedText = text.replace("\"", "\"\"");
-
-        if (escapedText.contains(",") || escapedText.contains("\"") || escapedText.contains("\n") || escapedText.contains("\r")) {
-            return "\"" + escapedText + "\"";
-        }
-
-        return escapedText;
-    }
-
 }

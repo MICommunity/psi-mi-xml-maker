@@ -72,10 +72,10 @@ public class ParticipantAndInteractionCreatorGui {
     private final List<JTextField> baitFeatureShortName = new ArrayList<>();
     private final List<JTextField> preyFeatureShortName = new ArrayList<>();
 
-    private final List<JComboBox<String>> baitFeatureXrefs = new ArrayList<>();
-    private final List<JComboBox<String>> preyFeatureXrefs = new ArrayList<>();
-    private final List<JComboBox<String>> baitFeatureXrefDb = new ArrayList<>();
-    private final List<JComboBox<String>> preyFeatureXrefDb = new ArrayList<>();
+    private final List<List<JComboBox<String>>> baitFeatureXrefs = new ArrayList<>();
+    private final List<List<JComboBox<String>>> preyFeatureXrefs = new ArrayList<>();
+    private final List<List<JComboBox<String>>> baitFeatureXrefDb = new ArrayList<>();
+    private final List<List<JComboBox<String>>> preyFeatureXrefDb = new ArrayList<>();
 
     /**
      * Creates the GUI panel for selecting participant and interaction details.
@@ -534,7 +534,6 @@ public class ParticipantAndInteractionCreatorGui {
      */
     private JPanel createFeaturePanel(int featureNumber, boolean bait) {
         Map<String, JComboBox<String>> comboBoxMap = new HashMap<>();
-
         JPanel featurePanel = new JPanel();
         featurePanel.setBorder(BorderFactory.createTitledBorder("Create feature " + (featureNumber + 1)));
 
@@ -556,19 +555,25 @@ public class ParticipantAndInteractionCreatorGui {
         featureShortLabel.setEditable(true);
         featurePanel.add(featureShortLabel);
 
-        featurePanel.add(createFeatureXrefPanel(bait));
+        // Initialize lists for xrefs for this feature
+        if (bait) {
+            baitFeatureShortName.add(featureShortLabel);
+            baitFeaturesComboBoxes.add(comboBoxMap);
+            baitFeatureXrefs.add(new ArrayList<>());   // Ensure there's a list for xrefs
+            baitFeatureXrefDb.add(new ArrayList<>());  // Ensure there's a list for xref DBs
+        } else {
+            preyFeatureShortName.add(featureShortLabel);
+            preyFeaturesComboBoxes.add(comboBoxMap);
+            preyFeatureXrefs.add(new ArrayList<>());   // Ensure there's a list for xrefs
+            preyFeatureXrefDb.add(new ArrayList<>());  // Ensure there's a list for xref DBs
+        }
+
+        featurePanel.add(createFeatureXrefPanel(bait, featureNumber));
+
         setFeatureType(comboBoxMap.get(DataForRawFile.FEATURE_TYPE.name));
         setFeatureRangeType(comboBoxMap.get(DataForRawFile.FEATURE_RANGE_TYPE.name));
         setFeatureLocation(comboBoxMap.get(DataForRawFile.FEATURE_START_LOCATION.name));
         setFeatureLocation(comboBoxMap.get(DataForRawFile.FEATURE_END_LOCATION.name));
-
-        if (bait) {
-            baitFeatureShortName.add(featureShortLabel);
-            baitFeaturesComboBoxes.add(comboBoxMap);
-        } else {
-            preyFeatureShortName.add(featureShortLabel);
-            preyFeaturesComboBoxes.add(comboBoxMap);
-        }
 
         return featurePanel;
     }
@@ -623,17 +628,18 @@ public class ParticipantAndInteractionCreatorGui {
                     Objects.requireNonNull(comboBoxMap.get(DataForRawFile.FEATURE_RANGE_TYPE.name).
                             getSelectedItem()).toString());
 
-            featureData.put(DataForRawFile.FEATURE_XREF.name, getFeatureXrefAsString(bait));
-
-            featureData.put(DataForRawFile.FEATURE_XREF_DB.name, getFeatureXrefDbAsString(bait));
-
             featuresData.add(featureData);
         }
 
         for (int i = 0 ; i < featuresData.size(); i++) {
             if (bait){
+                featuresData.get(i).put(DataForRawFile.FEATURE_XREF.name, getFeatureXrefAsString(bait, i));
+                featuresData.get(i).put(DataForRawFile.FEATURE_XREF_DB.name, getFeatureXrefDbAsString(bait, i));
                 featuresData.get(i).put(DataForRawFile.FEATURE_SHORT_NAME.name, baitFeatureShortName.get(i).getText());
+
             } else {
+                featuresData.get(i).put(DataForRawFile.FEATURE_XREF.name, getFeatureXrefAsString(bait, i));
+                featuresData.get(i).put(DataForRawFile.FEATURE_XREF_DB.name, getFeatureXrefDbAsString(bait, i));
                 featuresData.get(i).put(DataForRawFile.FEATURE_SHORT_NAME.name, preyFeatureShortName.get(i).getText());
             }
         }
@@ -662,10 +668,11 @@ public class ParticipantAndInteractionCreatorGui {
      * @param bait A boolean indicating whether the xrefs are for bait (true) or prey (false).
      * @return A panel for selecting feature xrefs.
      */
-    private JPanel createFeatureXrefPanel(boolean bait) {
+    private JPanel createFeatureXrefPanel(boolean bait, int featureIndex) {
         JPanel featureXrefPanel = new JPanel();
         featureXrefPanel.setLayout(new BoxLayout(featureXrefPanel, BoxLayout.Y_AXIS));
         featureXrefPanel.setBorder(BorderFactory.createTitledBorder("Feature Xref"));
+
         JSpinner numberOfXref = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
         numberOfXref.setPreferredSize(new Dimension(200, 50));
         numberOfXref.setMaximumSize(new Dimension(200, 50));
@@ -674,17 +681,15 @@ public class ParticipantAndInteractionCreatorGui {
 
         JPanel xrefContainerPanel = new JPanel();
         xrefContainerPanel.setLayout(new BoxLayout(xrefContainerPanel, BoxLayout.Y_AXIS));
-        xrefContainerPanel.add(createOneFeatureXrefPanel(bait));
+        xrefContainerPanel.add(createOneFeatureXrefPanel(bait, featureIndex));
 
         featureXrefPanel.add(xrefContainerPanel);
 
         numberOfXref.addChangeListener(e -> updateFeatureXrefPanel(xrefContainerPanel,
-                (int) numberOfXref.getValue(), bait));
+                (int) numberOfXref.getValue(), bait, featureIndex));
 
         return featureXrefPanel;
     }
-
-
 
     /**
      * Creates a single xref panel for selecting a feature xref and its associated database.
@@ -692,8 +697,9 @@ public class ParticipantAndInteractionCreatorGui {
      * @param bait A boolean indicating whether the xrefs are for bait (true) or prey (false).
      * @return A panel representing one feature xref.
      */
-    private JPanel createOneFeatureXrefPanel(boolean bait) {
+    private JPanel createOneFeatureXrefPanel(boolean bait, int featureIndex) {
         JPanel xrefPanel = new JPanel();
+
         JComboBox<String> xrefComboBox = new JComboBox<>();
         xrefComboBox.setEditable(true);
         XmlMakerUtils.setComboBoxDimension(xrefComboBox, DataForRawFile.FEATURE_XREF.name);
@@ -705,14 +711,14 @@ public class ParticipantAndInteractionCreatorGui {
         setFeatureDb(xrefDbComboBox);
         xrefPanel.add(xrefDbComboBox);
 
-
         if (bait) {
-            baitFeatureXrefs.add(xrefComboBox);
-            baitFeatureXrefDb.add(xrefDbComboBox);
+            baitFeatureXrefs.get(featureIndex).add(xrefComboBox);
+            baitFeatureXrefDb.get(featureIndex).add(xrefDbComboBox);
         } else {
-            preyFeatureXrefs.add(xrefComboBox);
-            preyFeatureXrefDb.add(xrefDbComboBox);
+            preyFeatureXrefs.get(featureIndex).add(xrefComboBox);
+            preyFeatureXrefDb.get(featureIndex).add(xrefDbComboBox);
         }
+
         return xrefPanel;
     }
 
@@ -723,64 +729,49 @@ public class ParticipantAndInteractionCreatorGui {
      * @param numberOfXref The number of xrefs to display.
      * @param bait A boolean indicating whether the xrefs are for bait (true) or prey (false).
      */
-    private void updateFeatureXrefPanel(JPanel xrefPanel, int numberOfXref, boolean bait) {
+    private void updateFeatureXrefPanel(JPanel xrefPanel, int numberOfXref, boolean bait, int featureIndex) {
         int currentCount = xrefPanel.getComponentCount();
+
         for (int i = currentCount; i < numberOfXref; i++) {
-            xrefPanel.add(createOneFeatureXrefPanel(bait));
+            xrefPanel.add(createOneFeatureXrefPanel(bait, featureIndex));
         }
         for (int i = currentCount - 1; i >= numberOfXref; i--) {
             xrefPanel.remove(i);
+            if (bait) {
+                baitFeatureXrefs.get(featureIndex).remove(i);
+                baitFeatureXrefDb.get(featureIndex).remove(i);
+            } else {
+                preyFeatureXrefs.get(featureIndex).remove(i);
+                preyFeatureXrefDb.get(featureIndex).remove(i);
+            }
         }
 
         xrefPanel.revalidate();
         xrefPanel.repaint();
     }
 
-    /**
-     * Retrieves the selected feature xrefs as a string, concatenated with semicolons.
-     *
-     * @param bait A boolean indicating whether the xrefs are for bait (true) or prey (false).
-     * @return A string representing the selected feature xrefs.
-     */
-    private String getFeatureXrefAsString(boolean bait) {
+    private String getFeatureXrefAsString(boolean bait, int feature) {
         StringBuilder xrefBuilder = new StringBuilder();
-        if (bait) {
-            for (JComboBox<String> comboBox : baitFeatureXrefs) {
-                String baitFeatureXref = (String) comboBox.getSelectedItem();
-                baitFeatureXref = getFeatureXref(baitFeatureXref);
-                xrefBuilder.append(baitFeatureXref).append(";");
-            }
-        } else {
-            for (JComboBox<String> comboBox : preyFeatureXrefs) {
-                String preyFeatureXref = (String) comboBox.getSelectedItem();
-                preyFeatureXref = getFeatureXref(preyFeatureXref);
-                xrefBuilder.append(preyFeatureXref).append(";");
-            }
+        List<JComboBox<String>> xrefList = bait ? baitFeatureXrefs.get(feature) : preyFeatureXrefs.get(feature);
+
+        for (JComboBox<String> comboBox : xrefList) {
+            String xref = (String) comboBox.getSelectedItem();
+            xref = getFeatureXref(xref);
+            xrefBuilder.append(xref).append(";");
         }
         return xrefBuilder.toString();
     }
 
-    /**
-     * Retrieves the selected feature xref databases as a string, concatenated with semicolons.
-     *
-     * @param bait A boolean indicating whether the xrefs are for bait (true) or prey (false).
-     * @return A string representing the selected feature xref databases.
-     */
-    private String getFeatureXrefDbAsString(boolean bait) {
-        StringBuilder xrefBuilder = new StringBuilder();
-        if (bait) {
-            for (JComboBox<String> comboBox : baitFeatureXrefDb) {
-                String baitFeatureXrefDb = (String) comboBox.getSelectedItem();
-                baitFeatureXrefDb = getFeatureXrefDb(baitFeatureXrefDb);
-                xrefBuilder.append(baitFeatureXrefDb).append(";");
-            }
-        } else {
-            for (JComboBox<String> comboBox : preyFeatureXrefDb) {
-                String preyFeatureXrefDb = (String) comboBox.getSelectedItem();
-                preyFeatureXrefDb = getFeatureXrefDb(preyFeatureXrefDb);
-                xrefBuilder.append(preyFeatureXrefDb).append(";");
-            }
+    private String getFeatureXrefDbAsString(boolean bait, int feature) {
+        StringBuilder xrefDbBuilder = new StringBuilder();
+        List<JComboBox<String>> xrefDbList = bait ? baitFeatureXrefDb.get(feature) : preyFeatureXrefDb.get(feature);
+
+        for (JComboBox<String> comboBox : xrefDbList) {
+            String xrefDb = (String) comboBox.getSelectedItem();
+            xrefDb = getFeatureXrefDb(xrefDb);
+            xrefDbBuilder.append(xrefDb).append(";");
         }
-        return xrefBuilder.toString();
+        return xrefDbBuilder.toString();
     }
+
 }
