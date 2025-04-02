@@ -363,8 +363,8 @@ public class ParticipantAndInteractionCreatorGui {
      * @param featureDbComboBox The combo box to populate with database options.
      */
     private void setFeatureDb(JComboBox<String> featureDbComboBox) {
-        featureDbComboBox.addItem("uniprotKB");
-        featureDbComboBox.addItem("geneid");
+        featureDbComboBox.addItem("UniProtKB");
+        featureDbComboBox.addItem("Gene ID");
 
         for (String termName : dbCache) {
             featureDbComboBox.addItem(termName);
@@ -394,7 +394,7 @@ public class ParticipantAndInteractionCreatorGui {
         baitPanel.add(XmlMakerUtils.setComboBoxDimension(baitExpressedInOrganism, DataForRawFile.BAIT_EXPRESSED_IN_ORGANISM.name));
 
         numberOfBaitExperimentalPrep.setPreferredSize(new Dimension(200, 100));
-        numberOfBaitExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Select number of experimental preparations"));
+        numberOfBaitExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Experimental preparations"));
         numberOfBaitExperimentalPrep.add(baitExperimentalPreparationPanel);
         baitPanel.add(numberOfBaitExperimentalPrep);
         baitPanel.add(baitExperimentalPreparationPanel);
@@ -428,7 +428,7 @@ public class ParticipantAndInteractionCreatorGui {
         preyPanel.add(XmlMakerUtils.setComboBoxDimension(preyExpressedInOrganism, DataForRawFile.PREY_EXPRESSED_IN_ORGANISM.name));
 
         numberOfPreyExperimentalPrep.setPreferredSize(new Dimension(200, 100));
-        numberOfPreyExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Select number of experimental preparations"));
+        numberOfPreyExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Experimental preparations"));
         numberOfPreyExperimentalPrep.add(preyExperimentalPreparationPanel);
         preyPanel.add(numberOfPreyExperimentalPrep);
         preyPanel.add(preyExperimentalPreparationPanel);

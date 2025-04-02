@@ -40,7 +40,7 @@ public class UniprotGeneralMapperGui {
         JComboBox<String> otherParticipantTypeComboBox = createParticipantTypeComboBox();
         buttonContainer.add(otherParticipantTypeComboBox);
 
-        buttonContainer.setBorder(BorderFactory.createTitledBorder("Select Uniprot ID for: " + previousId));
+        buttonContainer.setBorder(BorderFactory.createTitledBorder("Select UniProt ID for: " + previousId));
         buttonContainer.setLayout(new BoxLayout(buttonContainer, BoxLayout.Y_AXIS));
         Enumeration<AbstractButton> buttons = uniprotIdsGroup.getElements();
 
@@ -49,7 +49,7 @@ public class UniprotGeneralMapperGui {
             buttonContainer.add(button);
         }
 
-        int result = JOptionPane.showConfirmDialog(null, buttonContainer, "Choose a Uniprot ID",
+        int result = JOptionPane.showConfirmDialog(null, buttonContainer, "Choose a UniProt ID",
                 JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.YES_OPTION) {
@@ -76,7 +76,7 @@ public class UniprotGeneralMapperGui {
                 AbstractButton button = buttons.nextElement();
                 if (button.isSelected()) {
                     selectedId = button.getName();
-                    selectedIdDb = "UniprotKB";
+                    selectedIdDb = "UniProtKB";
                     break;
                 }
             }

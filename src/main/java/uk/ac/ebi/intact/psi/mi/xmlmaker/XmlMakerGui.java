@@ -307,12 +307,12 @@ public class XmlMakerGui {
 
         JPanel pubmedInputPanel = new JPanel();
         pubmedInputPanel.setLayout(new FlowLayout());
-        pubmedInputPanel.setBorder(BorderFactory.createTitledBorder("1.2 Enter the PubMed ID"));
+        pubmedInputPanel.setBorder(BorderFactory.createTitledBorder("1.2 Enter the publication ID and database"));
 
 
         JTextField publicationDatabase = new JTextField("Publication database");
         publicationDatabase.setEditable(true);
-        pubmedInputPanel.add(publicationDatabase);
+
 
         JTextField publicationTitleField = new JTextField("Publication ID");
         publicationTitleField.setEditable(true);
@@ -322,6 +322,7 @@ public class XmlMakerGui {
             excelFileReader.setPublicationDb(publicationDatabase.getText());
         });
         pubmedInputPanel.add(publicationTitleField);
+        pubmedInputPanel.add(publicationDatabase);
         pubmedInputPanel.add(textValidationButton);
 
         fileFetcherPanel.add(fileSelectionPanel);

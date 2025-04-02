@@ -109,6 +109,11 @@ public class UniprotGeneralMapper {
             return baseUrl + previousParticipantId;
         }
 
+        System.out.println(baseUrl + "(xref:" + previousParticipantId +
+                "%20AND%20organism_id:" + organism +
+                "%20AND%20database:" + previousDb +
+                ")");
+
         return baseUrl + "(xref:" + previousParticipantId +
                 "%20AND%20organism_id:" + organism +
                 "%20AND%20database:" + previousDb +
@@ -173,7 +178,7 @@ public class UniprotGeneralMapper {
             if (inactiveResult.get("mergeDemergeTo").getAsString() != null) {
                 String name = inactiveResult.get("mergeDemergeTo").getAsString();
                 String organism = "";
-                JsonObject newResult = getUniprotResponse(name, "uniprotkb", organism);
+                JsonObject newResult = getUniprotResponse(name, "UniProtKB", organism);
                 JsonArray resultsAsJson = newResult.get("results").getAsJsonArray();
                 return getUniprotResultFromActiveID(resultsAsJson.get(0).getAsJsonObject());
             }
@@ -190,7 +195,7 @@ public class UniprotGeneralMapper {
         String entryType = result.get("entryType").getAsString();
 
         return new UniprotResult(uniprotAc, name, organism,
-                entryType, uniprotLink, "UniprotKB", sequenceSize, "protein");
+                entryType, uniprotLink, "UniProtKB", sequenceSize, "protein");
     }
 
     /**
