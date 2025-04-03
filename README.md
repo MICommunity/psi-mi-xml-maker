@@ -8,7 +8,7 @@ These XML files can later be used in the editor for further processing.
 
 ### How to download?
 - **MacOS** : download the .dmg file
-- **Windows** : download the .zip file
+- **Windows** : download the .jar file
 - **Linux** : download the .tar file
 
 ### Supported File Formats
