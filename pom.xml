@@ -176,7 +176,9 @@
       <artifactId>javapackager</artifactId>
       <version>1.7.6</version>
       <executions>
+
         <execution>
+          <id>package-macos-x64</id>
           <phase>package</phase>
           <goals>
             <goal>package</goal>
@@ -187,10 +189,28 @@
               <icnsFile>${project.basedir}/src/main/resources/psi.icns</icnsFile>
             </macConfig>
             <iconFile>src/main/resources/psi.icns</iconFile>
-            <packagingJdk>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</packagingJdk>
-            <jdkPath>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</jdkPath>
+            <packagingJdk>jdks/jdk-11.0.26-macOSx64/Contents/Home</packagingJdk>
+            <jdkPath>jdks/jdk-11.0.26-macOSx64/Contents/Home</jdkPath>
           </configuration>
         </execution>
+
+        <execution>
+          <id>package-macos-aarch64</id>
+          <phase>package</phase>
+          <goals>
+            <goal>package</goal>
+          </goals>
+          <configuration>
+            <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
+            <macConfig>
+              <icnsFile>${project.basedir}/src/main/resources/psi.icns</icnsFile>
+            </macConfig>
+            <iconFile>src/main/resources/psi.icns</iconFile>
+            <packagingJdk>jdks/jdk-11.0.26-macOSaarch64</packagingJdk>
+            <jdkPath>jdks/jdk-11.0.26-macOSaarch64</jdkPath>
+          </configuration>
+        </execution>
+
 
         <execution>
           <id>bundling-for-windows</id>
@@ -202,8 +222,8 @@
             <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
             <platform>windows</platform>
             <createZipball>true</createZipball>
-            <packagingJdk>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</packagingJdk>
-            <jdkPath>/Library/Java/JavaVirtualMachines/jdk-11.jdk/Contents/Home</jdkPath>
+            <packagingJdk>jdks/jdk-11.0.26-windowsx64</packagingJdk>
+            <jdkPath>jdks/jdk-11.0.26-windowsx64</jdkPath>
             <iconFile>src/main/resources/psi.ico</iconFile>
           </configuration>
         </execution>
