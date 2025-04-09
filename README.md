@@ -1,6 +1,7 @@
 # PSI-MI XML Maker User Guide
 
-⚠️ It is necessary to download Java 11 -> https://adoptium.net/en-GB/temurin/archive/?version=11 
+⚠️ It is necessary to download Java 11 **JDK** -> https://adoptium.net/en-GB/temurin/archive/?version=11 
+- Use the installer so it is downloaded directly in the right folder
 
 ## Introduction
 
