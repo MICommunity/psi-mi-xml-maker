@@ -32,7 +32,9 @@ public enum DataTypeAndColumn {
     FEATURE_END("Feature end", false),
     FEATURE_RANGE_TYPE("Feature range type", false),
     FEATURE_XREF("Feature xref", false),
-    FEATURE_XREF_DB("Feature xref database", false);
+    FEATURE_XREF_DB("Feature xref database", false),
+    FEATURE_XREF_QUALIFIER("Feature xref qualifier", false),
+    ;
 
     public final String name;
     public final Function<Cell, String> extractString;

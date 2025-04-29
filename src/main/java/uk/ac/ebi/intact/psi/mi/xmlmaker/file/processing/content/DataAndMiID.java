@@ -9,6 +9,8 @@ public enum DataAndMiID {
     EXPERIMENTAL_PREPARATION("MI:0346"),
     DATABASES("MI:0473"),
     BIOLOGICAL_ROLE("MI:0500"),
+    XREF_QUALIFIER("MI:0353"),
+    UNIT("MI:0647"),
     ;
 
 

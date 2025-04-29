@@ -29,6 +29,7 @@ public enum DataForRawFile {
     FEATURE_RANGE_TYPE("Feature range type", false, false, true),
     FEATURE_XREF("Feature xref", false, false, true),
     FEATURE_XREF_DB("Feature xref database", false, false, true),
+    FEATURE_XREF_QUALIFIER("Feature xref qualifier", false, false, true),
     ;
 
     public final String name;

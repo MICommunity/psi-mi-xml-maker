@@ -310,11 +310,11 @@ public class XmlMakerGui {
         pubmedInputPanel.setBorder(BorderFactory.createTitledBorder("1.2 Enter the publication ID and database"));
 
 
-        JTextField publicationDatabase = new JTextField("Publication database");
+        JTextField publicationDatabase = new JTextField("* Publication database");
         publicationDatabase.setEditable(true);
 
 
-        JTextField publicationTitleField = new JTextField("Publication ID");
+        JTextField publicationTitleField = new JTextField("* Publication ID");
         publicationTitleField.setEditable(true);
         JButton textValidationButton = new JButton("Submit");
         textValidationButton.addActionListener(e -> {
