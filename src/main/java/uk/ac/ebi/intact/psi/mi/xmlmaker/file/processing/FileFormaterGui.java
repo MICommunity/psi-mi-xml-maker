@@ -1,6 +1,7 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.Map;
@@ -33,13 +34,15 @@ public class FileFormaterGui {
     private final JComboBox<String> baitNameColumn = new JComboBox<>();
     private final JComboBox<String> preyNameColumn = new JComboBox<>();
 
-    final ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui = new ParticipantAndInteractionCreatorGui();
+    final ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui;
 
     private static final Logger LOGGER = Logger.getLogger(FileFormaterGui.class.getName());
 
     public FileFormaterGui(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
         fileFormater = new FileFormater(excelFileReader);
+        this.participantAndInteractionCreatorGui = new ParticipantAndInteractionCreatorGui(excelFileReader);
+
     }
 
     /**
@@ -207,8 +210,9 @@ public class FileFormaterGui {
         JButton fileFormaterButton = new JButton("Format file");
         fileFormaterButton.addActionListener(e -> {
             Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
-            fileFormater.setBaitFeatures(participantAndInteractionCreatorGui.getFeaturesData(true));
-            fileFormater.setPreyFeatures(participantAndInteractionCreatorGui.getFeaturesData(false));
+            fileFormater.setAddParameters(participantAndInteractionCreatorGui.getMultipleInteractionParameters().isSelected());
+            fileFormater.setBaitFeatures(participantAndInteractionCreatorGui.getFeatureCreatorGui().getBaitFeatures());
+            fileFormater.setPreyFeatures(participantAndInteractionCreatorGui.getFeatureCreatorGui().getPreyFeatures());
             formatFile(fileFormaterCheckBox.isSelected(), interactionData);
         });
 

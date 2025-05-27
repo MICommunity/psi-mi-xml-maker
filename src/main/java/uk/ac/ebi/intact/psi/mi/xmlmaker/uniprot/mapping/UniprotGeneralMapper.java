@@ -109,11 +109,6 @@ public class UniprotGeneralMapper {
             return baseUrl + previousParticipantId;
         }
 
-        System.out.println(baseUrl + "(xref:" + previousParticipantId +
-                "%20AND%20organism_id:" + organism +
-                "%20AND%20database:" + previousDb +
-                ")");
-
         return baseUrl + "(xref:" + previousParticipantId +
                 "%20AND%20organism_id:" + organism +
                 "%20AND%20database:" + previousDb +

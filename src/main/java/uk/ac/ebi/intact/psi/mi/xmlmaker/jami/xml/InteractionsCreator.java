@@ -10,6 +10,8 @@ import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
@@ -470,7 +472,6 @@ public class InteractionsCreator {
 
             interaction.setExperiment(experiment);
         }
-
         xmlModelledInteractions.add(interaction);
         launchWriting();
     }
@@ -539,12 +540,25 @@ public class InteractionsCreator {
             hostOrganism = participant.get(DataTypeAndColumn.HOST_ORGANISM.name);
             interactionType = participant.get(DataTypeAndColumn.INTERACTION_TYPE.name);
             interactionFigureLegend = participant.get(DataTypeAndColumn.INTERACTION_FIGURE_LEGEND.name);
+
+            String parameterType = participant.get(INTERACTION_PARAM_TYPE.name);
+            String parameterValue = participant.get(INTERACTION_PARAM_VALUE.name);
+            String parameterUncertainty = participant.get(INTERACTION_PARAM_UNCERTAINTY.name);
+            String parameterUnit = participant.get(INTERACTION_PARAM_UNIT.name);
+
+            List<XmlParameter> interactionParameters = createParameter(parameterType, parameterValue, parameterUncertainty, parameterUnit);
+            for (XmlParameter interactionParameter : interactionParameters) {
+                if (!interaction.getParameters().contains(interactionParameter)) {
+                    interaction.getParameters().add(interactionParameter);
+                }
+            }
         }
         if (interactionFigureLegend != null) {
             CvTerm annotationType = utils.fetchTerm("figure legend");
             Annotation annotation = new XmlAnnotation(annotationType, interactionFigureLegend);
             interaction.getAnnotations().add(annotation);
         }
+
 
         processInteractionCreation(interaction, interactionDetectionMethod, participantIdentificationMethod, hostOrganism, interactionType);
     }
@@ -562,6 +576,7 @@ public class InteractionsCreator {
         String featureShortName = data.get(FEATURE_SHORT_NAME.name + featureIndexString);
         String featureType = data.get(FEATURE_TYPE.name + featureIndexString);
         String featureStart = data.get(FEATURE_START.name + featureIndexString);
+        String featureEnd = data.get(FEATURE_END.name + featureIndexString);
         String featureRangeType = data.get(FEATURE_RANGE_TYPE.name + featureIndexString);
         String featureXref = data.get(FEATURE_XREF.name + featureIndexString);
         String featureXrefDb = data.get(FEATURE_XREF_DB.name + featureIndexString);
@@ -572,8 +587,9 @@ public class InteractionsCreator {
             return null;
         }
 
-        Position position = getRangePosition(featureStart, featureRangeType);
-        XmlRange featureRange = getFeatureRange(position, position);
+        Position positionStart = getRangePosition(featureStart, featureRangeType);
+        Position positionEnd = getRangePosition(featureEnd, featureRangeType);
+        XmlRange featureRange = getFeatureRange(positionStart, positionEnd);
 
         FeatureXrefContainer featureXrefContainer = getFeatureXrefContainer(featureXref, featureXrefDb);
 
@@ -650,7 +666,7 @@ public class InteractionsCreator {
      *   <li>The file has been marked as finished.</li>
      * </ul>
      *
-     * <p>Once written, the interactions list is cleared.</p>
+     * <p>Once written, the interaction list is cleared.</p>
      *
      * <p>Logs the number of interactions being processed before writing.</p>
      */
@@ -710,5 +726,32 @@ public class InteractionsCreator {
         }
 
         return PositionUtils.createUndeterminedPosition();
+    }
+
+    private List<XmlParameter> createParameter(String parameterType, String parameterValue, String parameterUncertainty, String parameterUnit) {
+        List<XmlParameter> parameters = new ArrayList<>();
+
+        String[] parameterValues = parameterValue.split(";");
+        String[] parameterUncertainties = parameterUncertainty.split(";");
+        String[] parameterUnits = parameterUnit.split(";");
+        String[] parameterTypes = parameterType.split(";");
+
+        for (int i = 0; i < parameterValues.length; i++) {
+            CvTerm type = utils.fetchTerm(parameterTypes[i]);
+            ParameterValue value = createParameterValue(parameterValues[i]);
+            BigDecimal uncertainty = null;
+            if (parameterUncertainties.length > 0) {
+                uncertainty = new BigDecimal(parameterUncertainties[i]);
+            }
+            CvTerm unit = utils.fetchTerm(parameterUnits[i]);
+            parameters.add(new XmlParameter(type, value, uncertainty, unit));
+        }
+
+        return parameters;
+    }
+
+    private ParameterValue createParameterValue(String value) {
+        BigDecimal valueAsBigDecimal = new BigDecimal(value);
+        return new ParameterValue(valueAsBigDecimal);
     }
 }

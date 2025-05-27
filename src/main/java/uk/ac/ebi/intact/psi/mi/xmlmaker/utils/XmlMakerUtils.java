@@ -266,6 +266,12 @@ public class XmlMakerUtils {
         return comboBox;
     }
 
+    public static void setTextFieldDimension(JTextField textField, String defaultItem) {
+        textField.setPreferredSize(new Dimension(200, 50));
+        textField.setMaximumSize(new Dimension(200, 50));
+        textField.setText(defaultItem);
+    }
+
     /**
      * Retrieves a list of term names from the OLS (Ontology Lookup Service) for a given MI (Molecular Interaction) ID.
      * The method uses the provided MI ID to query the OLS and fetch the child terms associated with it.
@@ -290,5 +296,23 @@ public class XmlMakerUtils {
         termsNames.sort(String::compareTo);
 
         return termsNames;
+    }
+
+    /**
+     * Checks if the given value is null or matches the specified keyName.
+     * If the value is null or equal to the keyName, an empty string is returned.
+     * Otherwise, the string representation of the value is returned.
+     *
+     * @param value The object whose value is to be checked. Can be any object or null.
+     * @param keyName The key name to compare the string value against.
+     *
+     * @return An empty string if the value is null or equals the keyName, otherwise the string representation of the value.
+     */
+    public static String isValueNull(Object value, String keyName) {
+        if (value == null) {
+            return "";
+        }
+        String stringValue = value.toString();
+        return stringValue.equals(keyName) ? "" : stringValue;
     }
 }

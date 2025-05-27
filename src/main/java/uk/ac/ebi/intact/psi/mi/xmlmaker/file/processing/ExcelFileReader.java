@@ -63,6 +63,9 @@ public class ExcelFileReader  {
     @Getter
     private List<String> uniprotIdNotFound = new ArrayList<>();
 
+    @Getter
+    String sheetSelectedUpdate;
+
     public ExcelFileReader() {
         this.fileName = null;
         this.currentFileLabel = new JLabel("No file selected");
@@ -224,6 +227,7 @@ public class ExcelFileReader  {
      * @return A list of column names.
      */
     public List<String> getColumns(String sheetSelected) {
+        sheetSelectedUpdate = sheetSelected;
         columns.clear();
         if (fileType.equals("xlsx") || fileType.equals("xls")) {
             if (workbook == null) {
