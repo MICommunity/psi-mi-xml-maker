@@ -15,6 +15,7 @@ public class Feature {
     private String startLocation;
     private String endLocation;
     private String rangeType;
+    private String resultingSequence;
 
     private List<String> xref = new ArrayList<>();
     private List<String> xrefDb = new ArrayList<>();

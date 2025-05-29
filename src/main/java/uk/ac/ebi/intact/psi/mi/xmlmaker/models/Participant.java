@@ -3,6 +3,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.models;
 import lombok.Getter;
 import lombok.Setter;
 import psidev.psi.mi.jami.model.CvTerm;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.Feature;
 
 import java.util.List;
 
@@ -22,5 +23,6 @@ public class Participant {
     private String inputIdDb;
     private String inputName;
 
-    //todo: add features and parameters
+    private List<Feature> features;
+
 }

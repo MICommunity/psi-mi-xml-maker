@@ -119,7 +119,13 @@ public class FeatureCreatorGui {
         rangeTypeComboBox.addActionListener(e -> feature.setRangeType(rangeTypeComboBox.getSelectedItem().toString()));
 
         JComboBox<String> typeComboBox = createComboBox(typeOptions, "Feature type");
-        typeComboBox.addActionListener(e -> feature.setType(typeComboBox.getSelectedItem().toString()));
+        typeComboBox.addActionListener(e -> {
+            feature.setType(typeComboBox.getSelectedItem().toString());
+            if (typeComboBox.getSelectedItem().toString().contains("mutation")){
+                feature.setResultingSequence("test");
+            }
+        });
+        //todo: add resulting sequence if type contains "mutation"
 
         JTextField shortLabelTextField = new JTextField();
         setTextFieldDimension(shortLabelTextField, "Short label");

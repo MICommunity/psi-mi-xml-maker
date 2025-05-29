@@ -1,10 +1,12 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.jami;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.poi.ss.usermodel.Cell;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 public enum DataTypeAndColumn {
@@ -50,6 +52,7 @@ public enum DataTypeAndColumn {
     FEATURE_PARAM_BASE("Feature parameter base", false),
     FEATURE_PARAM_EXPONENT("Feature parameter exponent", false),
     FEATURE_PARAM_UNCERTAINTY("Feature parameter uncertainty", false),
+    FEATURE_RESULTING_SEQUENCE("Feature resulting sequence", false),
     ;
 
     public final String name;
@@ -76,4 +79,14 @@ public enum DataTypeAndColumn {
         this.initial = initial;
     }
 
+
+    public static List<String> getNotInitialData(){
+        final List<String> notInitialData = new ArrayList<>();
+        for (DataTypeAndColumn dataType : DataTypeAndColumn.values()) {
+            if (!dataType.initial) {
+                notInitialData.add(dataType.name);
+            }
+        }
+        return notInitialData;
+    }
 }

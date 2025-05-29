@@ -13,6 +13,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
@@ -25,7 +26,7 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn.*;
+
 
 /**
  * The {@code FileFormater} class processes interaction data from CSV, TSV, XLS, and XLSX files,
@@ -40,21 +41,17 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn.*;
  *     fileFormater.selectFileFormater("data.xlsx", 0, 1, "Sheet1", true);
  * </pre>
  */
-
+@Getter
+@Setter
 public class FileFormater {
     final ExcelFileReader excelFileReader;
 
     private static final Logger LOGGER = Logger.getLogger(FileFormater.class.getName());
 
-    @Getter
     private final List<Map<String, String>> participants = new ArrayList<>();
-    @Setter
     private Map<String, String> interactionData = new HashMap<>();
-    @Setter
     private List<Feature> baitFeatures = new ArrayList<>();
-    @Setter
     private List<Feature> preyFeatures = new ArrayList<>();
-    @Setter
     private boolean addParameters;
 
     ParametersGui parametersGui;
@@ -446,6 +443,7 @@ public class FileFormater {
                 participant.put(DataForRawFile.FEATURE_PARAM_EXPONENT.name + adding, feature.getParameterExponents());
                 participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, feature.getParameterUncertainties());
                 participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding), participant));
+                participant.put(DataForRawFile.FEATURE_RESULTING_SEQUENCE.name + adding, feature.getResultingSequence());
             }
         }
     }
@@ -528,7 +526,6 @@ public class FileFormater {
             String newValue = previousValue + value;
             participant.put(key, newValue);
         }
-
     }
 
     private Map<String, Object> getIndexFromHeader(List<String> headerRow) {

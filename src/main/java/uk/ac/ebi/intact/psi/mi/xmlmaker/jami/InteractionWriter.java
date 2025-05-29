@@ -1,4 +1,4 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.jami;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -123,7 +123,7 @@ public class InteractionWriter {
      */
     private XmlSource initializeSource() {
         Publication intactPubmedRef = new BibRef(publicationId);
-        String intactMiId = utils.fetchMiId("intact");
+        String intactMiId = XmlMakerUtils.fetchMiId("intact");
 
         XmlSource source = new XmlSource("IntAct", "European Bioinformatics Institute", "https://www.ebi.ac.uk",
                 "European Bioinformatics Institute (EMBL-EBI), Wellcome Genome Campus, Hinxton, Cambridge, CB10 1SD, United Kingdom.", intactPubmedRef);
@@ -276,8 +276,8 @@ public class InteractionWriter {
      * @return an instance of XmlXref
      */
     public XmlXref createXref(String name, String refType, String database, String id) {
-        String dbMiId = utils.fetchMiId(name);
-        String refTypeMiId = utils.fetchMiId(refType);
+        String dbMiId = XmlMakerUtils.fetchMiId(name);
+        String refTypeMiId = XmlMakerUtils.fetchMiId(refType);
         CvTerm refTypeCv = new XmlCvTerm(refType, refTypeMiId);
         CvTerm databaseCv = new XmlCvTerm(database, dbMiId);
 

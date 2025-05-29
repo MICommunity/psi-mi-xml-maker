@@ -2,7 +2,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.*;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Experiment;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Participant;
 import javax.swing.*;
@@ -387,7 +387,11 @@ public class ParticipantAndInteractionCreatorGui {
         JButton createFeatureButton = new JButton("Create feature(s)");
         createFeatureButton.addActionListener(e -> {
             JPanel featureOptionPanel = featureCreatorGui.getFeatureMainPanel(true);
-            JOptionPane.showConfirmDialog(null, featureOptionPanel,"Feature Selection", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            JOptionPane.showConfirmDialog(null,
+                    featureOptionPanel,
+                    "Feature(s) creation",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
         });
         baitPanel.add(createFeatureButton);
 
@@ -421,8 +425,11 @@ public class ParticipantAndInteractionCreatorGui {
         JButton createFeatureButton = new JButton("Create feature(s)");
         createFeatureButton.addActionListener(e -> {
             JPanel featureOptionPanel = featureCreatorGui.getFeatureMainPanel(false);
-            JOptionPane.showConfirmDialog(null, featureOptionPanel,
-                    "Feature Selection", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            JOptionPane.showConfirmDialog(null,
+                    featureOptionPanel,
+                    "Feature(s) creation",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
         });
 
         preyPanel.add(createFeatureButton);

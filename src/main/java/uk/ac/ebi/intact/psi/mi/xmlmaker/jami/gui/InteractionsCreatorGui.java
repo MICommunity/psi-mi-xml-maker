@@ -1,10 +1,13 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui;
 
 import lombok.Getter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.InteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 
@@ -144,7 +147,7 @@ public class InteractionsCreatorGui extends JPanel {
      */
     private void createInteractionDataTable() {
         int rows = 5;
-        int cols = dataNeededForInteractor.size() + (int) numberOfFeatures.getValue() * 7;
+        int cols = dataNeededForInteractor.size() + (int) numberOfFeatures.getValue() * DataTypeAndColumn.getNotInitialData().size();
         String defaultCellValue = "Select from file";
         String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
@@ -290,15 +293,10 @@ public class InteractionsCreatorGui extends JPanel {
      * @param featureIndex The index of the feature being added.
      */
     public void addFeatureCells(int featureIndex) {
-        List<String> featureCells = List.of(
-                DataTypeAndColumn.FEATURE_SHORT_NAME.name + "_" + featureIndex,
-                DataTypeAndColumn.FEATURE_TYPE.name + "_" + featureIndex,
-                DataTypeAndColumn.FEATURE_START.name + "_" + featureIndex,
-                DataTypeAndColumn.FEATURE_END.name + "_" + featureIndex,
-                DataTypeAndColumn.FEATURE_RANGE_TYPE.name + "_" + featureIndex,
-                DataTypeAndColumn.FEATURE_XREF.name + "_" + featureIndex,
-                DataTypeAndColumn.FEATURE_XREF_DB.name + "_" + featureIndex
-        );
+        List<String> featureCells = DataTypeAndColumn.getNotInitialData();
+        featureCells = featureCells.stream()
+                .map(data -> data + "_" + featureIndex)
+                .collect(Collectors.toList());
 
         TableModel tableModel = table.getModel();
         int baseColumnIndex = dataNeededForInteractor.size() + featureIndex * featureCells.size();

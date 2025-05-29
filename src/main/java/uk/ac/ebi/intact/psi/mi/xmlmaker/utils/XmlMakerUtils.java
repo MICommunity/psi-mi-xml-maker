@@ -143,7 +143,7 @@ public class XmlMakerUtils {
         return URLEncoder.encode(input, StandardCharsets.UTF_8);
     }
 
-    public CvTerm fetchTerm(String input) {
+    public static CvTerm fetchTerm(String input) {
         input = input.trim();
         if (input.isBlank() || input.contains("null")) return null;
         CvTerm term = nameToCvTerm.get(input);
@@ -167,7 +167,7 @@ public class XmlMakerUtils {
     /**
      * Fetches the MI (Molecular Interaction) ID for a given term using the OLS client.
      */
-    public String fetchMiId(String input) {
+    public static String fetchMiId(String input) {
         CvTerm cvTerm = fetchTerm(input);
         return cvTerm == null ? null : cvTerm.getMIIdentifier();
     }

@@ -2,8 +2,8 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFormaterGui;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionWriterGui;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.InteractionsCreatorGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.InteractionWriterGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 

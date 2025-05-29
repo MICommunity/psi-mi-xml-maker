@@ -1,7 +1,9 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui;
 
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.InteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GUIUtils;
 

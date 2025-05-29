@@ -1,9 +1,9 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content;
 
 import lombok.Getter;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
 
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
 
 public enum DataForRawFile {
     BAIT_ID_DB(PARTICIPANT_ID_DB.name, true, false, false),
@@ -40,7 +40,9 @@ public enum DataForRawFile {
     FEATURE_PARAM_UNIT(DataTypeAndColumn.FEATURE_PARAM_UNIT.name, false, false, true),
     FEATURE_PARAM_BASE(DataTypeAndColumn.FEATURE_PARAM_BASE.name, false, false, true),
     FEATURE_PARAM_EXPONENT(DataTypeAndColumn.FEATURE_PARAM_EXPONENT.name, false, false, true),
-    FEATURE_PARAM_UNCERTAINTY(DataTypeAndColumn.FEATURE_PARAM_UNCERTAINTY.name, false, false, true);
+    FEATURE_PARAM_UNCERTAINTY(DataTypeAndColumn.FEATURE_PARAM_UNCERTAINTY.name, false, false, true),
+    FEATURE_RESULTING_SEQUENCE(DataTypeAndColumn.FEATURE_RESULTING_SEQUENCE.name, false, false, true)
+    ;
 
     public final String name;
     public final boolean isBait;

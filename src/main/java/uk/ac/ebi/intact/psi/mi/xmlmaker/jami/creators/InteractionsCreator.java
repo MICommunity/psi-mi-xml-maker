@@ -1,24 +1,24 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
-import psidev.psi.mi.jami.exception.IllegalRangeException;
 import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import psidev.psi.mi.jami.utils.PositionUtils;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.xml.DataTypeAndColumn.*;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
 
 /**
  * The InteractionsCreator class is responsible for processing Excel files or directory-based input files
@@ -79,29 +79,6 @@ public class InteractionsCreator {
         }
     }
 
-    /**
-     * Creates an {@link XmlParticipantEvidence} instance from the provided data.
-     *
-     * <p>Extracts and validates participant attributes, resolves MI IDs asynchronously,
-     * and constructs the participant evidence object with the given details. Returns
-     * {@code null} if required fields are missing or invalid.
-     *
-     * @param data a {@link Map} containing participant attributes, with keys defined
-     *             in {@link DataTypeAndColumn}.
-     * @return an {@link XmlParticipantEvidence} instance, or {@code null} if validation fails.
-     *
-     * <p>Required fields:
-     * <ul>
-     *   <li>{@code PARTICIPANT_NAME}: Non-null, non-empty participant name.</li>
-     *   <li>{@code PARTICIPANT_ID} and {@code PARTICIPANT_ID_DB}: Valid unique ID and database.</li>
-     *   <li>{@code PARTICIPANT_ORGANISM}: Resolved to a valid taxonomy ID.</li>
-     * </ul>
-     *
-     * <p>Optional attributes include type, experimental role, preparations, cross-references,
-     * and identification methods, which are resolved if provided. Features can also be added
-     * via {@link #createFeature(int, Map)}.
-     * @throws NumberFormatException if the organism's taxonomy ID is invalid.
-     */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
         DataTypeAndColumn[] required = {PARTICIPANT_NAME, PARTICIPANT_ID, PARTICIPANT_ID_DB, PARTICIPANT_ORGANISM};
 
@@ -154,10 +131,6 @@ public class InteractionsCreator {
 
         addXrefs(participantEvidence, xref, xrefDb);
 
-        //TODO: see the commented part for psi-mi verification:
-//        Xref authorName = new XmlXref(xrefDb, xref.getShortName(), utils.fetchTerm("inferred by author"));
-//        participantEvidence.getXrefs().add(authorName);
-
         addExperimentalPreparations(participantEvidence, experimentalPreparations);
 
         if (participantIdentificationMethod != null) {
@@ -187,7 +160,7 @@ public class InteractionsCreator {
     private void addFeatures(XmlParticipantEvidence participantEvidence, Map<String, String> data) {
         if (numberOfFeature > 0) {
             for (int i = 0; i < numberOfFeature; i++) {
-                XmlFeatureEvidence feature = createFeature(i, data);
+                XmlFeatureEvidence feature = XmlFeatureEvidenceCreator.createFeature(i, data);
                 if (feature != null) {
                     participantEvidence.addFeature(feature);
                 }
@@ -546,7 +519,7 @@ public class InteractionsCreator {
             String parameterUncertainty = participant.get(INTERACTION_PARAM_UNCERTAINTY.name);
             String parameterUnit = participant.get(INTERACTION_PARAM_UNIT.name);
 
-            List<XmlParameter> interactionParameters = createParameter(parameterType, parameterValue, parameterUncertainty, parameterUnit);
+            List<XmlParameter> interactionParameters = XmlParameterCreator.createParameter(parameterType, parameterValue, parameterUncertainty, parameterUnit);
             for (XmlParameter interactionParameter : interactionParameters) {
                 if (!interaction.getParameters().contains(interactionParameter)) {
                     interaction.getParameters().add(interactionParameter);
@@ -561,100 +534,6 @@ public class InteractionsCreator {
 
 
         processInteractionCreation(interaction, interactionDetectionMethod, participantIdentificationMethod, hostOrganism, interactionType);
-    }
-
-    /**
-     * Creates a feature evidence object for a participant based on feature data.
-     *
-     * @param featureIndex the index of the feature.
-     * @param data         the map containing feature data.
-     * @return the created XmlFeatureEvidence object.
-     */
-    private XmlFeatureEvidence createFeature(int featureIndex, Map<String, String> data) {
-        String featureIndexString = "_" + featureIndex;
-
-        String featureShortName = data.get(FEATURE_SHORT_NAME.name + featureIndexString);
-        String featureType = data.get(FEATURE_TYPE.name + featureIndexString);
-        String featureStart = data.get(FEATURE_START.name + featureIndexString);
-        String featureEnd = data.get(FEATURE_END.name + featureIndexString);
-        String featureRangeType = data.get(FEATURE_RANGE_TYPE.name + featureIndexString);
-        String featureXref = data.get(FEATURE_XREF.name + featureIndexString);
-        String featureXrefDb = data.get(FEATURE_XREF_DB.name + featureIndexString);
-
-        XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureType, featureShortName);
-
-        if (featureEvidence.getType().getMIIdentifier() == null || featureEvidence.getType().getMIIdentifier().isEmpty()) {
-            return null;
-        }
-
-        Position positionStart = getRangePosition(featureStart, featureRangeType);
-        Position positionEnd = getRangePosition(featureEnd, featureRangeType);
-        XmlRange featureRange = getFeatureRange(positionStart, positionEnd);
-
-        FeatureXrefContainer featureXrefContainer = getFeatureXrefContainer(featureXref, featureXrefDb);
-
-        featureEvidence.setJAXBXref(featureXrefContainer);
-        featureEvidence.setJAXBRangeWrapper(new AbstractXmlFeature.JAXBRangeWrapper());
-        featureEvidence.getRanges().add(featureRange);
-
-        return featureEvidence;
-    }
-
-    private FeatureXrefContainer getFeatureXrefContainer(String featureXref, String featureXrefDb) {
-        FeatureXrefContainer featureXrefContainer = new FeatureXrefContainer();
-
-        if (featureXref != null && featureXrefDb != null) {
-            List<String> featuresXrefs = getFeatureXrefs(featureXref);
-            List<CvTerm> featuresXrefsDb = getFeatureXrefsDb(featureXrefDb);
-
-            // Ensure both lists are the same size before proceeding
-            int size = Math.min(featuresXrefs.size(), featuresXrefsDb.size());
-
-            for (int i = 0; i < size; i++) {
-                String xref = featuresXrefs.get(i);
-                CvTerm xrefDb = featuresXrefsDb.get(i);
-                if (xref != null && xrefDb != null) {
-                    Xref featureXrefXml = new XmlXref(xrefDb, xref);
-                    featureXrefContainer.getXrefs().add(featureXrefXml);
-                }
-            }
-        }
-
-        return featureXrefContainer;
-    }
-
-    private List<CvTerm> getFeatureXrefsDb(String featureXrefDb) {
-        if (featureXrefDb == null || featureXrefDb.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(featureXrefDb.split(";"))
-                .map(String::trim)
-                .map(utils::fetchTerm)
-                .collect(Collectors.toList());
-    }
-
-    private List<String> getFeatureXrefs(String featureXref) {
-        if (featureXref == null || featureXref.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(featureXref.split(";"))
-                .map(String::trim)
-                .collect(Collectors.toList());
-    }
-
-    private XmlFeatureEvidence getFeatureEvidence(String featureType, String featureShortLabel) {
-        String featureTypeMiId = utils.fetchMiId(featureType);
-        CvTerm featureTypeCv = new XmlCvTerm(featureType, featureTypeMiId);
-
-        XmlFeatureEvidence featureEvidence = new XmlFeatureEvidence(featureTypeCv);
-        featureEvidence.setShortName(featureShortLabel);
-        return featureEvidence;
-    }
-
-    private XmlRange getFeatureRange(Position startPosition, Position endPosition) {
-        XmlRange featureRange = new XmlRange();
-        featureRange.setPositions(startPosition, endPosition);
-        return featureRange;
     }
 
     /**
@@ -698,60 +577,5 @@ public class InteractionsCreator {
             }
         }
         return mostSimilarColumn;
-    }
-
-    /**
-     * Determines the position type based on the given range and feature range type.
-     * If a feature range type is provided, it creates a position using the feature type
-     * and its corresponding MI identifier. Otherwise, it interprets the range string
-     * to determine whether it represents a terminal position (N-terminal or C-terminal),
-     * a numeric position, or an undetermined position.
-     *
-     * @param range The range value, which may be a numeric position or a terminal designation (e.g., "c-term").
-     * @param featureRangeType The specific feature range type, if available.
-     * @return A {@code Position} object representing the determined range type.
-     * @throws RuntimeException If an invalid numeric range is encountered.
-     */
-    public Position getRangePosition(String range, String featureRangeType) {
-        if (featureRangeType.contains("c-term")) return PositionUtils.createCTerminalRangePosition();
-
-        if (featureRangeType.contains("n-term")) return PositionUtils.createNTerminalRangePosition();
-
-        if (range.matches("\\d+")) {
-            try {
-                return PositionUtils.createPositionFromString(range);
-            } catch (IllegalRangeException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return PositionUtils.createUndeterminedPosition();
-    }
-
-    private List<XmlParameter> createParameter(String parameterType, String parameterValue, String parameterUncertainty, String parameterUnit) {
-        List<XmlParameter> parameters = new ArrayList<>();
-
-        String[] parameterValues = parameterValue.split(";");
-        String[] parameterUncertainties = parameterUncertainty.split(";");
-        String[] parameterUnits = parameterUnit.split(";");
-        String[] parameterTypes = parameterType.split(";");
-
-        for (int i = 0; i < parameterValues.length; i++) {
-            CvTerm type = utils.fetchTerm(parameterTypes[i]);
-            ParameterValue value = createParameterValue(parameterValues[i]);
-            BigDecimal uncertainty = null;
-            if (parameterUncertainties.length > 0) {
-                uncertainty = new BigDecimal(parameterUncertainties[i]);
-            }
-            CvTerm unit = utils.fetchTerm(parameterUnits[i]);
-            parameters.add(new XmlParameter(type, value, uncertainty, unit));
-        }
-
-        return parameters;
-    }
-
-    private ParameterValue createParameterValue(String value) {
-        BigDecimal valueAsBigDecimal = new BigDecimal(value);
-        return new ParameterValue(valueAsBigDecimal);
     }
 }
