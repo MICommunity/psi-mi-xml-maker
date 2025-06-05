@@ -108,6 +108,7 @@ public class FeatureCreatorGui {
         Feature feature = new Feature();
         JPanel featurePanel = new JPanel();
         featurePanel.setBorder(BorderFactory.createTitledBorder("Feature"));
+        featurePanel.setLayout(new GridLayout(3,1));
 
         JComboBox<String> startLocationComboBox = createComboBox(locationOptions, "Start location");
         startLocationComboBox.addActionListener(e -> feature.setStartLocation(startLocationComboBox.getSelectedItem().toString()));
@@ -119,13 +120,15 @@ public class FeatureCreatorGui {
         rangeTypeComboBox.addActionListener(e -> feature.setRangeType(rangeTypeComboBox.getSelectedItem().toString()));
 
         JComboBox<String> typeComboBox = createComboBox(typeOptions, "Feature type");
-        typeComboBox.addActionListener(e -> {
-            feature.setType(typeComboBox.getSelectedItem().toString());
-            if (typeComboBox.getSelectedItem().toString().contains("mutation")){
-                feature.setResultingSequence("test");
-            }
-        });
-        //todo: add resulting sequence if type contains "mutation"
+        typeComboBox.addActionListener(e -> feature.setType(typeComboBox.getSelectedItem().toString()));
+
+        JTextField originalSequenceTextField = new JTextField();
+        setTextFieldDimension(originalSequenceTextField, "Original sequence");
+        originalSequenceTextField.addActionListener(e -> feature.setOriginalSequence(originalSequenceTextField.getText()));
+
+        JTextField newSequenceTextField = new JTextField();
+        setTextFieldDimension(newSequenceTextField, "New sequence");
+        newSequenceTextField.addActionListener(e -> feature.setNewSequence(newSequenceTextField.getText()));
 
         JTextField shortLabelTextField = new JTextField();
         setTextFieldDimension(shortLabelTextField, "Short label");
@@ -144,6 +147,8 @@ public class FeatureCreatorGui {
         featurePanel.add(rangeTypeComboBox);
         featurePanel.add(typeComboBox);
         featurePanel.add(shortLabelTextField);
+        featurePanel.add(originalSequenceTextField);
+        featurePanel.add(newSequenceTextField);
         featurePanel.add(createFeatureXrefContainerPanel(feature.getNumber()));
 
         return featurePanel;

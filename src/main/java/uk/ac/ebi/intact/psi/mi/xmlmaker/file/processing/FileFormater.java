@@ -443,7 +443,8 @@ public class FileFormater {
                 participant.put(DataForRawFile.FEATURE_PARAM_EXPONENT.name + adding, feature.getParameterExponents());
                 participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, feature.getParameterUncertainties());
                 participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding), participant));
-                participant.put(DataForRawFile.FEATURE_RESULTING_SEQUENCE.name + adding, feature.getResultingSequence());
+                participant.put(DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding, feature.getOriginalSequence());
+                participant.put(DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding, feature.getNewSequence());
             }
         }
     }

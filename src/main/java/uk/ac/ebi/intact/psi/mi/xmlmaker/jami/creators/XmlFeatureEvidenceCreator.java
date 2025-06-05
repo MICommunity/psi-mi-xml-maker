@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_END;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_RANGE_TYPE;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_RESULTING_SEQUENCE;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_ORIGINAL_SEQUENCE;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_XREF;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_XREF_DB;
 
@@ -35,7 +35,8 @@ public class XmlFeatureEvidenceCreator {
         String featureXref = data.get(FEATURE_XREF.name + featureIndexString);
         String featureXrefDb = data.get(FEATURE_XREF_DB.name + featureIndexString);
 
-        String featureResultingSequence = data.get(FEATURE_RESULTING_SEQUENCE.name + featureIndexString);
+        String featureOriginalSequence = data.get(FEATURE_ORIGINAL_SEQUENCE.name + featureIndexString);
+        String featureNewSequence = data.get(FEATURE_NEW_SEQUENCE.name + featureIndexString);
 
         XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureType, featureShortName);
 
@@ -61,8 +62,7 @@ public class XmlFeatureEvidenceCreator {
             }
         }
 
-        ResultingSequence resultingSequence = new XmlResultingSequence();
-        resultingSequence.setNewSequence("test");
+        ResultingSequence resultingSequence = new XmlResultingSequence(featureOriginalSequence, featureNewSequence);
         featureRange.setResultingSequence(resultingSequence);
 
         FeatureXrefContainer featureXrefContainer = getFeatureXrefContainer(featureXref, featureXrefDb);
@@ -70,6 +70,8 @@ public class XmlFeatureEvidenceCreator {
         featureEvidence.setJAXBXref(featureXrefContainer);
         featureEvidence.setJAXBRangeWrapper(new AbstractXmlFeature.JAXBRangeWrapper());
         featureEvidence.getRanges().add(featureRange);
+
+        System.out.println(featureRange.getResultingSequence());
 
         return featureEvidence;
     }

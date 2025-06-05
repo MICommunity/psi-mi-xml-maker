@@ -52,7 +52,8 @@ public enum DataTypeAndColumn {
     FEATURE_PARAM_BASE("Feature parameter base", false),
     FEATURE_PARAM_EXPONENT("Feature parameter exponent", false),
     FEATURE_PARAM_UNCERTAINTY("Feature parameter uncertainty", false),
-    FEATURE_RESULTING_SEQUENCE("Feature resulting sequence", false),
+    FEATURE_ORIGINAL_SEQUENCE("Feature original sequence", false),
+    FEATURE_NEW_SEQUENCE("Feature resulting sequence", false),
     ;
 
     public final String name;

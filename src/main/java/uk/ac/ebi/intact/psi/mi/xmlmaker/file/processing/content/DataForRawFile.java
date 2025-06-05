@@ -41,7 +41,8 @@ public enum DataForRawFile {
     FEATURE_PARAM_BASE(DataTypeAndColumn.FEATURE_PARAM_BASE.name, false, false, true),
     FEATURE_PARAM_EXPONENT(DataTypeAndColumn.FEATURE_PARAM_EXPONENT.name, false, false, true),
     FEATURE_PARAM_UNCERTAINTY(DataTypeAndColumn.FEATURE_PARAM_UNCERTAINTY.name, false, false, true),
-    FEATURE_RESULTING_SEQUENCE(DataTypeAndColumn.FEATURE_RESULTING_SEQUENCE.name, false, false, true)
+    FEATURE_ORIGINAL_SEQUENCE(DataTypeAndColumn.FEATURE_ORIGINAL_SEQUENCE.name, false, false, true),
+    FEATURE_NEW_SEQUENCE(DataTypeAndColumn.FEATURE_NEW_SEQUENCE.name, false, false, true),
     ;
 
     public final String name;
