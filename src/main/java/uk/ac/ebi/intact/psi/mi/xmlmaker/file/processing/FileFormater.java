@@ -449,7 +449,6 @@ public class FileFormater {
                 participant.put(DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding, feature.getNewSequence());
 
                 if (feature.isFetchFromFile()){
-                    //todo: check for when it is input by user
                     participant.put(DataForRawFile.FEATURE_TYPE.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_TYPE.name + adding), participant));
                     participant.put(DataForRawFile.FEATURE_START_LOCATION.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_START_LOCATION.name + adding), participant));
                     participant.put(DataForRawFile.FEATURE_END_LOCATION.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_END_LOCATION.name + adding), participant));
