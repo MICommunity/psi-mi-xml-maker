@@ -5,8 +5,10 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataAndMiID;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.getTermsFromOls;
@@ -108,31 +110,50 @@ public class FeatureCreatorGui {
         Feature feature = new Feature();
         JPanel featurePanel = new JPanel();
         featurePanel.setBorder(BorderFactory.createTitledBorder("Feature"));
-        featurePanel.setLayout(new GridLayout(3,1));
+        featurePanel.setLayout(new GridLayout(3, 2));
+        AtomicBoolean fetchFromFile = new AtomicBoolean(false);
+
+        JCheckBox featureToggle = new JCheckBox("Fetch from file");
+        featureToggle.setSelected(fetchFromFile.get());
+        featurePanel.add(featureToggle);
 
         JComboBox<String> startLocationComboBox = createComboBox(locationOptions, "Start location");
-        startLocationComboBox.addActionListener(e -> feature.setStartLocation(startLocationComboBox.getSelectedItem().toString()));
-
         JComboBox<String> endLocationComboBox = createComboBox(locationOptions, "End location");
-        endLocationComboBox.addActionListener(e -> feature.setEndLocation(endLocationComboBox.getSelectedItem().toString()));
-
         JComboBox<String> rangeTypeComboBox = createComboBox(rangeTypeOptions, "Range type");
-        rangeTypeComboBox.addActionListener(e -> feature.setRangeType(rangeTypeComboBox.getSelectedItem().toString()));
-
         JComboBox<String> typeComboBox = createComboBox(typeOptions, "Feature type");
-        typeComboBox.addActionListener(e -> feature.setType(typeComboBox.getSelectedItem().toString()));
-
-        JTextField originalSequenceTextField = new JTextField();
-        setTextFieldDimension(originalSequenceTextField, "Original sequence");
-        originalSequenceTextField.addActionListener(e -> feature.setOriginalSequence(originalSequenceTextField.getText()));
-
-        JTextField newSequenceTextField = new JTextField();
-        setTextFieldDimension(newSequenceTextField, "New sequence");
-        newSequenceTextField.addActionListener(e -> feature.setNewSequence(newSequenceTextField.getText()));
-
+        JComboBox<String> originalSequenceComboBox = createComboBox(new ArrayList<>(), "Original sequence");
+        JComboBox<String> newSequenceComboBox = createComboBox(new ArrayList<>(), "New sequence");
         JTextField shortLabelTextField = new JTextField();
+
+        setComboBoxDimension(originalSequenceComboBox, "Original sequence");
+        setComboBoxDimension(newSequenceComboBox, "New sequence");
+        newSequenceComboBox.setEditable(true);
         setTextFieldDimension(shortLabelTextField, "Short label");
-        shortLabelTextField.addActionListener(e -> feature.setShortName(shortLabelTextField.getText()));
+
+        ActionListener updateListeners = e -> {
+            Object start = getComboBoxValue(startLocationComboBox);
+            Object end = getComboBoxValue(endLocationComboBox);
+            Object range = getComboBoxValue(rangeTypeComboBox);
+            Object type = getComboBoxValue(typeComboBox);
+            Object original = getComboBoxValue(originalSequenceComboBox);
+            Object newSequence = getComboBoxValue(newSequenceComboBox);
+
+            feature.setStartLocation(start != null ? start.toString() : "");
+            feature.setEndLocation(end != null ? end.toString() : "");
+            feature.setRangeType(range != null ? range.toString() : "");
+            feature.setType(type != null ? type.toString() : "");
+            feature.setOriginalSequence(original != null ? original.toString() : "");
+            feature.setNewSequence(newSequence != null ? newSequence.toString() : "");
+            feature.setShortName(shortLabelTextField.getText());
+        };
+
+        startLocationComboBox.addActionListener(updateListeners);
+        endLocationComboBox.addActionListener(updateListeners);
+        rangeTypeComboBox.addActionListener(updateListeners);
+        typeComboBox.addActionListener(updateListeners);
+        originalSequenceComboBox.addActionListener(updateListeners);
+        newSequenceComboBox.addActionListener(updateListeners);
+        shortLabelTextField.addActionListener(updateListeners);
 
         if (bait) {
             feature.setNumber(baitFeatures.size());
@@ -147,12 +168,48 @@ public class FeatureCreatorGui {
         featurePanel.add(rangeTypeComboBox);
         featurePanel.add(typeComboBox);
         featurePanel.add(shortLabelTextField);
-        featurePanel.add(originalSequenceTextField);
-        featurePanel.add(newSequenceTextField);
+        featurePanel.add(originalSequenceComboBox);
+        featurePanel.add(newSequenceComboBox);
         featurePanel.add(createFeatureXrefContainerPanel(feature.getNumber()));
+
+        featureToggle.addActionListener(e -> {
+            boolean fetch = featureToggle.isSelected();
+            fetchFromFile.set(fetch);
+            feature.setFetchFromFile(fetch);
+
+            ExcelFileReader reader = participantAndInteractionCreatorGui.getExcelFileReader();
+            List<String> columns = reader.getColumns(reader.sheetSelectedUpdate);
+
+            updateComboBoxData(typeComboBox, fetch ? columns : typeOptions);
+            updateComboBoxData(startLocationComboBox, fetch ? columns : locationOptions);
+            updateComboBoxData(endLocationComboBox, fetch ? columns : locationOptions);
+            updateComboBoxData(rangeTypeComboBox, fetch ? columns : rangeTypeOptions);
+            updateComboBoxData(originalSequenceComboBox, fetch ? columns : new ArrayList<>());
+            updateComboBoxData(newSequenceComboBox, fetch ? columns : new ArrayList<>());
+        });
 
         return featurePanel;
     }
+
+    private Object getComboBoxValue(JComboBox<String> comboBox) {
+        return comboBox.isEditable() ? comboBox.getEditor().getItem() : comboBox.getSelectedItem();
+    }
+
+    private void updateComboBoxData(JComboBox<String> comboBox, List<String> items) {
+        String tooltip = comboBox.getToolTipText();
+        comboBox.removeAllItems();
+
+        if (tooltip != null) {
+            comboBox.addItem(tooltip);
+        }
+
+        for (String item : items) {
+            if (!item.equals(tooltip)) {
+                comboBox.addItem(item);
+            }
+        }
+    }
+
 
     private JComboBox<String> createComboBox(List<String> options, String tooltip) {
         JComboBox<String> comboBox = new JComboBox<>();
@@ -255,4 +312,5 @@ public class FeatureCreatorGui {
 
         return xrefPanel;
     }
+
 }

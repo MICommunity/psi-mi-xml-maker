@@ -17,6 +17,7 @@ public class Feature {
     private String rangeType;
     private String originalSequence;
     private String newSequence;
+    private boolean fetchFromFile;
 
     private List<String> xref = new ArrayList<>();
     private List<String> xrefDb = new ArrayList<>();

@@ -81,6 +81,7 @@ public class FileFormaterGui {
 
         if (excelFileReader.sheets.isEmpty()) {
             sheets.addItem("* Select sheet");
+            sheets.setToolTipText("* Select sheet");
             sheets.setEnabled(false);
             sheets.setSelectedIndex(0);
             setUpColumns();
@@ -88,6 +89,7 @@ public class FileFormaterGui {
             sheets.removeAllItems();
             sheets.setEnabled(true);
             sheets.addItem("* Select sheet");
+            sheets.setToolTipText("* Select sheet");
             for (String sheetName : excelFileReader.sheets) {
                 sheets.addItem(sheetName);
             }
@@ -112,18 +114,22 @@ public class FileFormaterGui {
      */
     public void setUpColumns() {
         baitColumn.removeAllItems();
+        baitColumn.setToolTipText("* Select baits id column");
         baitColumn.addItem("* Select baits id column");
         baitColumn.setEnabled(true);
 
         preyColumn.removeAllItems();
+        preyColumn.setToolTipText("* Select preys id column");
         preyColumn.addItem("* Select preys id column");
         preyColumn.setEnabled(true);
 
         baitNameColumn.removeAllItems();
+        baitNameColumn.setToolTipText("Select baits name column");
         baitNameColumn.addItem("Select baits name");
         baitNameColumn.setEnabled(true);
 
         preyNameColumn.removeAllItems();
+        preyNameColumn.setToolTipText("Select preys name column");
         preyNameColumn.addItem("Select preys name");
         preyNameColumn.setEnabled(true);
 

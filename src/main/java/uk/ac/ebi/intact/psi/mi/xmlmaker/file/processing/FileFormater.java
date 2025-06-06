@@ -434,6 +434,7 @@ public class FileFormater {
                 participant.put(DataForRawFile.FEATURE_XREF.name + adding, feature.getListAsString(feature.getXref()));
                 participant.put(DataForRawFile.FEATURE_XREF_DB.name + adding, feature.getListAsString(feature.getXrefDb()));
                 participant.put(DataForRawFile.FEATURE_XREF_QUALIFIER.name + adding, feature.getListAsString(feature.getXrefQualifier()));
+                participant.put(DataForRawFile.FEATURE_RANGE_TYPE.name + adding, feature.getRangeType());
 
                 participant.put(DataForRawFile.FEATURE_PARAM_TYPE.name + adding, feature.getParameterTypes());
                 participant.put(DataForRawFile.FEATURE_PARAM_VALUE.name + adding, feature.getParameterValues());
@@ -443,8 +444,19 @@ public class FileFormater {
                 participant.put(DataForRawFile.FEATURE_PARAM_EXPONENT.name + adding, feature.getParameterExponents());
                 participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, feature.getParameterUncertainties());
                 participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding), participant));
+
                 participant.put(DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding, feature.getOriginalSequence());
                 participant.put(DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding, feature.getNewSequence());
+
+                if (feature.isFetchFromFile()){
+                    //todo: check for when it is input by user
+                    participant.put(DataForRawFile.FEATURE_TYPE.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_TYPE.name + adding), participant));
+                    participant.put(DataForRawFile.FEATURE_START_LOCATION.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_START_LOCATION.name + adding), participant));
+                    participant.put(DataForRawFile.FEATURE_END_LOCATION.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_END_LOCATION.name + adding), participant));
+                    participant.put(DataForRawFile.FEATURE_RANGE_TYPE.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_RANGE_TYPE.name + adding), participant));
+                    participant.put(DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding), participant));
+                    participant.put(DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding), participant));
+                }
             }
         }
     }
@@ -558,7 +570,12 @@ public class FileFormater {
         if (featureValueColumns != null) {
             String[] valuesColumns = featureValueColumns.split(";");
             for (String valueColumn : valuesColumns) {
-                value.append(getDataFromRow(getColumnIndex(valueColumn), Integer.parseInt(participant.get(PARTICIPANT_ROW_INDEX.name)))).append(";");
+                int valueIndex = getColumnIndex(valueColumn);
+                if (valueIndex == -1) {
+                    value.append(valueColumn);
+                } else {
+                    value.append(getDataFromRow(valueIndex, Integer.parseInt(participant.get(PARTICIPANT_ROW_INDEX.name)))).append(";");
+                }
             }
         }
         return value.toString();
@@ -570,6 +587,7 @@ public class FileFormater {
     }
 
     private String getDataFromRow(int columnIndex, int rowIndex) {
+        System.out.println(columnIndex);
         Sheet sheet = excelFileReader.workbook.getSheet(excelFileReader.sheetSelectedUpdate);
         Row row = sheet.getRow(rowIndex);
         if (row == null || columnIndex < 0) {

@@ -46,9 +46,13 @@ public class UniprotMapperGui extends JPanel {
         setupComboBoxDefaults();
 
         uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(sheets, "Select sheet"));
+        sheets.setToolTipText("Select sheet");
         uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(idColumn, "Select ID column"));
+        idColumn.setToolTipText("Select ID column");
         uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(idDbColumn, "Select ID database column"));
+        idDbColumn.setToolTipText("Select ID database column");
         uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(organismColumn, "Select Organism column"));
+        organismColumn.setToolTipText("Select Organism column");
 
         sheets.addActionListener(e -> {
             if (!isUpdatingSheets) {

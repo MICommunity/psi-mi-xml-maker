@@ -113,9 +113,11 @@ public class ParticipantAndInteractionCreatorGui {
         setXrefQualifiers();
 
         updateExperimentalPreparations((int) numberOfBaitExperimentalPrep.getValue(), baitExperimentalPreparationPanel, baitExperimentalPreparationList);
+        numberOfBaitExperimentalPrep.setToolTipText("Number of bait experimental preparations");
         addSpinnerListener(numberOfBaitExperimentalPrep, baitExperimentalPreparationPanel, baitExperimentalPreparationList);
 
         updateExperimentalPreparations((int) numberOfPreyExperimentalPrep.getValue(), preyExperimentalPreparationPanel, preyExperimentalPreparationList);
+        numberOfPreyExperimentalPrep.setToolTipText("Number of prey experimental preparations");
         addSpinnerListener(numberOfPreyExperimentalPrep, preyExperimentalPreparationPanel, preyExperimentalPreparationList);
     }
 
@@ -133,6 +135,7 @@ public class ParticipantAndInteractionCreatorGui {
      * Populates the bait and prey experimental preparation dropdowns.
      */
     public void setExperimentalPreparations() {
+
         for (String termName : getTermsFromOls(DataAndMiID.EXPERIMENTAL_PREPARATION.miId)) {
             preyExperimentalPreparationNames.add(termName);
             baitExperimentalPreparationNames.add(termName);
@@ -143,6 +146,7 @@ public class ParticipantAndInteractionCreatorGui {
      * Populates the interaction detection method dropdown with predefined methods.
      */
     public void setInteractionDetectionMethod() {
+        interactionDetectionMethodCombobox.setToolTipText("Interaction Detection Method");
         for (String termName : getTermsFromOls(DataAndMiID.INTERACTION_DETECTION_METHOD.miId)) {
             interactionDetectionMethodCombobox.addItem(termName);
         }
@@ -152,6 +156,7 @@ public class ParticipantAndInteractionCreatorGui {
      * Populates the participant detection method dropdown with predefined methods.
      */
     public void setParticipantDetectionMethod() {
+        participantDetectionMethodCombobox.setToolTipText("Participant Identification Method");
         for (String termName : getTermsFromOls(DataAndMiID.PARTICIPANT_DETECTION_METHOD.miId)) {
             participantDetectionMethodCombobox.addItem(termName);
         }
@@ -163,10 +168,20 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public void setOrganisms() {
         baitOrganism.setEditable(true);
+        baitOrganism.setToolTipText("Bait organism ID");
+
         preyOrganism.setEditable(true);
+        preyOrganism.setToolTipText("Prey organism ID");
+
         hostOrganism.setEditable(true);
+        hostOrganism.setToolTipText("Host organism ID");
+
         preyExpressedInOrganism.setEditable(true);
+        preyExpressedInOrganism.setToolTipText("Prey expressed organism ID");
+
         baitExpressedInOrganism.setEditable(true);
+        baitExpressedInOrganism.setToolTipText("Bait expressed organism ID");
+
         for (ParticipantOrganism participantOrganism : ParticipantOrganism.values()) {
             preyOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
             baitOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
@@ -264,6 +279,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         for (int i = 0; i < count; i++) {
             JComboBox<String> comboBox = new JComboBox<>();
+            comboBox.setToolTipText("Experimental preparation " + i);
             comboBox.addItem("Experimental Preparation");
 
             for (String termName : baitExperimentalPreparationNames) {
@@ -315,7 +331,10 @@ public class ParticipantAndInteractionCreatorGui {
      */
     private void setDatabases() {
         baitIdDatabase.addItem("UniProtKB");
+        baitIdDatabase.setToolTipText("Bait ID database");
+
         preyIdDatabase.addItem("UniProtKB");
+        preyIdDatabase.setToolTipText("Prey ID database");
 
         baitIdDatabase.addItem("geneid");
         preyIdDatabase.addItem("geneid");
@@ -375,6 +394,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         baitPanel.add(setComboBoxDimension(baitIdDatabase, BAIT_ID_DB.name));
         baitPanel.add(setComboBoxDimension(baitBiologicalRole, BAIT_BIOLOGICAL_ROLE.name));
+        baitBiologicalRole.setToolTipText("Bait Biological Role");
         baitPanel.add(setComboBoxDimension(baitOrganism, BAIT_ORGANISM.name));
         baitPanel.add(setComboBoxDimension(baitExpressedInOrganism, BAIT_EXPRESSED_IN_ORGANISM.name));
 
@@ -413,6 +433,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         preyPanel.add(setComboBoxDimension(preyIdDatabase, PREY_ID_DB.name));
         preyPanel.add(setComboBoxDimension(preyBiologicalRole, PREY_BIOLOGICAL_ROLE.name));
+        preyBiologicalRole.setToolTipText("Prey Biological Role");
         preyPanel.add(setComboBoxDimension(preyOrganism, PREY_ORGANISM.name));
         preyPanel.add(setComboBoxDimension(preyExpressedInOrganism, PREY_EXPRESSED_IN_ORGANISM.name));
 
@@ -467,6 +488,7 @@ public class ParticipantAndInteractionCreatorGui {
         interactionInfoPanel.add(multipleInteractionParameters);
 
         interactionFigureLegend.setPreferredSize(new Dimension(200, 50));
+        interactionFigureLegend.setToolTipText("Interaction Figure Legend");
         interactionInfoPanel.add(interactionFigureLegend);
 
         return interactionInfoPanel;

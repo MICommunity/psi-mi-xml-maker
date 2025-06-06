@@ -76,6 +76,7 @@ public class InteractionsCreatorGui extends JPanel {
         sheetWrapperPanel.setLayout(new GridLayout(1,1));
 
         sheets.addItem("Select sheet");
+        sheets.setToolTipText("Select sheet");
         sheetWrapperPanel.add(sheets);
 
         numberOfFeatures.setBorder(BorderFactory.createTitledBorder("Select number of features"));
@@ -112,11 +113,13 @@ public class InteractionsCreatorGui extends JPanel {
             sheets.setEnabled(false);
             sheets.setSelectedIndex(0);
             sheets.addItem("Select sheet");
+            sheets.setToolTipText("Select sheet");
             setUpColumns();
         } else {
             sheets.removeAllItems();
             sheets.setEnabled(true);
             sheets.addItem("Select sheet");
+            sheets.setToolTipText("Select sheet");
             for (String sheetName : excelFileReader.sheets) {
                 sheets.addItem(sheetName);
             }
