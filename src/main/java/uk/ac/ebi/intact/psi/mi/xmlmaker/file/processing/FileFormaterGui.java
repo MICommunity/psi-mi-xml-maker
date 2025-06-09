@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
+import static java.awt.Toolkit.*;
+
 /**
  * The {@code FileFormaterGui} class provides a graphical user interface
  * for formatting interaction data files. It allows users to select an
@@ -34,6 +36,8 @@ public class FileFormaterGui {
     private final JComboBox<String> baitNameColumn = new JComboBox<>();
     private final JComboBox<String> preyNameColumn = new JComboBox<>();
 
+    private final int WIDTH = getDefaultToolkit().getScreenSize().width - 100;
+
     final ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui;
 
     private static final Logger LOGGER = Logger.getLogger(FileFormaterGui.class.getName());
@@ -53,9 +57,9 @@ public class FileFormaterGui {
      */
     public JPanel getFileFormaterPanel() {
         JPanel fileFormaterPanel = new JPanel();
-        fileFormaterPanel.setLayout(new BoxLayout(fileFormaterPanel, BoxLayout.X_AXIS));
+        fileFormaterPanel.setLayout(new BoxLayout(fileFormaterPanel, BoxLayout.Y_AXIS));
 
-        JPanel wrapperSheetSelection = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel wrapperSheetSelection = new JPanel(new FlowLayout(FlowLayout.CENTER));
         wrapperSheetSelection.add(createSheetPanel());
         fileFormaterPanel.add(wrapperSheetSelection);
 
@@ -181,8 +185,8 @@ public class FileFormaterGui {
      */
     public JPanel createSheetPanel() {
         JPanel sheetsPanel = new JPanel();
-        sheetsPanel.setLayout(new GridLayout(5, 1));
-        sheetsPanel.setPreferredSize(new Dimension(250, 300));
+        sheetsPanel.setLayout(new GridLayout(1, 5));
+        sheetsPanel.setPreferredSize(new Dimension(WIDTH, 100));
 
         sheetsPanel.setBorder(BorderFactory.createTitledBorder(" 2.1 Select in the file"));
 
@@ -223,7 +227,7 @@ public class FileFormaterGui {
         });
 
         JPanel processPanel = new JPanel();
-        processPanel.setPreferredSize(new Dimension(200, 100));
+        processPanel.setPreferredSize(new Dimension(WIDTH, 100));
         processPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;

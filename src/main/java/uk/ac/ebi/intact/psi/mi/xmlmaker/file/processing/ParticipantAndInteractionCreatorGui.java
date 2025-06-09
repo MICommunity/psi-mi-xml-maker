@@ -64,7 +64,12 @@ public class ParticipantAndInteractionCreatorGui {
     private final JPanel preyExperimentalPreparationPanel = new JPanel(new GridLayout(2, 1));
 
     private final int HEIGHT = 300;
-    private final Dimension panelDimension = new Dimension(500, HEIGHT);
+    private final int SCREEN_WIDTH = Toolkit.getDefaultToolkit().getScreenSize().width - 100;
+    private final int THIRD_WIDTH = SCREEN_WIDTH / 3;
+    private final int SIXTH_WIDTH = SCREEN_WIDTH / 6;
+
+    private final Dimension participantPanelDimension = new Dimension(THIRD_WIDTH, HEIGHT);
+    private final Dimension experimentPanelDimension = new Dimension(SIXTH_WIDTH, HEIGHT);
 
     private final List<String> dbCache = new ArrayList<>();
     private final List<String> xrefQualifierCache = new ArrayList<>();
@@ -89,6 +94,9 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public JPanel createParticipantAndInteractionCreatorGui() {
         JPanel participantAndInteractionCreatorPanel = new JPanel();
+        participantAndInteractionCreatorPanel.setSize(new Dimension(SCREEN_WIDTH, HEIGHT));
+        participantAndInteractionCreatorPanel.setPreferredSize(new Dimension(SCREEN_WIDTH, HEIGHT));
+        participantAndInteractionCreatorPanel.setLayout(new BoxLayout(participantAndInteractionCreatorPanel, BoxLayout.X_AXIS));
 
         participantAndInteractionCreatorPanel.add(experimentInfoPanel());
         participantAndInteractionCreatorPanel.add(interactionInfoPanel());
@@ -364,10 +372,10 @@ public class ParticipantAndInteractionCreatorGui {
     public JPanel createBaitPanel() {
         JPanel baitPanel = new JPanel();
         baitPanel.setLayout(new GridLayout(4, 1));
-        baitPanel.setPreferredSize(panelDimension);
+        baitPanel.setPreferredSize(participantPanelDimension);
 
         baitPanel.setBorder(BorderFactory.createTitledBorder(" 2.3 Select baits information"));
-        baitPanel.setMaximumSize(panelDimension);
+        baitPanel.setMaximumSize(participantPanelDimension);
 
 
         baitPanel.add(setComboBoxDimension(baitIdDatabase, BAIT_ID_DB.name));
@@ -405,9 +413,9 @@ public class ParticipantAndInteractionCreatorGui {
     public JPanel createPreyPanel() {
         JPanel preyPanel = new JPanel();
         preyPanel.setLayout(new GridLayout(4, 1));
-        preyPanel.setPreferredSize(panelDimension);
+        preyPanel.setPreferredSize(participantPanelDimension);
         preyPanel.setBorder(BorderFactory.createTitledBorder(" 2.4 Select preys information"));
-        preyPanel.setMaximumSize(panelDimension);
+        preyPanel.setMaximumSize(participantPanelDimension);
 
         preyPanel.add(setComboBoxDimension(preyIdDatabase, PREY_ID_DB.name));
         preyPanel.add(setComboBoxDimension(preyBiologicalRole, PREY_BIOLOGICAL_ROLE.name));
@@ -445,7 +453,8 @@ public class ParticipantAndInteractionCreatorGui {
     public JPanel experimentInfoPanel() {
         JPanel experimentInfoPanel = new JPanel();
         experimentInfoPanel.setLayout(new GridLayout(4, 1));
-        experimentInfoPanel.setPreferredSize(new Dimension(200, HEIGHT));
+        experimentInfoPanel.setPreferredSize(experimentPanelDimension);
+        experimentInfoPanel.setMaximumSize(experimentPanelDimension);
         experimentInfoPanel.setBorder(BorderFactory.createTitledBorder(" 2.2 Experiment details"));
 
         experimentInfoPanel.add(setComboBoxDimension(hostOrganism, HOST_ORGANISM.name));
@@ -460,12 +469,13 @@ public class ParticipantAndInteractionCreatorGui {
     public JPanel interactionInfoPanel() {
         JPanel interactionInfoPanel = new JPanel();
         interactionInfoPanel.setLayout(new GridLayout(4, 1));
-        interactionInfoPanel.setPreferredSize(new Dimension(200, HEIGHT));
+        interactionInfoPanel.setPreferredSize(experimentPanelDimension);
+        interactionInfoPanel.setMaximumSize(experimentPanelDimension);
         interactionInfoPanel.setBorder(BorderFactory.createTitledBorder(" 2.3 Interaction details"));
 
         interactionInfoPanel.add(multipleInteractionParameters);
 
-        interactionFigureLegend.setPreferredSize(new Dimension(200, 50));
+        interactionFigureLegend.setPreferredSize(new Dimension(100, 50));
         interactionFigureLegend.setToolTipText("Interaction Figure Legend");
         interactionInfoPanel.add(interactionFigureLegend);
 

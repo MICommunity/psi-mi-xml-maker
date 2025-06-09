@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.awt.Toolkit.getDefaultToolkit;
+
 
 /**
  * Main GUI class for the PSI-MI XML Maker application.
@@ -30,8 +32,8 @@ import java.util.logging.Logger;
  */
 public class XmlMakerGui {
 
-    private static final int FRAME_WIDTH = 2000;
-    private static final int FRAME_HEIGHT = 2000;
+    private static final int FRAME_WIDTH = getDefaultToolkit().getScreenSize().width - 50;
+    private static final int FRAME_HEIGHT = getDefaultToolkit().getScreenSize().height - 50;
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGui.class.getName());
     private final ExcelFileReader excelFileReader;
     private final UniprotMapperGui uniprotMapperGui;
@@ -158,6 +160,7 @@ public class XmlMakerGui {
      */
     private JPanel createUniprotMapperPanel() {
         JPanel uniprotMapperPanel = uniprotMapperGui.uniprotPanel();
+        uniprotMapperPanel.setSize(new Dimension(FRAME_WIDTH, 200));
         uniprotMapperPanel.setBorder(new TitledBorder("3. Update the Uniprot ids"));
         return uniprotMapperPanel;
     }
@@ -426,6 +429,8 @@ public class XmlMakerGui {
     private JPanel createFileFormaterPanel(){
         JPanel fileFormaterPanel = fileFormaterGui.getFileFormaterPanel();
         fileFormaterPanel.setAutoscrolls(true);
+        fileFormaterPanel.setSize(new Dimension(FRAME_WIDTH, 350));
+        fileFormaterPanel.setMaximumSize(new Dimension(FRAME_WIDTH, 350));
         fileFormaterPanel.setBorder(new TitledBorder("2. Format raw file"));
         return fileFormaterPanel;
     }

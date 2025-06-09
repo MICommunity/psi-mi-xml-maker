@@ -93,7 +93,8 @@ public class InteractionsCreatorGui extends JPanel {
 
 
         JScrollPane scrollPane = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        scrollPane.setPreferredSize(new Dimension(scrollPane.getPreferredSize().width, 200)); // Set the height to 200 pixels
+        scrollPane.setPreferredSize(new Dimension(Toolkit.getDefaultToolkit().getScreenSize().width - 100, 200));
+        scrollPane.setMaximumSize(new Dimension(Toolkit.getDefaultToolkit().getScreenSize().width - 100, 200));
         sheetSelectorPanel.add(scrollPane);
 
         participantCreatorPanel.add(sheetSelectorPanel, BorderLayout.NORTH);

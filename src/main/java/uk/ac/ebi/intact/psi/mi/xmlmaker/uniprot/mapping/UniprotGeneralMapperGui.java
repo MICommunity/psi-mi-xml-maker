@@ -29,12 +29,14 @@ public class UniprotGeneralMapperGui {
      * @param uniprotIdsGroup The {@link ButtonGroup} containing the possible UniProt IDs.
      * @param previousId The previous UniProt ID, used in the title of the panel.
      */
-    public void getUniprotIdChoicePanel(ButtonGroup uniprotIdsGroup, String previousId) {
+    public void getUniprotIdChoicePanel(ButtonGroup uniprotIdsGroup, String previousId, String previousIdDb) {
         JPanel buttonContainer = new JPanel();
         buttonContainer.setPreferredSize(new Dimension(1000, 700));
 
-        JTextField otherIdField = new JTextField("Other id");
-        JTextField otherIdDbField = new JTextField("Other id database");
+        JTextField otherIdField = new JTextField(previousId);
+        otherIdField.setBorder(BorderFactory.createTitledBorder("Other id"));
+        JTextField otherIdDbField = new JTextField(previousIdDb);
+        otherIdDbField.setBorder(BorderFactory.createTitledBorder("Other id database"));
         buttonContainer.add(otherIdField);
         buttonContainer.add(otherIdDbField);
         JComboBox<String> otherParticipantTypeComboBox = createParticipantTypeComboBox();

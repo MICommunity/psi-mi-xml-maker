@@ -511,7 +511,7 @@ public class ExcelFileReader  {
         List<UniprotResult> noEntryTypes = new ArrayList<>();
 
         if (uniprotResults == null || uniprotResults.isEmpty()) {
-            mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup(), previousId);
+            mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup(), previousId, previousIdDb);
             synchronized (this) {
                 while (mapperGui.getSelectedId() == null) {
                     try {
@@ -541,7 +541,7 @@ public class ExcelFileReader  {
         if (swissProtEntries.size() == 1) {
             return swissProtEntries.get(0);
         } else if (swissProtEntries.size() > 1) {
-            mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup(), previousId);
+            mapperGui.getUniprotIdChoicePanel(uniprotGeneralMapper.getButtonGroup(), previousId, previousIdDb);
             synchronized (this) {
                 while (mapperGui.getSelectedId() == null) {
                     try {

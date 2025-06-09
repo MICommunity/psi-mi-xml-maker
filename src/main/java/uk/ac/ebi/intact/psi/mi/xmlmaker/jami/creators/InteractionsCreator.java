@@ -92,7 +92,6 @@ public class InteractionsCreator {
                 else if (!(data.get(PARTICIPANT_ID.name) == null) || !data.get(PARTICIPANT_ID.name).trim().isBlank()) {
                     interactionWriter.skippedParticipants.add(data.get(PARTICIPANT_ID.name));
                 }
-
                 return null;
             }
         }
@@ -108,6 +107,8 @@ public class InteractionsCreator {
         String name = Objects.requireNonNull(data.get(PARTICIPANT_NAME.name), "The participant name cannot be null");
         String participantId = data.get(PARTICIPANT_ID.name);
         String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
+
+
         Xref uniqueId = new XmlXref(participantIdDb, participantId);
 
         if (participantOrganism == null || participantOrganism.isEmpty()) {
@@ -117,7 +118,10 @@ public class InteractionsCreator {
 
         Organism organism = createOrganism(participantOrganism);
 
-        Interactor participant = createParticipantByType(data.get(PARTICIPANT_TYPE.name), name, organism, uniqueId);
+        Interactor participant = createParticipantByType(data.get(PARTICIPANT_TYPE.name), name, organism);
+        participant.setShortName(name);
+        participant.getIdentifiers().add(uniqueId);
+
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
 
         String participantExpressedInOrganism = data.get(PARTICIPANT_EXPRESSED_IN_ORGANISM.name);
@@ -175,25 +179,25 @@ public class InteractionsCreator {
         }
     }
 
-    private Interactor createParticipantByType(String participantType, String name, Organism organism, Xref uniqueId) {
+    private Interactor createParticipantByType(String participantType, String name, Organism organism) {
         Interactor participant = new XmlPolymer();
 
         switch (participantType.toLowerCase().trim()){
             case "protein":
-                participant = new XmlProtein(name, organism, uniqueId);
+                participant = new XmlProtein(name, organism);
                 break;
             case "nucleic acid":
-                participant = new XmlNucleicAcid(name, organism, uniqueId);
+                participant = new XmlNucleicAcid(name, organism);
                 CvTerm nucleicAcidType = utils.fetchTerm("nucleic acid");
                 participant.setInteractorType(nucleicAcidType); // needed as the type is not set automatically by jami here
                 break;
             case "molecule":
-                participant = new XmlMolecule(name, organism, uniqueId);
+                participant = new XmlMolecule(name, organism);
                 CvTerm moleculeType = utils.fetchTerm("small molecule");
                 participant.setInteractorType(moleculeType); // needed as the type is not set automatically by jami here
                 break;
             case "gene":
-                participant = new XmlGene(name, organism, uniqueId);
+                participant = new XmlGene(name, organism);
                 break;
             default:
                 break;
@@ -505,6 +509,7 @@ public class InteractionsCreator {
         String interactionFigureLegend = null;
 
         for (Map<String, String> participant : dataList) {
+            System.out.println(participant);
             XmlParticipantEvidence newParticipant = createParticipant(participant);
             interaction.addParticipant(newParticipant);
 
@@ -527,7 +532,7 @@ public class InteractionsCreator {
             }
         }
         if (interactionFigureLegend != null) {
-            CvTerm annotationType = utils.fetchTerm("figure legend");
+            CvTerm annotationType = XmlMakerUtils.fetchTerm("figure legend");
             Annotation annotation = new XmlAnnotation(annotationType, interactionFigureLegend);
             interaction.getAnnotations().add(annotation);
         }

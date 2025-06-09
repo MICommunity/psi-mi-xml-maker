@@ -12,6 +12,8 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.io.File;
 
+import static java.awt.Toolkit.*;
+
 /**
  * InteractionWriterGui provides a graphical user interface (GUI) for generating
  * PSI-MI XML files using the InteractionWriter class. The GUI allows users to
@@ -53,9 +55,11 @@ public class InteractionWriterGui {
         xmlPanel.setLayout(new BoxLayout(xmlPanel, BoxLayout.Y_AXIS));
 
         JPanel datePanel = createDateSelectionPanel();
+        datePanel.setMaximumSize(new Dimension(getDefaultToolkit().getScreenSize().width - 100, 100));
         xmlPanel.add(datePanel);
 
         JPanel saveLocationPanel = createSaveLocationPanel();
+        saveLocationPanel.setMaximumSize(new Dimension(getDefaultToolkit().getScreenSize().width - 100, 100));
         xmlPanel.add(saveLocationPanel);
 
         return xmlPanel;
