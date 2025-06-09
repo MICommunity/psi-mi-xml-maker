@@ -353,28 +353,6 @@ public class ParticipantAndInteractionCreatorGui {
         xrefQualifierCache.addAll(getTermsFromOls(DataAndMiID.XREF_QUALIFIER.miId));
     }
 
-
-    /**
-     * Sets the available feature database options in the given combo box.
-     * Adds "uniprotKB" and "geneid" as options, followed by the terms in the cache.
-     *
-     * @param featureDbComboBox The combo box to populate with database options.
-     */
-    private void setFeatureDb(JComboBox<String> featureDbComboBox) {
-        featureDbComboBox.addItem("UniProtKB");
-        featureDbComboBox.addItem("Gene ID");
-
-        for (String termName : dbCache) {
-            featureDbComboBox.addItem(termName);
-        }
-    }
-
-    private void setXrefQualifiers(JComboBox<String> xrefQualifierComboBox) {
-        for (String termName : xrefQualifierCache) {
-            xrefQualifierComboBox.addItem(termName);
-        }
-    }
-
     //PANELS
 
     /**
