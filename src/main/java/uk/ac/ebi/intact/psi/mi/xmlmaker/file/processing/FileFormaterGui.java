@@ -221,8 +221,8 @@ public class FileFormaterGui {
         fileFormaterButton.addActionListener(e -> {
             Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
             fileFormater.setAddParameters(participantAndInteractionCreatorGui.getMultipleInteractionParameters().isSelected());
-            fileFormater.setBaitFeatures(participantAndInteractionCreatorGui.getFeatureCreatorGui().getBaitFeatures());
-            fileFormater.setPreyFeatures(participantAndInteractionCreatorGui.getFeatureCreatorGui().getPreyFeatures());
+            fileFormater.setBaitFeatures(participantAndInteractionCreatorGui.getBaitFeatureCreator().getBaitFeatures());
+            fileFormater.setPreyFeatures(participantAndInteractionCreatorGui.getPreyFeatureCreator().getPreyFeatures());
             formatFile(fileFormaterCheckBox.isSelected(), interactionData);
         });
 

@@ -2,17 +2,12 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataAndMiID;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
-
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
 
 public class ParametersGui {
     List<String> parametersTypeCache = new ArrayList<>();
@@ -41,42 +36,55 @@ public class ParametersGui {
 
         parametersPanel.add(getParametersTypeComboBox(parameter));
 
-        JComboBox<String> value = new JComboBox<>(new Vector<>(getValueColumn()));
-        XmlMakerUtils.setComboBoxDimension(value, "Value");
-        value.addActionListener(e-> parameter.setValueColumn(value.getSelectedItem().toString()));
-        parametersPanel.add(value);
+        JComboBox<String> valueCombobox = new JComboBox<>();
+        setComboBoxDimension(valueCombobox, "Value");
+        valueCombobox.setToolTipText("Value");
+        for (String value : getValueColumn()) {
+            valueCombobox.addItem(value);
+        }
+        valueCombobox.addActionListener(e-> parameter.setValueColumn(valueCombobox.getSelectedItem().toString()));
+        parametersPanel.add(valueCombobox);
 
         parametersPanel.add(getUnitComboBox(parameter));
 
-        JTextField base = new JTextField();
-        XmlMakerUtils.setTextFieldDimension(base, "Base");
-        base.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { parameter.setBase(base.getText()); }
-            public void removeUpdate(DocumentEvent e) { parameter.setBase(base.getText()); }
-            public void changedUpdate(DocumentEvent e) { parameter.setBase(base.getText()); }
+        JComboBox<String> baseCombobox = new JComboBox<>();
+        setComboBoxDimension(baseCombobox, "Base");
+        baseCombobox.setEditable(true);
+        baseCombobox.setToolTipText("Base");
+        baseCombobox.addActionListener(e -> {
+            String selected = baseCombobox.getSelectedItem() != null ? baseCombobox.getSelectedItem().toString() : "";
+            parameter.setBase(selected.equals(baseCombobox.getToolTipText()) ? "" : selected);
         });
-        parametersPanel.add(base);
+        parametersPanel.add(baseCombobox);
 
-        JTextField exponent = new JTextField();
-        XmlMakerUtils.setTextFieldDimension(exponent, "Exponent");
-        exponent.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { parameter.setExponent(exponent.getText()); }
-            public void removeUpdate(DocumentEvent e) { parameter.setExponent(exponent.getText()); }
-            public void changedUpdate(DocumentEvent e) { parameter.setExponent(exponent.getText()); }
+        JComboBox<String> exponentCombobox = new JComboBox<>();
+        setComboBoxDimension(exponentCombobox, "Exponent");
+        exponentCombobox.setEditable(true);
+        exponentCombobox.setToolTipText("Exponent");
+        exponentCombobox.addActionListener(e -> {
+            String selected = exponentCombobox.getSelectedItem() != null ? exponentCombobox.getSelectedItem().toString() : "";
+            parameter.setExponent(selected.equals(exponentCombobox.getToolTipText()) ? "" : selected);
         });
-        parametersPanel.add(exponent);
+        parametersPanel.add(exponentCombobox);
 
-
-        JComboBox<String> uncertainty = new JComboBox<>(new Vector<>(getValueColumn()));
-        XmlMakerUtils.setComboBoxDimension(uncertainty, "Uncertainty");
-        parametersPanel.add(uncertainty);
-        uncertainty.addActionListener(e -> parameter.setUncertaintyColumn(uncertainty.getSelectedItem().toString()));
+        JComboBox<String> uncertaintyCombobox = new JComboBox<>();
+        setComboBoxDimension(uncertaintyCombobox, "Uncertainty");
+        uncertaintyCombobox.setToolTipText("Uncertainty");
+        for (String uncertainty : getValueColumn()) {
+            uncertaintyCombobox.addItem(uncertainty);
+        }
+        parametersPanel.add(uncertaintyCombobox);
+        uncertaintyCombobox.addActionListener(e -> {
+            String selected = uncertaintyCombobox.getSelectedItem() != null ? uncertaintyCombobox.getSelectedItem().toString() : "";
+            parameter.setUncertaintyColumn(selected.equals(uncertaintyCombobox.getToolTipText()) ? "" : selected);
+        });
         return parametersPanel;
     }
 
     private JComboBox<String> getUnitComboBox(Parameter parameter) {
         JComboBox<String> unitCombobox = new JComboBox<>();
         setComboBoxDimension(unitCombobox, "Unit");
+        unitCombobox.setToolTipText("Unit");
         for (String unit : parametersUnitCache) {
             unitCombobox.addItem(unit);
         }
@@ -86,6 +94,7 @@ public class ParametersGui {
 
     private JComboBox<String> getParametersTypeComboBox(Parameter parameter) {
         JComboBox<String> parametersTypeComboBox = new JComboBox<>();
+        parametersTypeComboBox.setToolTipText("Parameter Type");
         setComboBoxDimension(parametersTypeComboBox, "Parameter type");
         for (String type : parametersTypeCache) {
             parametersTypeComboBox.addItem(type);
@@ -95,7 +104,7 @@ public class ParametersGui {
     }
 
     private void setupParametersTypeCache() {
-        parametersTypeCache.addAll(getTermsFromOls(DataAndMiID.XREF_QUALIFIER.miId));
+        parametersTypeCache.addAll(getTermsFromOls(DataAndMiID.PARAMETER_TYPE.miId));
     }
 
     private void setupUnitCache() {

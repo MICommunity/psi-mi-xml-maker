@@ -54,6 +54,21 @@ public class XmlMakerUtils {
     }
 
     /**
+     * Displays an error message in a dialog box.
+     */
+    public static boolean showConfirmDialog(String message) {
+        int choice = JOptionPane.showConfirmDialog(
+                new JFrame(),
+                message,
+                "Confirmation",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        return choice == JOptionPane.OK_OPTION;
+    }
+
+    /**
      * Displays an informational message in a dialog box.
      */
     public static void showInfoDialog(String message) {

@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,8 +37,10 @@ public class Feature {
     private String parameterExponents = "";
     private String parameterUncertainties = "";
 
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+
     public String getListAsString(List<String> list) {
-        return String.join(";", list);
+        return String.join(",", list);
     }
 
     public void setParametersAsString(){
@@ -50,17 +54,15 @@ public class Feature {
         }
     }
 
-    public void printInformation(){
-        System.out.println("ShortName: " + shortName);
-        System.out.println("Type: " + type);
-        System.out.println("StartLocation: " + startLocation);
-        System.out.println("EndLocation: " + endLocation);
-        System.out.println("RangeType: " + rangeType);
-        System.out.println("Xref: " + xref);
-        System.out.println("XrefDb: " + xrefDb);
-        System.out.println("XrefQualifier: " + xrefQualifier);
-        System.out.println("InduceInteractionParameters: " + induceInteractionParameters);
-        System.out.println("Number: " + number);
-        System.out.println("Parameters: " + parameters);
+    public void setFetchFromFile(boolean fetchFromFile) {
+        boolean oldValue = this.fetchFromFile;
+        this.fetchFromFile = fetchFromFile;
+        pcs.firePropertyChange("fetchFromFile", oldValue, fetchFromFile);
     }
+
+
+    public void addFetchFromFileListener(PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener("fetchFromFile", listener);
+    }
+
 }

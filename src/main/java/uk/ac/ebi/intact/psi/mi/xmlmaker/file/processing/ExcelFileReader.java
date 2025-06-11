@@ -500,6 +500,17 @@ public class ExcelFileReader  {
      * @return A {@link UniprotResult} object representing the selected UniProt ID, or {@code null} if no entries exist.
      */
     private UniprotResult getOneUniprotId(String previousId, String previousIdDb, String organism) {
+        //todo: check with kalpana if it is what we want
+        if (previousId != null &&
+                previousId.contains("PRO_") &&
+                previousIdDb.equalsIgnoreCase("uniprotkb")) {
+            UniprotResult uniprotResult = new UniprotResult(previousId, previousId,
+                    organism, null, null, previousIdDb,
+                    -1, "protein");
+            alreadyParsed.put(previousId, uniprotResult);
+            return uniprotResult;
+        }
+
         UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui();
         ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
         uniprotIdNotFound = uniprotGeneralMapper.getUniprotIdNotFound();

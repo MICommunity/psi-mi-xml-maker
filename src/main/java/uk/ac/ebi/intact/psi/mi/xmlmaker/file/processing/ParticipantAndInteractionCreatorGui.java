@@ -74,7 +74,10 @@ public class ParticipantAndInteractionCreatorGui {
     private final List<String> dbCache = new ArrayList<>();
     private final List<String> xrefQualifierCache = new ArrayList<>();
 
-    private final FeatureCreatorGui featureCreatorGui = new FeatureCreatorGui(this);
+//    private final FeatureCreatorGui featureCreatorGui = new FeatureCreatorGui(this);
+
+    FeatureCreatorGui baitFeatureCreator = new FeatureCreatorGui(this);
+    FeatureCreatorGui preyFeatureCreator = new FeatureCreatorGui(this);
 
     private final ExcelFileReader excelFileReader;
 
@@ -392,7 +395,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         JButton createFeatureButton = new JButton("Create feature(s)");
         createFeatureButton.addActionListener(e -> {
-            JPanel featureOptionPanel = featureCreatorGui.getFeatureMainPanel(true);
+            JPanel featureOptionPanel = baitFeatureCreator.getFeatureMainPanel(true);
             JOptionPane.showConfirmDialog(null,
                     featureOptionPanel,
                     "Feature(s) creation",
@@ -431,7 +434,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         JButton createFeatureButton = new JButton("Create feature(s)");
         createFeatureButton.addActionListener(e -> {
-            JPanel featureOptionPanel = featureCreatorGui.getFeatureMainPanel(false);
+            JPanel featureOptionPanel = preyFeatureCreator.getFeatureMainPanel(false);
             JOptionPane.showConfirmDialog(null,
                     featureOptionPanel,
                     "Feature(s) creation",

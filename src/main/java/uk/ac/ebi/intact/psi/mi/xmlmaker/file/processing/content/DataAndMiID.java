@@ -11,6 +11,7 @@ public enum DataAndMiID {
     BIOLOGICAL_ROLE("MI:0500"),
     XREF_QUALIFIER("MI:0353"),
     UNIT("MI:0647"),
+    PARAMETER_TYPE("MI:0640")
     ;
 
 

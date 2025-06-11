@@ -172,6 +172,10 @@ public class FileFormater {
             String interactionParamValue = getParamValue.apply(row);
             String interactionParamUncertainty = getParamUncertainty.apply(row);
 
+            if (bait.isEmpty() || prey.isEmpty()) {
+                continue;
+            }
+
             if (binary) {
                 interactionNumber++;
                 addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait", interactionParamValue, interactionParamUncertainty, rowIndex);
@@ -431,10 +435,11 @@ public class FileFormater {
                 participant.put(DataForRawFile.FEATURE_TYPE.name + adding, feature.getType());
                 participant.put(DataForRawFile.FEATURE_START_LOCATION.name + adding, feature.getStartLocation());
                 participant.put(DataForRawFile.FEATURE_END_LOCATION.name + adding, feature.getEndLocation());
+                participant.put(DataForRawFile.FEATURE_RANGE_TYPE.name + adding, feature.getRangeType());
+
                 participant.put(DataForRawFile.FEATURE_XREF.name + adding, feature.getListAsString(feature.getXref()));
                 participant.put(DataForRawFile.FEATURE_XREF_DB.name + adding, feature.getListAsString(feature.getXrefDb()));
                 participant.put(DataForRawFile.FEATURE_XREF_QUALIFIER.name + adding, feature.getListAsString(feature.getXrefQualifier()));
-                participant.put(DataForRawFile.FEATURE_RANGE_TYPE.name + adding, feature.getRangeType());
 
                 participant.put(DataForRawFile.FEATURE_PARAM_TYPE.name + adding, feature.getParameterTypes());
                 participant.put(DataForRawFile.FEATURE_PARAM_VALUE.name + adding, feature.getParameterValues());
@@ -445,8 +450,11 @@ public class FileFormater {
                 participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, feature.getParameterUncertainties());
                 participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding), participant));
 
-                participant.put(DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding, feature.getOriginalSequence());
-                participant.put(DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding, feature.getNewSequence());
+                participant.put(DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding,
+                        "Original Sequence".equalsIgnoreCase(feature.getOriginalSequence()) ? "" : feature.getOriginalSequence());
+
+                participant.put(DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding,
+                        "New Sequence".equalsIgnoreCase(feature.getNewSequence()) ? "" : feature.getNewSequence());
 
                 if (feature.isFetchFromFile()){
                     participant.put(DataForRawFile.FEATURE_TYPE.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_TYPE.name + adding), participant));
@@ -455,6 +463,11 @@ public class FileFormater {
                     participant.put(DataForRawFile.FEATURE_RANGE_TYPE.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_RANGE_TYPE.name + adding), participant));
                     participant.put(DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding), participant));
                     participant.put(DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding), participant));
+
+                    participant.put(DataForRawFile.FEATURE_XREF.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_XREF.name + adding), participant));
+                    participant.put(DataForRawFile.FEATURE_XREF_DB.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_XREF_DB.name + adding), participant));
+                    participant.put(DataForRawFile.FEATURE_XREF_QUALIFIER.name + adding, getValueFromFeatureParameter((DataForRawFile.FEATURE_XREF_QUALIFIER.name + adding), participant));
+
                 }
             }
         }
@@ -570,12 +583,14 @@ public class FileFormater {
             String[] valuesColumns = featureValueColumns.split(";");
             for (String valueColumn : valuesColumns) {
                 int valueIndex = getColumnIndex(valueColumn);
-                if (valueIndex == -1) {
+                if (valueIndex == -1 && valueColumn != null && !valueColumn.equals(getFromParticipant)) {
                     value.append(valueColumn);
                 } else {
                     value.append(getDataFromRow(valueIndex, Integer.parseInt(participant.get(PARTICIPANT_ROW_INDEX.name)))).append(";");
                 }
             }
+        } else {
+            return "";
         }
         return value.toString();
     }
@@ -586,7 +601,6 @@ public class FileFormater {
     }
 
     private String getDataFromRow(int columnIndex, int rowIndex) {
-        System.out.println(columnIndex);
         Sheet sheet = excelFileReader.workbook.getSheet(excelFileReader.sheetSelectedUpdate);
         Row row = sheet.getRow(rowIndex);
         if (row == null || columnIndex < 0) {

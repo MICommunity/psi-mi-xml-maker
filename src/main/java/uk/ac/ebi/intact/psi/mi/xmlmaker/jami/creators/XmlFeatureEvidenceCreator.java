@@ -71,8 +71,6 @@ public class XmlFeatureEvidenceCreator {
         featureEvidence.setJAXBRangeWrapper(new AbstractXmlFeature.JAXBRangeWrapper());
         featureEvidence.getRanges().add(featureRange);
 
-        System.out.println(featureRange.getResultingSequence());
-
         return featureEvidence;
     }
 

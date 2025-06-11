@@ -509,7 +509,6 @@ public class InteractionsCreator {
         String interactionFigureLegend = null;
 
         for (Map<String, String> participant : dataList) {
-            System.out.println(participant);
             XmlParticipantEvidence newParticipant = createParticipant(participant);
             interaction.addParticipant(newParticipant);
 

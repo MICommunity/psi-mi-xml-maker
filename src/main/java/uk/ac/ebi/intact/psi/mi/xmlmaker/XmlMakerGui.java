@@ -5,6 +5,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFormaterGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.InteractionWriterGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.VersionUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
@@ -85,6 +86,7 @@ public class XmlMakerGui {
      * @see #makeFrameDragAndDrop(JFrame)
      */
     public void initialize() {
+        VersionUtils.checkForUpdates();
         JFrame frame = createMainFrame();
 
         JPanel contentPanel = new JPanel();
