@@ -86,7 +86,7 @@ public class InteractionsCreatorGui extends JPanel {
 
         sheets.addActionListener(e -> {
             if (!isUpdatingSheets) {
-                interactionsCreator.sheetSelected = Objects.requireNonNull(sheets.getSelectedItem()).toString();
+                interactionsCreator.setSheetSelected(Objects.requireNonNull(sheets.getSelectedItem()).toString());
                 setUpColumns();
             }
         });
@@ -156,7 +156,7 @@ public class InteractionsCreatorGui extends JPanel {
         String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
 
-        if(excelFileReader.currentFilePath != null) {
+        if(excelFileReader.getCurrentFilePath() != null) {
             String sheetName = Objects.requireNonNull(sheets.getSelectedItem(), "Sheet selection is null").toString();
             firstLines = excelFileReader.getFileFirstLines(sheetName, rows);
         }
@@ -255,15 +255,21 @@ public class InteractionsCreatorGui extends JPanel {
      */
     public Map<String, Integer> getDataAndIndexes() {
         List<String> tableColumnsNames = getTableColumnNames();
-        if (excelFileReader.workbook == null) {
+        if (excelFileReader.getWorkbook() == null) {
             getDataAndIndexesSeparatedFile(tableColumnsNames);
         } else {
-            Sheet sheet = excelFileReader.workbook.getSheetAt(sheets.getSelectedIndex()-1);
+            Sheet sheet = excelFileReader.getWorkbook().getSheetAt(sheets.getSelectedIndex()-1);
             getDataAndIndexesWorkbook(tableColumnsNames, sheet);
         }
         return dataAndIndexes;
     }
 
+    /**
+     * Maps column names to their corresponding indexes in an Excel workbook sheet.
+     *
+     * @param tableColumnsNames The list of column names in the table.
+     * @param sheet             The Excel sheet to extract data from.
+     */
     private void getDataAndIndexesWorkbook(List<String> tableColumnsNames, Sheet sheet) {
         Row row = sheet.getRow(0); // get the header
         for (int i = 0; i < table.getColumnCount(); i++) {
@@ -279,6 +285,11 @@ public class InteractionsCreatorGui extends JPanel {
         }
     }
 
+    /**
+     * Maps column names to their indexes in a separated (e.g., CSV/TSV) file.
+     *
+     * @param tableColumnsNames The list of column names in the table.
+     */
     private void getDataAndIndexesSeparatedFile(List<String> tableColumnsNames){
         for (int i = 0; i < table.getColumnCount(); i++) {
             if (Objects.equals(table.getValueAt(0, i).toString(), "No data")){
@@ -367,7 +378,7 @@ public class InteractionsCreatorGui extends JPanel {
      * @throws IndexOutOfBoundsException If the comboBoxIndex is out of bounds for the table.
      */
     public void setUpPreviewRows(int comboBoxIndex, String columnName) {
-        if (excelFileReader.currentFilePath == null) {
+        if (excelFileReader.getCurrentFilePath() == null) {
             return;
         }
 

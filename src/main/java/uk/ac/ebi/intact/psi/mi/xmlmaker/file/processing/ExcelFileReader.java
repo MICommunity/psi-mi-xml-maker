@@ -35,36 +35,38 @@ import java.util.stream.StreamSupport;
 public class ExcelFileReader  {
 
     private static final Logger LOGGER = Logger.getLogger(ExcelFileReader.class.getName());
+
+    // Dependencies
+
     private final MoleculeSetChecker moleculeSetChecker = new MoleculeSetChecker();
     private final DataFormatter formatter = new DataFormatter();
     private final UniprotGeneralMapper uniprotGeneralMapper = new UniprotGeneralMapper();
 
-    public Workbook workbook;
-    public List<String> fileData;
-
+    // File data
+    private final Map<String, UniprotResult> alreadyParsed = new HashMap<>();
     private final List<InputSelectedEvent.Listener> listeners = new ArrayList<>();
-
-    @Getter
-    @Setter
-    public String publicationId;
-    @Setter
-    @Getter
-    public String publicationDb;
-    public String currentFilePath;
     private String fileName;
     private String fileType;
     private char separator;
     private final JLabel currentFileLabel;
-    public final List<String> sheets = new ArrayList<>();
     private final List<String> columns = new ArrayList<>();
-    public final List<String> proteinsPartOfMoleculeSet = new ArrayList<>();
-    public final Map<String, UniprotResult> alreadyParsed = new HashMap<>();
 
-    @Getter
-    private List<String> uniprotIdNotFound = new ArrayList<>();
+    @Setter @Getter public String publicationId;
 
-    @Getter
-    String sheetSelectedUpdate;
+    @Setter @Getter public String publicationDb;
+
+    @Getter private String currentFilePath;
+
+    @Getter private List<String> uniprotIdNotFound = new ArrayList<>();
+
+    @Getter String sheetSelectedUpdate;
+
+    @Getter private Workbook workbook;
+
+    @Getter private final List<String> proteinsPartOfMoleculeSet = new ArrayList<>();
+
+    public List<String> fileData;
+    public List<String> sheets = new ArrayList<>();
 
     public ExcelFileReader() {
         this.fileName = null;
@@ -84,37 +86,51 @@ public class ExcelFileReader  {
         fileType = FileUtils.getFileExtension(filePath);
         currentFileLabel.setText(getFileName());
         currentFilePath = filePath;
+
         fileData = new ArrayList<>();
         sheets.clear();
         columns.clear();
+
         try {
-            switch (fileType) {
-                case "xlsx":
-                    LOGGER.info("Reading xlsx file: " + fileName);
-                    readXlsxFile(filePath);
-                    break;
-                case "xls":
-                    LOGGER.info("Reading xls file: " + fileName);
-                    readXlsFile(filePath);
-                    break;
-                case "csv":
-                    LOGGER.info("Reading csv file: " + fileName);
-                    separator = ',';
-                    readFileWithSeparator();
-                    break;
-                case "tsv":
-                    LOGGER.info("Reading tsv file: " + fileName);
-                    separator = '\t';
-                    readFileWithSeparator();
-                    break;
-                default:
-                    LOGGER.warning("Unsupported file format: " + fileType);
-                    XmlMakerUtils.showErrorDialog("Unsupported file format! Supported formats: .csv, .tsv, .xls, .xlsx");
+            if (!handleFileByType(fileType, filePath)) {
+                LOGGER.warning("Unsupported file format: " + fileType);
+                XmlMakerUtils.showErrorDialog("Unsupported file format! Supported formats: .csv, .tsv, .xls, .xlsx");
+                return;
             }
             fireInputSelectedEvent(new InputSelectedEvent(file));
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error reading file: " + fileName, e);
             XmlMakerUtils.showErrorDialog("Unable to read file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Processes the file based on its extension.
+     *
+     * @param fileType the file extension (e.g. "csv", "xlsx")
+     * @param filePath the full path to the file
+     * @return {@code true} if the file type is supported and processed, {@code false} otherwise
+     * @throws IOException if an error occurs while reading the file
+     */
+    private boolean handleFileByType(String fileType, String filePath) throws IOException {
+        LOGGER.info("Reading " + fileType + " file: " + fileName);
+        switch (fileType) {
+            case "xlsx":
+                readXlsxFile(filePath);
+                return true;
+            case "xls":
+                readXlsFile(filePath);
+                return true;
+            case "csv":
+                separator = ',';
+                readFileWithSeparator();
+                return true;
+            case "tsv":
+                separator = '\t';
+                readFileWithSeparator();
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -153,23 +169,21 @@ public class ExcelFileReader  {
     public Iterator<Row> readWorkbookSheet(String sheetSelected) {
         Sheet sheet = workbook.getSheet(sheetSelected);
         if (sheet == null) {
-            LOGGER.severe("Sheet " + sheetSelected + " does not exist.");
+            LOGGER.severe("Sheet '" + sheetSelected + "' does not exist.");
             return Collections.emptyIterator();
         }
 
-        Iterator<Row> iterator = sheet.iterator();
-
-        if (iterator.hasNext()) {
-            Row row = iterator.next();
-            List<String> rowData = new ArrayList<>();
-            for (int i = 0; i < row.getLastCellNum(); i++) {
-                rowData.add(formatter.formatCellValue(row.getCell(i)));
-
+        Iterator<Row> rowIterator = sheet.iterator();
+        if (rowIterator.hasNext()) {
+            Row headerRow = rowIterator.next();
+            List<String> headers = new ArrayList<>();
+            for (Cell cell : headerRow) {
+                headers.add(formatter.formatCellValue(cell));
             }
-            fileData = rowData;
+            this.fileData = headers;
         }
 
-        return iterator;
+        return rowIterator;
     }
 
     /**
@@ -229,28 +243,47 @@ public class ExcelFileReader  {
     public List<String> getColumns(String sheetSelected) {
         sheetSelectedUpdate = sheetSelected;
         columns.clear();
-        if (fileType.equals("xlsx") || fileType.equals("xls")) {
+
+        if (fileType == null || fileType.isEmpty()) {
+            LOGGER.warning("File type is not specified.");
+            return columns;
+        }
+
+        if (fileType.equalsIgnoreCase("xlsx") || fileType.equalsIgnoreCase("xls")) {
             if (workbook == null) {
-                LOGGER.warning("No file data loaded.");
+                LOGGER.warning("No Excel workbook data loaded.");
                 return columns;
             }
             Sheet sheet = workbook.getSheet(sheetSelected);
-            if (sheet != null) {
-                Row headerRow = sheet.getRow(0);
-                if (headerRow != null) {
-                    for (Cell cell : headerRow) {
-                        columns.add(formatter.formatCellValue(cell));
-                    }
-                }
+            if (sheet == null) {
+                LOGGER.warning("Sheet not found: " + sheetSelected);
+                return columns;
             }
-        } else if (fileType.equals("csv") || fileType.equals("tsv")) {
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                LOGGER.warning("Header row is missing in the sheet: " + sheetSelected);
+                return columns;
+            }
+            for (Cell cell : headerRow) {
+                columns.add(formatter.formatCellValue(cell));
+            }
+
+        } else if (fileType.equalsIgnoreCase("csv") || fileType.equalsIgnoreCase("tsv")) {
             if (fileData == null || fileData.isEmpty()) {
-                LOGGER.warning("No file data loaded.");
+                LOGGER.warning("No CSV/TSV file data loaded.");
                 return columns;
             }
             columns.addAll(fileData);
+
+        } else {
+            LOGGER.warning("Unsupported file type: " + fileType);
+            return columns;
         }
-        columns.add("No data");
+
+        if (columns.isEmpty()) {
+            columns.add("No data");
+        }
+
         return columns;
     }
 
@@ -401,6 +434,15 @@ public class ExcelFileReader  {
         selectFileOpener(currentFilePath);
     }
 
+    /**
+     * Retrieves updated UniProt data based on a previous identifier, database, and organism.
+     * Uses a cache to avoid redundant lookups.
+     *
+     * @param previousId       The previous identifier to update.
+     * @param previousDb       The database from which the identifier originates.
+     * @param updatedOrganism  The organism to be used for querying.
+     * @return                 A {@link UniprotResult} containing updated data, or null if not found.
+     */
     private UniprotResult getUpdatedUniprotData(String previousId, String previousDb, String updatedOrganism) {
         if (previousId == null || previousId.isEmpty()) {
             return null;
@@ -416,12 +458,16 @@ public class ExcelFileReader  {
         return result;
     }
 
+    /**
+     * Processes a single CSV row, updating UniProt information and appending it to the output CSV.
+     *
+     * @param row                      The input row as a list of string values.
+     * @param idColumnIndex           Index of the ID column in the row.
+     * @param previousIdDbColumnIndex Index of the ID database column in the row.
+     * @param organismColumnIndex     Index of the organism column in the row.
+     * @param csvWriter               The {@link CSVWriter} used to write the updated row.
+     */
     private void processRow(List<String> row, int idColumnIndex, int previousIdDbColumnIndex, int organismColumnIndex, CSVWriter csvWriter) {
-//        if (row == null || row.size() < fileData.size()) {
-//            LOGGER.warning("Skipping null or incomplete row: " + row);
-//            return;
-//        }
-
         String previousId = row.get(idColumnIndex).trim();
         String previousDb = (previousIdDbColumnIndex >= 0 && previousIdDbColumnIndex < row.size()) ? row.get(previousIdDbColumnIndex).trim() : "";
         String updatedOrganism = (organismColumnIndex >= 0 && organismColumnIndex < row.size()) ? row.get(organismColumnIndex).trim() : "";
@@ -449,6 +495,16 @@ public class ExcelFileReader  {
         csvWriter.writeNext(data.toArray(new String[0]));
     }
 
+    /**
+     * Processes a single Excel workbook row, updating UniProt data and writing the results
+     * into new cells in the row.
+     *
+     * @param row                 The Excel {@link Row} to process.
+     * @param idColumnIndex      Index of the ID column.
+     * @param idDbColumnIndex    Index of the ID database column.
+     * @param organismColumnIndex Index of the organism column.
+     * @param lastCellIndex      Index at which to start writing new UniProt-related cells.
+     */
     private void processWorkbookRow(Row row, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex, int lastCellIndex) {
         if (row == null || row.getLastCellNum() <= idColumnIndex) {
             LOGGER.warning("Skipping null or incomplete row: " + row);
@@ -500,7 +556,6 @@ public class ExcelFileReader  {
      * @return A {@link UniprotResult} object representing the selected UniProt ID, or {@code null} if no entries exist.
      */
     private UniprotResult getOneUniprotId(String previousId, String previousIdDb, String organism) {
-        //todo: check with kalpana if it is what we want
         if (previousId != null &&
                 previousId.contains("PRO_") &&
                 previousIdDb.equalsIgnoreCase("uniprotkb")) {

@@ -3,8 +3,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Experiment;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Participant;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
@@ -73,8 +72,6 @@ public class ParticipantAndInteractionCreatorGui {
 
     private final List<String> dbCache = new ArrayList<>();
     private final List<String> xrefQualifierCache = new ArrayList<>();
-
-//    private final FeatureCreatorGui featureCreatorGui = new FeatureCreatorGui(this);
 
     FeatureCreatorGui baitFeatureCreator = new FeatureCreatorGui(this);
     FeatureCreatorGui preyFeatureCreator = new FeatureCreatorGui(this);
@@ -238,33 +235,6 @@ public class ParticipantAndInteractionCreatorGui {
         participantDetails.put(BAIT_EXPRESSED_IN_ORGANISM.nameAndExperimentalRole, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(baitExpressedInOrganism.getSelectedItem()).toString()), BAIT_EXPRESSED_IN_ORGANISM.name));
 
         return participantDetails;
-    }
-
-    public Participant getParticipantDetailsWithObject(boolean isBait) {
-        Participant participant = new Participant();
-
-        if (isBait) {
-            participant.setIdDb(isValueNull(baitIdDatabase.getSelectedItem(), BAIT_ID_DB.name));
-            participant.setExperimentalPreparations(isValueNull(getBaitExperimentalPreparationsAsString(), BAIT_EXPERIMENTAL_PREPARATION.name));
-            participant.setTaxId(isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()), BAIT_ORGANISM.name));
-            participant.setExpressedInTaxId(isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(baitExpressedInOrganism.getSelectedItem()).toString()), BAIT_EXPRESSED_IN_ORGANISM.name));
-            participant.setBiologicalRole(isValueNull(baitBiologicalRole.getSelectedItem(), BAIT_BIOLOGICAL_ROLE.name));
-        } else {
-            participant.setIdDb(isValueNull(preyIdDatabase.getSelectedItem(), PREY_ID_DB.name));
-            participant.setExperimentalPreparations(isValueNull(getBaitExperimentalPreparationsAsString(), PREY_EXPERIMENTAL_PREPARATION.name));
-            participant.setTaxId(isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), PREY_ORGANISM.name));
-            participant.setExpressedInTaxId(isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(preyExpressedInOrganism.getSelectedItem()).toString()), PREY_EXPRESSED_IN_ORGANISM.name));
-            participant.setBiologicalRole(isValueNull(preyBiologicalRole.getSelectedItem(), PREY_BIOLOGICAL_ROLE.name));
-        }
-        return participant;
-    }
-
-    private Experiment getExperimentDetailsWithObject() {
-        Experiment experiment = new Experiment();
-        experiment.setHostOrganismTaxId(isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(hostOrganism.getSelectedItem()).toString()), HOST_ORGANISM.name));
-        experiment.setInteractionsDetectionMethod(isValueNull(interactionDetectionMethodCombobox.getSelectedItem(), INTERACTION_DETECTION_METHOD.name));
-        experiment.setParticipantsIdentificationMethod(isValueNull(participantDetectionMethodCombobox.getSelectedItem(), PARTICIPANT_DETECTION_METHOD.name));
-        return experiment;
     }
 
     /**

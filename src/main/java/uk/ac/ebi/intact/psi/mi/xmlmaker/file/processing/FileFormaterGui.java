@@ -160,7 +160,7 @@ public class FileFormaterGui {
     public void formatFile(boolean binary, Map<String, String> interactionData) {
         try {
             fileFormater.setInteractionData(interactionData);
-            fileFormater.selectFileFormater(excelFileReader.currentFilePath,
+            fileFormater.selectFileFormater(excelFileReader.getCurrentFilePath(),
                     baitColumn.getSelectedIndex()-1,
                     preyColumn.getSelectedIndex()-1,
                     baitNameColumn.getSelectedIndex() -1,
@@ -170,7 +170,7 @@ public class FileFormaterGui {
 
         } catch (Exception e) {
             XmlMakerUtils.showErrorDialog("Error during file formatting, please check that the mandatory columns are correctly selected.");
-            LOGGER.warning("Error during file formatting: " + e);
+            LOGGER.warning("Error during file formatting: " + e.getStackTrace());
             e.printStackTrace();
         }
     }
@@ -217,14 +217,7 @@ public class FileFormaterGui {
     public JPanel createFileProcessingPanel() {
         JCheckBox fileFormaterCheckBox = new JCheckBox("Create binary interactions");
 
-        JButton fileFormaterButton = new JButton("Format file");
-        fileFormaterButton.addActionListener(e -> {
-            Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
-            fileFormater.setAddParameters(participantAndInteractionCreatorGui.getMultipleInteractionParameters().isSelected());
-            fileFormater.setBaitFeatures(participantAndInteractionCreatorGui.getBaitFeatureCreator().getBaitFeatures());
-            fileFormater.setPreyFeatures(participantAndInteractionCreatorGui.getPreyFeatureCreator().getPreyFeatures());
-            formatFile(fileFormaterCheckBox.isSelected(), interactionData);
-        });
+        JButton fileFormaterButton = getFileFormaterButton(fileFormaterCheckBox);
 
         JPanel processPanel = new JPanel();
         processPanel.setPreferredSize(new Dimension(WIDTH, 100));
@@ -244,5 +237,17 @@ public class FileFormaterGui {
         processPanel.add(fileFormaterButton, gbc);
 
         return processPanel;
+    }
+
+    private JButton getFileFormaterButton(JCheckBox fileFormaterCheckBox) {
+        JButton fileFormaterButton = new JButton("Format file");
+        fileFormaterButton.addActionListener(e -> {
+            Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
+            fileFormater.setAddParameters(participantAndInteractionCreatorGui.getMultipleInteractionParameters().isSelected());
+            fileFormater.setBaitFeatures(participantAndInteractionCreatorGui.getBaitFeatureCreator().getBaitFeatures());
+            fileFormater.setPreyFeatures(participantAndInteractionCreatorGui.getPreyFeatureCreator().getPreyFeatures());
+            formatFile(fileFormaterCheckBox.isSelected(), interactionData);
+        });
+        return fileFormaterButton;
     }
 }

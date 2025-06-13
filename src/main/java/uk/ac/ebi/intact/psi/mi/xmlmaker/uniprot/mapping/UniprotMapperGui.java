@@ -23,6 +23,7 @@ public class UniprotMapperGui extends JPanel {
     private final ExcelFileReader excelFileReader;
     private static final Logger LOGGER = Logger.getLogger(UniprotMapperGui.class.getName());
     private final LoadingSpinner loadingSpinner;
+    private boolean isUpdatingSheets = false;
 
     /**
      * Constructs a new instance of the UniprotMapperGui class.
@@ -80,8 +81,6 @@ public class UniprotMapperGui extends JPanel {
         organismColumn.addItem("Select organism column");
         organismColumn.setEnabled(true);
     }
-
-    private boolean isUpdatingSheets = false;
 
     /**
      * Sets up the sheet selection for the UI, updating the available options in a combo box
@@ -229,8 +228,8 @@ public class UniprotMapperGui extends JPanel {
      * If any proteins are part of a molecule set, they are shown in a comma-separated list.
      */
     private void showMoleculeSetDialog() {
-        if (!excelFileReader.proteinsPartOfMoleculeSet.isEmpty()) {
-            String participantsList = String.join(", ", excelFileReader.proteinsPartOfMoleculeSet);
+        if (!excelFileReader.getProteinsPartOfMoleculeSet().isEmpty()) {
+            String participantsList = String.join(", ", excelFileReader.getProteinsPartOfMoleculeSet());
             JOptionPane.showMessageDialog(new JFrame(),"Those participants have been identified as part of a molecule set: " + participantsList,
                     "INFORMATION", JOptionPane.INFORMATION_MESSAGE);
         }

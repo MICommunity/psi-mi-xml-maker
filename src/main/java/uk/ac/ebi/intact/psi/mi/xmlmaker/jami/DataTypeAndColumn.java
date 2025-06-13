@@ -54,6 +54,7 @@ public enum DataTypeAndColumn {
     FEATURE_PARAM_UNCERTAINTY("Feature parameter uncertainty", false),
     FEATURE_ORIGINAL_SEQUENCE("Feature original sequence", false),
     FEATURE_NEW_SEQUENCE("Feature resulting sequence", false),
+    FEATURE_ROLE("Feature role", false),
     ;
 
     public final String name;
@@ -67,14 +68,14 @@ public enum DataTypeAndColumn {
     }
 
     DataTypeAndColumn(String name, boolean initial) {
-        this(name, Cell::getStringCellValue, initial, false);
+        this(name, Cell::getStringCellValue, initial);
     }
 
     DataTypeAndColumn(String name, Function<Cell, String> extractString) {
-        this(name, extractString, true, false);
+        this(name, extractString, true);
     }
 
-    DataTypeAndColumn(String name, Function<Cell, String> extractString, boolean initial, boolean required) {
+    DataTypeAndColumn(String name, Function<Cell, String> extractString, boolean initial) {
         this.name = name;
         this.extractString = extractString;
         this.initial = initial;

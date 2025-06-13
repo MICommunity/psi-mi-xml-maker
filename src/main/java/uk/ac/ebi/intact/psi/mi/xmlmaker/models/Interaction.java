@@ -3,7 +3,6 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.models;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -15,7 +14,4 @@ public class Interaction {
     private String figureLegend;
     private List<Parameter> parameters;
 
-    public Interaction(){
-        participants = new ArrayList<Participant>();
-    }
 }

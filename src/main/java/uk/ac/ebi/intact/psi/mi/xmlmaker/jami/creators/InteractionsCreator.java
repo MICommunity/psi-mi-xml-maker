@@ -26,29 +26,35 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
  * It processes participants, interactions, and related data, and generates XML objects for interaction modeling.
  */
 public class InteractionsCreator {
+    // Constants
+    private static final Logger LOGGER = Logger.getLogger(InteractionsCreator.class.getName());
+    private static final int DEFAULT_MAX_INTERACTIONS_PER_FILE = 1_000;
+
+    // Configurable properties with default values
     @Setter
-    private static int MAX_INTERACTIONS_PER_FILE = 1_000;
-    final ExcelFileReader excelFileReader;
-    final InteractionWriter interactionWriter;
-    final XmlMakerUtils utils = new XmlMakerUtils();
-    public final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
-    public final List<Map<String, String>> dataList = new ArrayList<>();
-
-
-    @Setter
-    Map<String, Integer> columnAndIndex;
-    public String sheetSelected;
-
-    private boolean isFileFinished;
-
-    @Setter
-    @Getter
-    public String publicationId;
+    private static int MAX_INTERACTIONS_PER_FILE = DEFAULT_MAX_INTERACTIONS_PER_FILE;
 
     @Setter
     private int numberOfFeature = 1;
 
-    private static final Logger LOGGER = Logger.getLogger(InteractionsCreator.class.getName());
+    @Setter
+    private Map<String, Integer> columnAndIndex;
+
+    @Getter @Setter
+    private String publicationId;
+
+    @Getter @Setter
+    private String sheetSelected;
+
+    // State variables
+    private boolean isFileFinished;
+    private final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
+    private final List<Map<String, String>> dataList = new ArrayList<>();
+
+    // Dependencies
+    private final ExcelFileReader excelFileReader;
+    private final InteractionWriter interactionWriter;
+    private final XmlMakerUtils utils = new XmlMakerUtils();
 
     /**
      * Constructs an InteractionsCreator with the specified Excel reader, Uniprot mapper GUI, and column-to-index mapping.
@@ -72,13 +78,19 @@ public class InteractionsCreator {
         xmlModelledInteractions.clear();
         dataList.clear();
 
-        if (excelFileReader.workbook == null) {
+        if (excelFileReader.getWorkbook() == null) {
             fetchDataFileWithSeparator(columnAndIndex);
         } else {
             fetchDataWithWorkbook(columnAndIndex);
         }
     }
 
+    /**
+     * Creates an {@link XmlParticipantEvidence} object based on provided participant data.
+     *
+     * @param data A map containing participant-related data fields.
+     * @return The constructed {@link XmlParticipantEvidence}, or null if required fields are missing.
+     */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
         DataTypeAndColumn[] required = {PARTICIPANT_NAME, PARTICIPANT_ID, PARTICIPANT_ID_DB, PARTICIPANT_ORGANISM};
 
@@ -144,6 +156,12 @@ public class InteractionsCreator {
         return participantEvidence;
     }
 
+    /**
+     * Adds experimental preparations to the given participant evidence.
+     *
+     * @param participantEvidence       The participant to update.
+     * @param experimentalPreparations List of experimental preparation terms.
+     */
     private void addExperimentalPreparations(XmlParticipantEvidence participantEvidence, List<CvTerm> experimentalPreparations) {
         for (CvTerm experimentalPreparation : experimentalPreparations) {
             if (experimentalPreparation != null) {
@@ -152,6 +170,13 @@ public class InteractionsCreator {
         }
     }
 
+    /**
+     * Adds cross-references (xrefs) to the participant evidence.
+     *
+     * @param participantEvidence The participant to update.
+     * @param xref                The xref term (identifier).
+     * @param xrefDb              The database term for the xref.
+     */
     private void addXrefs(ParticipantEvidence participantEvidence, CvTerm xref, CvTerm xrefDb) {
         if (xref != null && xref.getShortName() != null && xrefDb != null) {
             Xref xmlXref = new XmlXref(xrefDb, xref.getShortName());
@@ -161,6 +186,12 @@ public class InteractionsCreator {
         }
     }
 
+    /**
+     * Adds features to the given participant evidence based on input data.
+     *
+     * @param participantEvidence The participant to update.
+     * @param data                The input data containing feature information.
+     */
     private void addFeatures(XmlParticipantEvidence participantEvidence, Map<String, String> data) {
         if (numberOfFeature > 0) {
             for (int i = 0; i < numberOfFeature; i++) {
@@ -172,6 +203,12 @@ public class InteractionsCreator {
         }
     }
 
+    /**
+     * Sets the expressed-in organism for the participant, if available.
+     *
+     * @param participantEvidence              The participant to update.
+     * @param participantExpressedInOrganism  Organism string to use.
+     */
     private void setParticipantExpressedInOrganism(ParticipantEvidence participantEvidence, String participantExpressedInOrganism) {
         if (!participantExpressedInOrganism.trim().isEmpty()) {
             Organism participantExpressedIn = createOrganism(participantExpressedInOrganism);
@@ -179,6 +216,14 @@ public class InteractionsCreator {
         }
     }
 
+    /**
+     * Creates an interactor instance based on type, name, and organism.
+     *
+     * @param participantType The type of participant (e.g., protein, gene).
+     * @param name            The name of the participant.
+     * @param organism        The organism associated with the participant.
+     * @return The created {@link Interactor} instance.
+     */
     private Interactor createParticipantByType(String participantType, String name, Organism organism) {
         Interactor participant = new XmlPolymer();
 
@@ -188,12 +233,12 @@ public class InteractionsCreator {
                 break;
             case "nucleic acid":
                 participant = new XmlNucleicAcid(name, organism);
-                CvTerm nucleicAcidType = utils.fetchTerm("nucleic acid");
+                CvTerm nucleicAcidType = XmlMakerUtils.fetchTerm("nucleic acid");
                 participant.setInteractorType(nucleicAcidType); // needed as the type is not set automatically by jami here
                 break;
             case "molecule":
                 participant = new XmlMolecule(name, organism);
-                CvTerm moleculeType = utils.fetchTerm("small molecule");
+                CvTerm moleculeType = XmlMakerUtils.fetchTerm("small molecule");
                 participant.setInteractorType(moleculeType); // needed as the type is not set automatically by jami here
                 break;
             case "gene":
@@ -205,21 +250,33 @@ public class InteractionsCreator {
         return participant;
     }
 
+    /**
+     * Parses a semicolon-separated string of experimental preparations into CvTerms.
+     *
+     * @param experimentalPreparation The input string.
+     * @return A list of corresponding {@link CvTerm} objects.
+     */
     private List<CvTerm> getExperimentalPreparations(String experimentalPreparation){
         List<CvTerm> experimentalPreparations = new ArrayList<>();
         if (experimentalPreparation != null) {
             if (!experimentalPreparation.contains(";")) {
-                experimentalPreparations.add(utils.fetchTerm(experimentalPreparation));
+                experimentalPreparations.add(XmlMakerUtils.fetchTerm(experimentalPreparation));
             } else {
                 String[] preparations = experimentalPreparation.split(";");
                 for (String preparation : preparations) {
-                    experimentalPreparations.add(utils.fetchTerm(preparation.trim()));
+                    experimentalPreparations.add(XmlMakerUtils.fetchTerm(preparation.trim()));
                 }
             }
         }
         return experimentalPreparations;
     }
 
+    /**
+     * Asynchronously fetches controlled vocabulary terms from participant data.
+     *
+     * @param data The participant data map.
+     * @return A map of {@link DataTypeAndColumn} to resolved {@link CvTerm}s.
+     */
     private Map<DataTypeAndColumn, CvTerm> fetchCvTermsFromData(Map<String, String> data) {
         Map<DataTypeAndColumn, CompletableFuture<CvTerm>> futureTerms = Stream.of(PARTICIPANT_TYPE, PARTICIPANT_ID_DB,
                         EXPERIMENTAL_ROLE, EXPERIMENTAL_PREPARATION, PARTICIPANT_IDENTIFICATION_METHOD,
@@ -228,7 +285,7 @@ public class InteractionsCreator {
                 .filter(e -> e.getValue() != null)
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        e -> CompletableFuture.supplyAsync(() -> utils.fetchTerm(e.getValue()))
+                        e -> CompletableFuture.supplyAsync(() -> XmlMakerUtils.fetchTerm(e.getValue()))
                 ));
 
         return futureTerms.entrySet().stream()
@@ -276,7 +333,7 @@ public class InteractionsCreator {
             List<String> datum = data.next();
 
             if (datum.size() < expectedNumberOfColumns) {
-                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
+                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum + "\n Size expected: " + expectedNumberOfColumns + "Row size: " + datum.size());
                 continue;
             }
 
@@ -355,7 +412,7 @@ public class InteractionsCreator {
             }
 
             if (datum.size() < expectedNumberOfColumns) {
-                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum);
+                LOGGER.warning("Row has fewer cells than expected. Skipping row: " + datum + "\n Size expected: " + expectedNumberOfColumns + "Row size: " + datum.size());
                 continue;
             }
 
@@ -426,7 +483,7 @@ public class InteractionsCreator {
                                             String participantIdentificationMethod,
                                             String hostOrganism, String interactionType) {
         if (interactionType != null) {
-            String interactionTypeMiId = utils.fetchMiId(interactionType);
+            String interactionTypeMiId = XmlMakerUtils.fetchMiId(interactionType);
             CvTerm interactionTypeCv = new XmlCvTerm(interactionType, interactionTypeMiId);
             interaction.setInteractionType(interactionTypeCv);
         }
@@ -434,7 +491,7 @@ public class InteractionsCreator {
         if (interactionDetectionMethod != null) {
             Organism organism = createOrganism(hostOrganism);
 
-            CvTerm detectionMethod = utils.fetchTerm(interactionDetectionMethod);
+            CvTerm detectionMethod = XmlMakerUtils.fetchTerm(interactionDetectionMethod);
             Publication publication = new BibRef(excelFileReader.getPublicationId());
             XmlExperiment experiment;
 
@@ -444,7 +501,7 @@ public class InteractionsCreator {
                 experiment = new XmlExperiment(publication, detectionMethod, organism);
             }
             if (participantIdentificationMethod != null) {
-                experiment.setParticipantIdentificationMethod(utils.fetchTerm(participantIdentificationMethod));
+                experiment.setParticipantIdentificationMethod(XmlMakerUtils.fetchTerm(participantIdentificationMethod));
             }
 
             interaction.setExperiment(experiment);
@@ -522,17 +579,24 @@ public class InteractionsCreator {
             String parameterValue = participant.get(INTERACTION_PARAM_VALUE.name);
             String parameterUncertainty = participant.get(INTERACTION_PARAM_UNCERTAINTY.name);
             String parameterUnit = participant.get(INTERACTION_PARAM_UNIT.name);
+            String parameterExponent = participant.get(INTERACTION_PARAM_EXPONENT.name);
+            String parameterBase = participant.get(INTERACTION_PARAM_BASE.name);
 
-            List<XmlParameter> interactionParameters = XmlParameterCreator.createParameter(parameterType, parameterValue, parameterUncertainty, parameterUnit);
-            for (XmlParameter interactionParameter : interactionParameters) {
-                if (!interaction.getParameters().contains(interactionParameter)) {
-                    interaction.getParameters().add(interactionParameter);
+            if (parameterType != null && !parameterType.isEmpty()) {
+                List<XmlParameter> interactionParameters = XmlParameterCreator.createParameter(parameterType, parameterValue, parameterUncertainty, parameterUnit, parameterExponent, parameterBase);
+                for (XmlParameter interactionParameter : interactionParameters) {
+                    if (!interaction.getParameters().contains(interactionParameter)) {
+                        interaction.getParameters().add(interactionParameter);
+                    }
                 }
             }
         }
         if (interactionFigureLegend != null) {
             CvTerm annotationType = XmlMakerUtils.fetchTerm("figure legend");
-            Annotation annotation = new XmlAnnotation(annotationType, interactionFigureLegend);
+            Annotation annotation = null;
+            if (annotationType != null) {
+                annotation = new XmlAnnotation(annotationType, interactionFigureLegend);
+            }
             interaction.getAnnotations().add(annotation);
         }
 

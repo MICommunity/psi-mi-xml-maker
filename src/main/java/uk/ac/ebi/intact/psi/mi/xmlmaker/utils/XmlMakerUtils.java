@@ -160,6 +160,10 @@ public class XmlMakerUtils {
 
     public static CvTerm fetchTerm(String input) {
         input = input.trim();
+        if (input.endsWith(";")){
+            input = input.substring(0, input.length() - 1);
+        }
+
         if (input.isBlank() || input.contains("null")) return null;
         CvTerm term = nameToCvTerm.get(input);
         if (term != null) return term;
@@ -279,12 +283,6 @@ public class XmlMakerUtils {
         comboBox.setPreferredSize(new Dimension(200, 50));
         comboBox.setMaximumSize(new Dimension(200, 50));
         return comboBox;
-    }
-
-    public static void setTextFieldDimension(JTextField textField, String defaultItem) {
-        textField.setPreferredSize(new Dimension(200, 50));
-        textField.setMaximumSize(new Dimension(200, 50));
-        textField.setText(defaultItem);
     }
 
     /**

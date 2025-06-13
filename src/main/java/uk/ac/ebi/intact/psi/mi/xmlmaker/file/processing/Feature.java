@@ -8,6 +8,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -20,6 +21,7 @@ public class Feature {
     private String originalSequence;
     private String newSequence;
     private boolean fetchFromFile;
+    private String role;
 
     private List<String> xref = new ArrayList<>();
     private List<String> xrefDb = new ArrayList<>();
@@ -42,16 +44,29 @@ public class Feature {
     public String getListAsString(List<String> list) {
         return String.join(",", list);
     }
+    public void setParametersAsString() {
+        StringBuilder types = new StringBuilder();
+        StringBuilder values = new StringBuilder();
+        StringBuilder units = new StringBuilder();
+        StringBuilder bases = new StringBuilder();
+        StringBuilder exponents = new StringBuilder();
+        StringBuilder uncertainties = new StringBuilder();
 
-    public void setParametersAsString(){
         for (Parameter parameter : parameters) {
-            parameterTypes += parameter.getType() + ";";
-            parameterValues += parameter.getValueColumn() + ";";
-            parameterUnits += parameter.getUnit() + ";";
-            parameterBases += parameter.getBase() + ";";
-            parameterExponents += parameter.getExponent() + ";";
-            parameterUncertainties += parameter.getUncertaintyColumn() + ";";
+            types.append(Objects.toString(parameter.getType(), "")).append(";");
+            values.append(Objects.toString(parameter.getValueColumn(), "")).append(";");
+            units.append(Objects.toString(parameter.getUnit(), "")).append(";");
+            bases.append(Objects.toString(parameter.getBase(), "")).append(";");
+            exponents.append(Objects.toString(parameter.getExponent(), "")).append(";");
+            uncertainties.append(Objects.toString(parameter.getUncertaintyColumn(), "")).append(";");
         }
+
+        parameterTypes = types.toString();
+        parameterValues = values.toString();
+        parameterUnits = units.toString();
+        parameterBases = bases.toString();
+        parameterExponents = exponents.toString();
+        parameterUncertainties = uncertainties.toString();
     }
 
     public void setFetchFromFile(boolean fetchFromFile) {

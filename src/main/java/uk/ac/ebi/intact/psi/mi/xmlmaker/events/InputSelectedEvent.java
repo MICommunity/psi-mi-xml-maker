@@ -4,7 +4,6 @@ import lombok.Getter;
 
 import java.io.File;
 
-
 @Getter
 public class InputSelectedEvent {
 

@@ -15,7 +15,7 @@ public class VersionUtils {
 
     private static String latestVersion = "UNKNOWN";
 
-    private static String DOWNLOAD_JAR_URL = GITHUB_URL + latestVersion + "/PSI-MI-XML-maker-" + latestVersion + "-runnable.3.jar"; //todo: find a way to put the correct version
+    private static String DOWNLOAD_JAR_URL = GITHUB_URL + latestVersion + "/PSI-MI-XML-maker-" + latestVersion + "-runnable.3.jar";
     private static String DOWNLOAD_DMG_URL = GITHUB_URL + latestVersion + "/PSI-MI-XML-maker_" + latestVersion + "-MacOS.dmg";
     private static String DOWNLOAD_ZIP_URL = GITHUB_URL + latestVersion + "/PSI-MI-XML-maker_" + latestVersion + "-windows.zip";
     private static String DOWNLOAD_TAR_URL = GITHUB_URL + latestVersion + "/PSI-MI-XML-maker_" + latestVersion + "-linux.tar.gz";
@@ -64,13 +64,13 @@ public class VersionUtils {
     public static void downloadDependingOnOs(){
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("mac")) {
-            downloadLatestJar(DOWNLOAD_DMG_URL, SAVE_DMG_PATH);
+            downloadLatestVersion(DOWNLOAD_DMG_URL, SAVE_DMG_PATH);
         } else if (osName.contains("win")) {
-            downloadLatestJar(DOWNLOAD_ZIP_URL, SAVE_ZIP_PATH);
+            downloadLatestVersion(DOWNLOAD_ZIP_URL, SAVE_ZIP_PATH);
         } else if (osName.contains("linux")) {
-            downloadLatestJar(DOWNLOAD_TAR_URL, SAVE_TAR_PATH);
+            downloadLatestVersion(DOWNLOAD_TAR_URL, SAVE_TAR_PATH);
         }  else {
-            downloadLatestJar(DOWNLOAD_JAR_URL, SAVE_JAR_PATH);
+            downloadLatestVersion(DOWNLOAD_JAR_URL, SAVE_JAR_PATH);
         }
     }
 
@@ -92,7 +92,7 @@ public class VersionUtils {
         return latestVersion;
     }
 
-    public static void downloadLatestJar(String downloadUrl, String savingPath){
+    public static void downloadLatestVersion(String downloadUrl, String savingPath){
         try {
             LOGGER.info("Downloading latest jar: " + downloadUrl);
 
@@ -102,8 +102,6 @@ public class VersionUtils {
 
             int responseCode = httpConn.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                new File("downloadableFiles").mkdirs();
-
                 try (InputStream inputStream = httpConn.getInputStream();
                      FileOutputStream outputStream = new FileOutputStream(savingPath)) {
 
@@ -124,7 +122,6 @@ public class VersionUtils {
             LOGGER.severe("Error downloading latest jar: " + e.getMessage());
         }
     }
-
 
     private static void scheduleRestart(String savingPath) {
         String[] command;

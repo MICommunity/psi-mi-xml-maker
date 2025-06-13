@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static java.awt.Toolkit.getDefaultToolkit;
 
@@ -223,7 +224,12 @@ public class XmlMakerGui {
     private boolean handleFileImport(TransferHandler.TransferSupport support) {
         try {
             Transferable transferable = support.getTransferable();
-            List<File> files = (List<File>) transferable.getTransferData(DataFlavor.javaFileListFlavor);
+
+            List<File> files = ((List<?>) transferable.getTransferData(DataFlavor.javaFileListFlavor))
+                    .stream()
+                    .map(File.class::cast)
+                    .collect(Collectors.toList());
+
             if (!files.isEmpty()) {
                 File file = files.get(0);
                 processFile(file);

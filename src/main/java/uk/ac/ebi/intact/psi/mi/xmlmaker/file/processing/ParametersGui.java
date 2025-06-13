@@ -9,18 +9,34 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * GUI component for creating and managing parameter input panels for XML export.
+ * Dynamically builds a list of {@link Parameter} configurations from an Excel sheet.
+ */
 public class ParametersGui {
-    List<String> parametersTypeCache = new ArrayList<>();
-    List<String> parametersUnitCache = new ArrayList<>();
-    List<Parameter> parameters = new ArrayList<>();
-    ExcelFileReader excelFileReader;
+    final List<String> parametersTypeCache = new ArrayList<>();
+    final List<String> parametersUnitCache = new ArrayList<>();
+    final List<Parameter> parameters = new ArrayList<>();
+    final ExcelFileReader excelFileReader;
 
+    /**
+     * Constructs a {@link ParametersGui} with reference to the Excel file reader.
+     *
+     * @param excelFileReader The Excel file reader used to populate combo boxes.
+     */
     public ParametersGui(ExcelFileReader excelFileReader) {
         setupParametersTypeCache();
         setupUnitCache();
         this.excelFileReader = excelFileReader;
     }
 
+    /**
+     * Creates a panel containing input components for a single parameter configuration.
+     * Includes fields for type, value, unit, base, exponent, and uncertainty, each linked
+     * to a {@link Parameter} instance.
+     *
+     * @return A {@link JPanel} with parameter input controls.
+     */
     private JPanel createParameterPanel() {
         JPanel parametersPanel = new JPanel();
         parametersPanel.setLayout(new GridLayout(2,3));
@@ -81,6 +97,12 @@ public class ParametersGui {
         return parametersPanel;
     }
 
+    /**
+     * Creates a combo box populated with units.
+     *
+     * @param parameter The parameter to update on selection.
+     * @return A configured JComboBox for units.
+     */
     private JComboBox<String> getUnitComboBox(Parameter parameter) {
         JComboBox<String> unitCombobox = new JComboBox<>();
         setComboBoxDimension(unitCombobox, "Unit");
@@ -92,6 +114,12 @@ public class ParametersGui {
         return unitCombobox;
     }
 
+    /**
+     * Creates a combo box populated with parameter types.
+     *
+     * @param parameter The parameter to update on selection.
+     * @return A configured JComboBox for parameter types.
+     */
     private JComboBox<String> getParametersTypeComboBox(Parameter parameter) {
         JComboBox<String> parametersTypeComboBox = new JComboBox<>();
         parametersTypeComboBox.setToolTipText("Parameter Type");
@@ -103,14 +131,25 @@ public class ParametersGui {
         return parametersTypeComboBox;
     }
 
+    /**
+     * Initializes the cache of available parameter types from OLS.
+     */
     private void setupParametersTypeCache() {
         parametersTypeCache.addAll(getTermsFromOls(DataAndMiID.PARAMETER_TYPE.miId));
     }
 
+    /**
+     * Initializes the cache of available units from OLS.
+     */
     private void setupUnitCache() {
         parametersUnitCache.addAll(getTermsFromOls(DataAndMiID.UNIT.miId));
     }
 
+    /**
+     * Creates a JPanel containing all parameter input panels with dynamic adjustment.
+     *
+     * @return A JPanel for use in the UI containing parameter components.
+     */
     public JPanel parametersContainer() {
         JPanel parametersContainer = new JPanel();
         parametersContainer.setLayout(new BoxLayout(parametersContainer, BoxLayout.Y_AXIS));
@@ -159,6 +198,11 @@ public class ParametersGui {
         return parametersContainer;
     }
 
+    /**
+     * Retrieves the available value column headers from the selected sheet.
+     *
+     * @return A list of value column names.
+     */
     private List<String> getValueColumn(){
         return excelFileReader.getColumns(excelFileReader.sheetSelectedUpdate);
     }

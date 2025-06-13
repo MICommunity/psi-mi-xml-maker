@@ -16,11 +16,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_END;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_RANGE_TYPE;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_ORIGINAL_SEQUENCE;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_XREF;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.FEATURE_XREF_DB;
 
 public class XmlFeatureEvidenceCreator {
 
@@ -34,9 +29,21 @@ public class XmlFeatureEvidenceCreator {
         String featureRangeType = data.get(FEATURE_RANGE_TYPE.name + featureIndexString);
         String featureXref = data.get(FEATURE_XREF.name + featureIndexString);
         String featureXrefDb = data.get(FEATURE_XREF_DB.name + featureIndexString);
+        String featureRole = data.get(FEATURE_ROLE.name + featureIndexString);
 
         String featureOriginalSequence = data.get(FEATURE_ORIGINAL_SEQUENCE.name + featureIndexString);
         String featureNewSequence = data.get(FEATURE_NEW_SEQUENCE.name + featureIndexString);
+
+        Position positionStart = getRangePosition(featureStart, featureRangeType);
+        Position positionEnd = getRangePosition(featureEnd, featureRangeType);
+        XmlRange featureRange = getFeatureRange(positionStart, positionEnd);
+
+        String parameterType = data.get(FEATURE_PARAM_TYPE.name + featureIndexString);
+        String parameterValue = data.get(FEATURE_PARAM_VALUE.name + featureIndexString);
+        String parameterUncertainty = data.get(FEATURE_PARAM_UNCERTAINTY.name + featureIndexString);
+        String parameterUnit = data.get(FEATURE_PARAM_UNIT.name + featureIndexString);
+        String parameterExponent = data.get(FEATURE_PARAM_EXPONENT.name + featureIndexString);
+        String parameterBase = data.get(FEATURE_PARAM_BASE.name + featureIndexString);
 
         XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureType, featureShortName);
 
@@ -44,21 +51,24 @@ public class XmlFeatureEvidenceCreator {
             return null;
         }
 
-        Position positionStart = getRangePosition(featureStart, featureRangeType);
-        Position positionEnd = getRangePosition(featureEnd, featureRangeType);
-        XmlRange featureRange = getFeatureRange(positionStart, positionEnd);
+        if (featureRole != null && !featureRole.isEmpty()) {
+            CvTerm featureRoleCv = XmlMakerUtils.fetchTerm(featureRole);
+            if (featureRoleCv != null) {
+                featureEvidence.setRole(featureRoleCv);
+            }
+        }
 
+        if (parameterType != null && !parameterType.isEmpty()) {
+            if (parameterType.endsWith(";")){
+                parameterType = parameterType.substring(0, parameterType.length() - 1);
+            }
 
-        String parameterType = data.get(FEATURE_PARAM_TYPE.name + featureIndexString);
-        String parameterValue = data.get(FEATURE_PARAM_VALUE.name + featureIndexString);
-        String parameterUncertainty = data.get(FEATURE_PARAM_UNCERTAINTY.name + featureIndexString);
-        String parameterUnit = data.get(FEATURE_PARAM_UNIT.name + featureIndexString);
+            List<XmlParameter> featureParameters = XmlParameterCreator.createParameter(parameterType, parameterValue, parameterUncertainty, parameterUnit,  parameterExponent, parameterBase);
 
-        List<XmlParameter> featureParameters = XmlParameterCreator.createParameter(parameterType, parameterValue, parameterUncertainty, parameterUnit);
-
-        for (XmlParameter interactionParameter : featureParameters) {
-            if (!featureEvidence.getParameters().contains(interactionParameter)) {
-                featureEvidence.getParameters().add(interactionParameter);
+            for (XmlParameter interactionParameter : featureParameters) {
+                if (!featureEvidence.getParameters().contains(interactionParameter)) {
+                    featureEvidence.getParameters().add(interactionParameter);
+                }
             }
         }
 
@@ -81,15 +91,27 @@ public class XmlFeatureEvidenceCreator {
     }
 
     public static Position getRangePosition(String range, String featureRangeType) {
-        if (featureRangeType.contains("c-term")) return PositionUtils.createCTerminalRangePosition();
+        if (range == null) {
+            return PositionUtils.createUndeterminedPosition();
+        }
 
-        if (featureRangeType.contains("n-term")) return PositionUtils.createNTerminalRangePosition();
+        range = range.trim().replaceAll(";$", "");
+
+        if (featureRangeType != null) {
+            String lowerFeatureRangeType = featureRangeType.toLowerCase();
+            if (lowerFeatureRangeType.contains("c-term")) {
+                return PositionUtils.createCTerminalRangePosition();
+            }
+            if (lowerFeatureRangeType.contains("n-term")) {
+                return PositionUtils.createNTerminalRangePosition();
+            }
+        }
 
         if (range.matches("\\d+")) {
             try {
                 return PositionUtils.createPositionFromString(range);
             } catch (IllegalRangeException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Invalid range: " + range, e);
             }
         }
 

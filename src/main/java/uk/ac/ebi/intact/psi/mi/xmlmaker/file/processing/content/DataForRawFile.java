@@ -2,9 +2,11 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content;
 
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
-
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
 
+/**
+ * The {@code DataForRawFile} enum is representing all the columns added to the formatted file.
+ */
 public enum DataForRawFile {
     BAIT_ID_DB(PARTICIPANT_ID_DB.name, true, false, false),
     PREY_ID_DB(PARTICIPANT_ID_DB.name, false, false, false),
@@ -43,6 +45,7 @@ public enum DataForRawFile {
     FEATURE_PARAM_UNCERTAINTY(DataTypeAndColumn.FEATURE_PARAM_UNCERTAINTY.name, false, false, true),
     FEATURE_ORIGINAL_SEQUENCE(DataTypeAndColumn.FEATURE_ORIGINAL_SEQUENCE.name, false, false, true),
     FEATURE_NEW_SEQUENCE(DataTypeAndColumn.FEATURE_NEW_SEQUENCE.name, false, false, true),
+    FEATURE_ROLE(DataTypeAndColumn.FEATURE_ROLE.name, false, false, true),
     ;
 
     public final String name;

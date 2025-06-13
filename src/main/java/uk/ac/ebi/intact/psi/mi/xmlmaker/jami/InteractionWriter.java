@@ -43,8 +43,6 @@ public class InteractionWriter {
 
     public String publicationId;
     public String publicationDb;
-
-    final XmlMakerUtils utils = new XmlMakerUtils();
     private final ExcelFileReader excelFileReader;
 
     private int fileCounter = 0;
@@ -56,7 +54,7 @@ public class InteractionWriter {
     public final List<String> skippedParticipants = new ArrayList<>();
 
     /**
-     * Constructs a InteractionWriter instance with the given dependencies.
+     * Constructs an InteractionWriter instance with the given dependencies.
      *
      * @param excelFileReader an instance of ExcelFileReader
      */
@@ -215,7 +213,6 @@ public class InteractionWriter {
 
         try {
             createDirectoryIfNotExists();
-
             xmlInteractionWriter = writerFactory.getInteractionWriterWith(writingOptions);
             xmlInteractionWriter.start();
             xmlInteractionWriter.write(interactions);

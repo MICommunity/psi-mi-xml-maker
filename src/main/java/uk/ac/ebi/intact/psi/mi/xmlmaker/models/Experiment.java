@@ -2,7 +2,6 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.models;
 
 import lombok.Getter;
 import lombok.Setter;
-import psidev.psi.mi.jami.model.CvTerm;
 
 import java.util.List;
 

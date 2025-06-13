@@ -96,7 +96,7 @@ public class XmlMakerGuiTest {
         interactionWriter.setName(fileName);
         interactionWriter.setSaveLocation(TEST_FILE_PATH);
 
-        interactionsCreator.sheetSelected = "test_sample";
+        interactionsCreator.setSheetSelected("test_sample");
         interactionsCreator.createParticipantsWithFileFormat();
 
         File writtenFile = new File(TEST_FILE_PATH + "test_sample/test_sample_13.xml");
@@ -121,8 +121,7 @@ public class XmlMakerGuiTest {
     @Test
     public void testMiFetching_returnExpectedMiId() {
         LOGGER.info("Testing MI fetching");
-        XmlMakerUtils utils = new XmlMakerUtils();
-        assertEquals("MI:1097", utils.fetchMiId("uniprot"));
+        assertEquals("MI:1097", XmlMakerUtils.fetchMiId("uniprot"));
     }
 
     @Test
