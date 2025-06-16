@@ -1,4 +1,4 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.models;
 
 import lombok.Getter;
 import lombok.Setter;

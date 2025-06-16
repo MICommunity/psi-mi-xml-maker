@@ -47,6 +47,7 @@ public class XmlMakerUtils {
 
     /**
      * Displays an error message in a dialog box.
+     * @param message message to display
      */
     public static void showErrorDialog(String message) {
         LOGGER.severe("Error: " + message);
@@ -55,6 +56,8 @@ public class XmlMakerUtils {
 
     /**
      * Displays an error message in a dialog box.
+     * @param message message to display
+     * @return boolean answer from user
      */
     public static boolean showConfirmDialog(String message) {
         int choice = JOptionPane.showConfirmDialog(
@@ -70,6 +73,7 @@ public class XmlMakerUtils {
 
     /**
      * Displays an informational message in a dialog box.
+     * @param message message to display
      */
     public static void showInfoDialog(String message) {
         JOptionPane.showMessageDialog(new JFrame(), message, "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
@@ -77,6 +81,8 @@ public class XmlMakerUtils {
 
     /**
      * Fetches the Taxonomy ID for a given organism name using the OLS API.
+     * @param organismName organism to fetch
+     * @return organism tax id
      */
     public static String fetchTaxIdWithApi(String organismName) {
         String urlString = "https://www.ebi.ac.uk/ols4/api/search?q=" + encodeForURL(organismName) + "&ontology=ncbitaxon";
@@ -104,6 +110,9 @@ public class XmlMakerUtils {
 
     /**
      * Creates an HTTP connection for a given URL.
+     * @param urlString url to connect
+     * @throws IOException if error
+     * @return URLConnection
      */
     public static HttpURLConnection createConnection(String urlString) throws IOException {
         LOGGER.fine("Creating HTTP connection to URL: " + urlString);
@@ -115,6 +124,8 @@ public class XmlMakerUtils {
 
     /**
      * Fetches the Taxonomy ID for a given organism name by processing the API response.
+     * @param organismName organism to fetch
+     * @return organism tax id
      */
     public static String fetchTaxIdForOrganism(String organismName) {
         String taxId = nameToTaxIdCache.get(organismName);
@@ -153,12 +164,23 @@ public class XmlMakerUtils {
 
     /**
      * Encodes a string for safe use in a URL.
+     * @param input to convert in URL format.
+     * @return string compatible with URL.
      */
     public static String encodeForURL(String input) {
         return URLEncoder.encode(input, StandardCharsets.UTF_8);
     }
 
+    /**
+     * Retrieves a {@link CvTerm} for the given input using the PSI-MI ontology.
+     * Trims input, removes trailing semicolons, checks cache, and falls back to OLS lookup.
+     * Returns {@code null} for blank or invalid input. Caches and returns a placeholder if not found.
+     *
+     * @param input the term name to look up
+     * @return the corresponding {@link CvTerm}, a placeholder if not found, or {@code null} if input is invalid
+     */
     public static CvTerm fetchTerm(String input) {
+        if (input == null) return null;
         input = input.trim();
         if (input.endsWith(";")){
             input = input.substring(0, input.length() - 1);
@@ -184,7 +206,9 @@ public class XmlMakerUtils {
     }
 
     /**
-     * Fetches the MI (Molecular Interaction) ID for a given term using the OLS client.
+     * Fetches the MI (Molecular Interaction) ID for a given term using the OLS client
+     * @param input string to look for in OLS.
+     * @return MI identifier from OLS
      */
     public static String fetchMiId(String input) {
         CvTerm cvTerm = fetchTerm(input);
@@ -193,6 +217,8 @@ public class XmlMakerUtils {
 
     /**
      * Extracts the OBO (Open Biomedical Ontologies) ID from a JSON response.
+     * @param json OLS response
+     * @return OLS MI identifier.
      */
     public static String extractOboId(String json) {
         if (json == null || json.isEmpty()) {

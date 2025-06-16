@@ -36,7 +36,7 @@ public class InteractionWriterGui {
     private JFileChooser directoryChooser;
 
     /**
-     * Constructs a InteractionWriterGui instance with the given dependencies.
+     * Constructs an InteractionWriterGui instance with the given dependencies.
      *
      * @param excelFileReader an instance of ExcelFileReader for reading publication-related data
      */

@@ -17,8 +17,23 @@ import java.util.stream.Collectors;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
 
+/**
+ * Utility class responsible for constructing {@link XmlFeatureEvidence} objects from structured input data.
+ * <p>
+ * This class interprets a {@code Map<String, String>} where each key corresponds to a feature property,
+ * typically loaded from structured flat-file data (e.g., tab-delimited format), and assembles the appropriate
+ * PSI-MI JAMI XML model components.
+ * </p>
+ */
 public class XmlFeatureEvidenceCreator {
 
+    /**
+     * Creates an {@link XmlFeatureEvidence} object based on a feature index and the input data map.
+     *
+     * @param featureIndex The index of the feature in the dataset. This is used to resolve suffixes for column names.
+     * @param data A map of column name to value for all parsed data entries.
+     * @return A populated {@link XmlFeatureEvidence} object, or {@code null} if essential data is missing or invalid.
+     */
     public static XmlFeatureEvidence createFeature(int featureIndex, Map<String, String> data) {
         String featureIndexString = "_" + featureIndex;
 
@@ -46,6 +61,9 @@ public class XmlFeatureEvidenceCreator {
         String parameterBase = data.get(FEATURE_PARAM_BASE.name + featureIndexString);
 
         XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureType, featureShortName);
+        if (featureEvidence == null) {
+            return null;
+        }
 
         if (featureEvidence.getType().getMIIdentifier() == null || featureEvidence.getType().getMIIdentifier().isEmpty()) {
             return null;
@@ -84,12 +102,27 @@ public class XmlFeatureEvidenceCreator {
         return featureEvidence;
     }
 
+    /**
+     * Constructs an {@link XmlRange} from start and end {@link Position} objects.
+     *
+     * @param startPosition The start position of the feature.
+     * @param endPosition The end position of the feature.
+     * @return An {@link XmlRange} representing the positional span of the feature.
+     */
     private static XmlRange getFeatureRange(Position startPosition, Position endPosition) {
         XmlRange featureRange = new XmlRange();
         featureRange.setPositions(startPosition, endPosition);
         return featureRange;
     }
 
+    /**
+     * Determines the {@link Position} of a feature range from the string value and range type.
+     * This handles numeric ranges, undetermined ranges, and special terminal positions (N-term/C-term).
+     *
+     * @param range The position as a string (e.g., "42").
+     * @param featureRangeType A description of the type (e.g., "n-term", "c-term").
+     * @return A {@link Position} object representing the resolved range.
+     */
     public static Position getRangePosition(String range, String featureRangeType) {
         if (range == null) {
             return PositionUtils.createUndeterminedPosition();
@@ -118,6 +151,13 @@ public class XmlFeatureEvidenceCreator {
         return PositionUtils.createUndeterminedPosition();
     }
 
+    /**
+     * Constructs a {@link FeatureXrefContainer} from provided xref and database name lists.
+     *
+     * @param featureXref A semicolon-separated list of feature xrefs (e.g., "P12345;Q67890").
+     * @param featureXrefDb A semicolon-separated list of corresponding database names (e.g., "UniProtKB;RefSeq").
+     * @return A {@link FeatureXrefContainer} containing all valid {@link Xref}s.
+     */
     private static FeatureXrefContainer getFeatureXrefContainer(String featureXref, String featureXrefDb) {
         FeatureXrefContainer featureXrefContainer = new FeatureXrefContainer();
 
@@ -141,6 +181,12 @@ public class XmlFeatureEvidenceCreator {
         return featureXrefContainer;
     }
 
+    /**
+     * Converts a semicolon-separated list of database names into a list of {@link CvTerm}s.
+     *
+     * @param featureXrefDb A semicolon-separated string of database names.
+     * @return A list of {@link CvTerm} objects representing the databases.
+     */
     private static List<CvTerm> getFeatureXrefsDb(String featureXrefDb) {
         if (featureXrefDb == null || featureXrefDb.trim().isEmpty()) {
             return Collections.emptyList();
@@ -151,6 +197,12 @@ public class XmlFeatureEvidenceCreator {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Converts a semicolon-separated list of xref identifiers into a list of strings.
+     *
+     * @param featureXref A semicolon-separated string of xref identifiers.
+     * @return A list of xref strings.
+     */
     private static List<String> getFeatureXrefs(String featureXref) {
         if (featureXref == null || featureXref.trim().isEmpty()) {
             return Collections.emptyList();
@@ -160,8 +212,18 @@ public class XmlFeatureEvidenceCreator {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Constructs a basic {@link XmlFeatureEvidence} object given a feature type and optional short label.
+     *
+     * @param featureType The descriptive name of the feature type (e.g., "phosphorylation site").
+     * @param featureShortLabel A short label for the feature (may be {@code null}).
+     * @return An initialized {@link XmlFeatureEvidence} object, or {@code null} if MI identifier could not be resolved.
+     */
     private static XmlFeatureEvidence getFeatureEvidence(String featureType, String featureShortLabel) {
         String featureTypeMiId = XmlMakerUtils.fetchMiId(featureType);
+        if (featureTypeMiId == null || featureTypeMiId.trim().isEmpty()) {
+            return null;
+        }
         CvTerm featureTypeCv = new XmlCvTerm(featureType, featureTypeMiId);
 
         XmlFeatureEvidence featureEvidence = new XmlFeatureEvidence(featureTypeCv);

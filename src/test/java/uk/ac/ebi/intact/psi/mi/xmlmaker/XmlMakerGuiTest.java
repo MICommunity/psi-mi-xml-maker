@@ -8,7 +8,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.InteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotGeneralMapper;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotResult;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.models.UniprotResult;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import java.io.BufferedReader;
@@ -17,6 +17,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -25,8 +26,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class XmlMakerGuiTest {
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGuiTest.class.getName());
     private static final String TEST_FILE_PATH = "src/test/java/uk/ac/ebi/intact/psi/mi/xmlmaker/testSamples/";
-    private static final int EXPECTED_COLUMN_COUNT = 24;
+    private static int EXPECTED_COLUMN_COUNT = 0;
     private static final String INTERACTION_ID_ATTRIBUTE = "interaction id=";
+    private static final int EXPECTED_INTERACTION_COUNT = 5;
 
     private ExcelFileReader reader;
     private InteractionsCreator interactionsCreator;
@@ -37,6 +39,11 @@ public class XmlMakerGuiTest {
         reader = new ExcelFileReader();
         interactionWriter = new InteractionWriter(reader);
         interactionsCreator = new InteractionsCreator(reader, interactionWriter, mockColumnAndIndex());
+        int numberOfInitialData = DataTypeAndColumn.getInitialData().size();
+        int numberOfNotInitialData = DataTypeAndColumn.getNotInitialData().size();
+        int numberOfFeatures = 2;
+
+        EXPECTED_COLUMN_COUNT = numberOfInitialData +  (numberOfNotInitialData * numberOfFeatures);
     }
 
     @Test
@@ -48,7 +55,8 @@ public class XmlMakerGuiTest {
     public void testOpenXslxFile_fileHasExpectedColumnCount() {
         LOGGER.info("Testing file opening: " + "test_sample.xlsx");
         reader.selectFileOpener(TEST_FILE_PATH + "test_sample.xlsx");
-        assertEquals(EXPECTED_COLUMN_COUNT, reader.getColumns("test_sample").size());
+
+        assertEquals(EXPECTED_COLUMN_COUNT, reader.getColumns("Formatted data").size());
     }
 
     @Test
@@ -82,6 +90,11 @@ public class XmlMakerGuiTest {
     }
 
     @Test
+    public void testInteractionsCreation_Csv_ParseAndCountInteractionIds() throws Exception {
+        testInteractionsCreation("test_sample.csv");
+    }
+
+    @Test
     public void testInteractionsCreation_workbook_ParseAndCountInteractionIds() throws Exception {
         testInteractionsCreation("test_sample.xlsx");
     }
@@ -90,21 +103,21 @@ public class XmlMakerGuiTest {
         LOGGER.info("Testing interactions creation for file: " + fileName);
 
         reader.selectFileOpener(TEST_FILE_PATH + fileName);
-        reader.publicationId = "1234";
-
+        reader.setPublicationId("1234");
+        reader.setPublicationDb("pubmed");
 
         interactionWriter.setName(fileName);
         interactionWriter.setSaveLocation(TEST_FILE_PATH);
 
-        interactionsCreator.setSheetSelected("test_sample");
+        interactionsCreator.setSheetSelected("Formatted data");
         interactionsCreator.createParticipantsWithFileFormat();
 
-        File writtenFile = new File(TEST_FILE_PATH + "test_sample/test_sample_13.xml");
+        File writtenFile = new File(TEST_FILE_PATH + "test_sample/test_sample_0.xml");
         assertTrue(writtenFile.exists(), "XML file should exist");
         assertTrue(writtenFile.length() > 0, "XML file should not be empty");
 
         int interactionIdCount = countOccurrencesInFile(writtenFile);
-        assertEquals(13, interactionIdCount, "Number of 'interaction id=' occurrences should match expected interaction count");
+        assertEquals(EXPECTED_INTERACTION_COUNT, interactionIdCount, "Number of 'interaction id=' occurrences should match expected interaction count");
     }
 
     private int countOccurrencesInFile(File file) throws IOException {
@@ -132,28 +145,9 @@ public class XmlMakerGuiTest {
 
     private Map<String, Integer> mockColumnAndIndex() {
         Map<String, Integer> columnAndIndex = new HashMap<>();
-
-        columnAndIndex.put(DataTypeAndColumn.INTERACTION_NUMBER.name, 5);
-        columnAndIndex.put(DataTypeAndColumn.INTERACTION_TYPE.name, 13);
-        columnAndIndex.put(DataTypeAndColumn.INTERACTION_DETECTION_METHOD.name, 1);
-        columnAndIndex.put(DataTypeAndColumn.HOST_ORGANISM.name, 3);
-        columnAndIndex.put(DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name, 13);
-
-        columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_NAME.name, 10);
-        columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_ID.name, 8);
-        columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_ID_DB.name, 9);
-        columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_TYPE.name, 13);
-        columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_ORGANISM.name, 16);
-        columnAndIndex.put(DataTypeAndColumn.EXPERIMENTAL_ROLE.name, 11);
-        columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name, 2);
-        columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_XREF.name, 15);
-        columnAndIndex.put(DataTypeAndColumn.PARTICIPANT_XREF_DB.name, 16);
-
-//        columnAndIndex.put(DataTypeAndColumn.FEATURE_SHORT_LABEL.name, 20);
-        columnAndIndex.put(DataTypeAndColumn.FEATURE_TYPE.name, 21);
-        columnAndIndex.put(DataTypeAndColumn.FEATURE_START.name, 22);
-        columnAndIndex.put(DataTypeAndColumn.FEATURE_END.name, 23);
-
+        for (int i = 0; i < DataTypeAndColumn.values().length; i++) {
+            columnAndIndex.put(DataTypeAndColumn.values()[i].name, i);
+        }
         return columnAndIndex;
     }
 
@@ -174,7 +168,7 @@ public class XmlMakerGuiTest {
         File writtenFile = new File(TEST_FILE_PATH + "Book1_xmlMakerFormatted.csv");
         assertTrue(writtenFile.exists(), "Formatted file should exist");
         assertTrue(writtenFile.length() > 0, "Formatted file should not be empty");
-        writtenFile.delete();
+        boolean deleted = writtenFile.delete();
     }
 
     @Test
@@ -186,7 +180,27 @@ public class XmlMakerGuiTest {
         File writtenFile = new File(TEST_FILE_PATH + "Book1_xmlMakerFormatted.xlsx");
         assertTrue(writtenFile.exists(), "Formatted file should exist");
         assertTrue(writtenFile.length() > 0, "Formatted file should not be empty");
-        writtenFile.delete();
+        boolean deleted = writtenFile.delete();
     }
+
+    @Test
+    public void testFetchFromFile(){
+        ExcelFileReader reader = new ExcelFileReader();
+        reader.selectFileOpener(TEST_FILE_PATH + "Book1.xlsx");
+        FileFormater formater = new FileFormater(reader);
+        reader.setSheetSelectedUpdate("Book1");
+        formater.formatExcelFile(0, 2, "Book1", false, 1, 3);
+        List<Map<String, String>> participants = formater.getParticipants();
+
+        Map<String, String> participant = participants.get(0);
+
+        String result = formater.getValueFromFile(DataTypeAndColumn.PARTICIPANT_ID.name, participant);
+
+        assertEquals("100;", result);
+
+        File writtenFile = new File(TEST_FILE_PATH + "Book1_xmlMakerFormatted.xlsx");
+        boolean deleted = writtenFile.delete();
+    }
+
 }
 

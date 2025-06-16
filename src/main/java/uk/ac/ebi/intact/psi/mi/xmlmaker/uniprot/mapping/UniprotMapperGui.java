@@ -28,6 +28,7 @@ public class UniprotMapperGui extends JPanel {
     /**
      * Constructs a new instance of the UniprotMapperGui class.
      * @param excelFileReader The ExcelFileReader instance to interact with the Excel file.
+     * @param loadingSpinner The loading spinner for display
      */
     public UniprotMapperGui(ExcelFileReader excelFileReader, LoadingSpinner loadingSpinner) {
         this.excelFileReader = excelFileReader;

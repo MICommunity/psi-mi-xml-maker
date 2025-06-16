@@ -170,8 +170,7 @@ public class FileFormaterGui {
 
         } catch (Exception e) {
             XmlMakerUtils.showErrorDialog("Error during file formatting, please check that the mandatory columns are correctly selected.");
-            LOGGER.warning("Error during file formatting: " + e.getStackTrace());
-            e.printStackTrace();
+            LOGGER.warning("Error during file formatting: " + e);
         }
     }
 
@@ -239,6 +238,19 @@ public class FileFormaterGui {
         return processPanel;
     }
 
+    /**
+     * Creates and returns a {@link JButton} labeled "Format file" with an attached action listener.
+     * <p>
+     * When clicked, the button:
+     * <ul>
+     *     <li>Retrieves participant interaction data from the GUI.</li>
+     *     <li>Configures the {@code fileFormater} instance with parameters and feature data from the GUI.</li>
+     *     <li>Triggers the file formatting process based on whether the associated checkbox is selected.</li>
+     * </ul>
+     *
+     * @param fileFormaterCheckBox a checkbox indicating whether the formatting should be applied
+     * @return a configured {@link JButton} that initiates file formatting when clicked
+     */
     private JButton getFileFormaterButton(JCheckBox fileFormaterCheckBox) {
         JButton fileFormaterButton = new JButton("Format file");
         fileFormaterButton.addActionListener(e -> {

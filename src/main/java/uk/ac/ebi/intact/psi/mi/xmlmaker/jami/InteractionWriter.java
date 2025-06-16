@@ -66,6 +66,7 @@ public class InteractionWriter {
 
     /**
      * Writes interaction data to a PSI-MI XML file at the specified location.
+     * @param interactions List of the interaction in XML 3.0 format
      */
     public void writeInteractions(List<XmlInteractionEvidence> interactions) {
         if (!validateInputs(interactions)) return;
@@ -144,7 +145,6 @@ public class InteractionWriter {
      * @return the default release date as an {@link XMLGregorianCalendar}.
      * @throws RuntimeException if an error occurs while creating the release date.
      */
-
     private XMLGregorianCalendar createDefaultReleaseDate() {
         try {
             GregorianCalendar calendar = new GregorianCalendar();

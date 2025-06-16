@@ -48,6 +48,7 @@ public class FileFormater {
 
     private static final Logger LOGGER = Logger.getLogger(FileFormater.class.getName());
 
+    @Getter
     private final List<Map<String, String>> participants = new ArrayList<>();
     private Map<String, String> interactionData = new HashMap<>();
     private List<Feature> baitFeatures = new ArrayList<>();
@@ -79,6 +80,8 @@ public class FileFormater {
      * @param filePath        The path of the file to be formatted.
      * @param baitColumnIndex The column index for the bait.
      * @param preyColumnIndex The column index for the prey.
+     * @param baitNameColumnIndex The column index for the bait name.
+     * @param preyNameColumnIndex The column index for the prey name.
      * @param sheetSelected   The sheet name (for Excel files).
      * @param binary          Indicates whether the interactions should be formatted in binary mode.
      */
@@ -157,7 +160,7 @@ public class FileFormater {
      * @param getBaitName              Function to extract bait display name.
      * @param getPreyName              Function to extract prey display name.
      * @param binary                   Whether to treat the data as binary (bait-prey pairs) or grouped.
-     * @param <T>                      Type of row (e.g., Excel Row or List<String>).
+     * @param <T>                      Type of row (e.g., Excel Row or list).
      */
     public <T> void formatFile(Iterator<T> iterator,
                                Function<T, String> getBait,
@@ -257,8 +260,10 @@ public class FileFormater {
      * Adds a new participantId to the formatted data structure.
      *
      * @param interactionNumber The interaction number associated with the participantId.
-     * @param participantId       The participantId's identifier.
+     * @param participantId       The participant's identifier.
+     * @param participantName       The participant name
      * @param experimentalRole   The type of participantId (e.g., "bait" or "prey").
+     * @param rowIndex   Participant row index.
      */
     public void addNewParticipant(String interactionNumber,
                                   String participantId,
@@ -596,7 +601,7 @@ public class FileFormater {
      * @param participant         The participant map with metadata.
      * @return                    Concatenated values resolved from the Excel sheet.
      */
-    private String getValueFromFile(String key, Map<String, String> participant) {
+    public String getValueFromFile(String key, Map<String, String> participant) {
         String columns = participant.get(key);
         if (columns == null) return ";";
 

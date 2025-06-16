@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.models.UniprotResult;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
@@ -92,6 +93,14 @@ public class UniprotGeneralMapper {
         }
     }
 
+    /**
+     * Builds the UniProt API search URL based on the provided participant ID, previous database, and organism.
+     *
+     * @param previousParticipantId The identifier to search for (e.g., UniProt accession or gene name).
+     * @param previousDb The name of the previous database (can be {@code null} or empty).
+     * @param organism The taxon ID of the organism to filter by (can be {@code null} or empty).
+     * @return A string representing the full search URL for the UniProt API.
+     */
     private String buildUrl(String previousParticipantId, String previousDb, String organism) {
         String baseUrl = "https://rest.uniprot.org/uniprotkb/search?query=";
 
@@ -115,6 +124,13 @@ public class UniprotGeneralMapper {
                 ")";
     }
 
+    /**
+     * Builds the UniProt API search URL specifically for gene name queries.
+     *
+     * @param previousParticipantId The gene name to search for.
+     * @param organism The taxon ID of the organism to filter by (can be {@code null} or empty).
+     * @return A string representing the full search URL for the UniProt API.
+     */
     private String buildUrlForGene(String previousParticipantId, String organism){
         String baseUrl = "https://rest.uniprot.org/uniprotkb/search?query=gene:" + previousParticipantId;
 
@@ -127,7 +143,6 @@ public class UniprotGeneralMapper {
 
         return baseUrl;
     }
-
 
     /**
      * Extracts UniProt results from the JSON response and returns a list of {@link UniprotResult} objects.
@@ -164,6 +179,12 @@ public class UniprotGeneralMapper {
         return uniprotResults;
     }
 
+    /**
+     * Constructs a {@link UniprotResult} object from a JSON object representing an active UniProt entry.
+     *
+     * @param result The JSON object containing the UniProt entry data.
+     * @return A {@code UniprotResult} object populated with entry details.
+     */
     private UniprotResult getUniprotResultFromInactiveID(JsonObject result) {
         JsonObject inactiveResult = result.get("inactiveReason").getAsJsonObject();
         if (inactiveResult.get("inactiveReasonType").getAsString().equals("DELETED")) {
@@ -181,6 +202,12 @@ public class UniprotGeneralMapper {
         return null;
     }
 
+    /**
+     * Processes a JSON object representing an inactive UniProt entry and retrieves the merged active entry if available.
+     *
+     * @param result The JSON object containing the inactive UniProt entry data.
+     * @return A {@code UniprotResult} for the merged entry, or {@code null} if deleted or unresolvable.
+     */
     private UniprotResult getUniprotResultFromActiveID(JsonObject result) {
         String uniprotAc = result.get("primaryAccession").getAsString();
         String name = result.get("uniProtkbId").getAsString();

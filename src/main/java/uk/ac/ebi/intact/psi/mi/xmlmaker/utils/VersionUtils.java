@@ -6,6 +6,13 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+/**
+ * Utility class for managing the versioning and update functionality of the PSI-MI XML Maker application.
+ * <p>
+ * This class checks for newer versions of the application on GitHub, downloads the appropriate artifact based on
+ * the operating system, and optionally schedules a restart to complete the update process.
+ * </p>
+ */
 public class VersionUtils {
 
     private static final Logger LOGGER = Logger.getLogger(VersionUtils.class.getName());
@@ -25,6 +32,11 @@ public class VersionUtils {
     private static String SAVE_ZIP_PATH = "downloadableFiles/PSI-MI-XML-maker" + latestVersion + "-windows.zip";
     private static String SAVE_TAR_PATH = "downloadableFiles/PSI-MI-XML-maker" + latestVersion + "-linux.tar.gz";
 
+    /**
+     * Reads the current application version from the internal resource file {@code xmlMaker.properties}.
+     *
+     * @return the current version as specified in the properties file, or {@code "UNKNOWN"} if not found or unreadable.
+     */
     public static String getCurrentVersion() {
         try (InputStream inputStream = VersionUtils.class.getResourceAsStream("/xmlMaker.properties")) {
             if (inputStream == null) {
@@ -40,6 +52,10 @@ public class VersionUtils {
         }
     }
 
+    /**
+     * Checks for a newer version by comparing the current version to the latest version available on GitHub.
+     * If an update is available, prompts the user to download it and restart the application.
+     */
     public static void checkForUpdates() {
         String currentVersion = getCurrentVersion();
         try {
@@ -61,6 +77,15 @@ public class VersionUtils {
         }
     }
 
+    /**
+     * Downloads the appropriate artifact depending on the user's operating system:
+     * <ul>
+     *     <li>macOS → DMG</li>
+     *     <li>Windows → ZIP</li>
+     *     <li>Linux → TAR.GZ</li>
+     *     <li>Other/Unknown → runnable JAR</li>
+     * </ul>
+     */
     public static void downloadDependingOnOs(){
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("mac")) {
@@ -74,6 +99,12 @@ public class VersionUtils {
         }
     }
 
+    /**
+     * Downloads and parses the remote {@code xmlMaker.properties} file to extract the latest version string.
+     *
+     * @return the version string (e.g., "1.1.3") if available, or {@code null} if not found or error occurs.
+     * @throws IOException if the URL cannot be read or the content is malformed.
+     */
     private static String getString() throws IOException {
         URL url = new URL(VERSION_URL);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -92,6 +123,13 @@ public class VersionUtils {
         return latestVersion;
     }
 
+    /**
+     * Downloads a release artifact from a given URL and saves it to the provided path.
+     * Upon successful download, schedule an application restart using the downloaded artifact.
+     *
+     * @param downloadUrl The URL of the file to download.
+     * @param savingPath  The local path where the file should be saved.
+     */
     public static void downloadLatestVersion(String downloadUrl, String savingPath){
         try {
             LOGGER.info("Downloading latest jar: " + downloadUrl);
@@ -123,6 +161,12 @@ public class VersionUtils {
         }
     }
 
+    /**
+     * Schedules a restart of the application using the specified path, tailored to the operating system.
+     * Shows a confirmation dialog to the user before initiating the restart.
+     *
+     * @param savingPath Path to the downloaded artifact used for restarting.
+     */
     private static void scheduleRestart(String savingPath) {
         String[] command;
         String osName = System.getProperty("os.name").toLowerCase();
@@ -158,6 +202,12 @@ public class VersionUtils {
         }
     }
 
+    /**
+     * Initializes the download URLs and local save paths with the provided version number.
+     * This method updates all previously defined static paths that include the version string.
+     *
+     * @param version The version string to use in the URLs and save paths.
+     */
     private static void initialiseUrls(String version) {
         DOWNLOAD_JAR_URL = GITHUB_URL + version + "/PSI-MI-XML-maker-" + version + "-runnable.3.jar";
         DOWNLOAD_DMG_URL = GITHUB_URL + version + "/PSI-MI-XML-maker_" + version + "-MacOS.dmg";

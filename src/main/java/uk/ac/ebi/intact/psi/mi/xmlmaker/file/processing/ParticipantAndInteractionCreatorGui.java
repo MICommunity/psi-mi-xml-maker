@@ -293,6 +293,14 @@ public class ParticipantAndInteractionCreatorGui {
         return String.join(" ; ", selectedPreparations);
     }
 
+    /**
+     * Retrieves the selected experimental preparations for the prey participant as a single formatted string.
+     * <p>
+     * The method loops through a list of combo boxes for experimental preparation, filters out null or empty
+     * selections, and concatenates the valid selections with a semicolon separator.
+     *
+     * @return a string of selected experimental preparations for prey, separated by " ; "
+     */
     public String getPreyExperimentalPreparationsAsString() {
         List<String> selectedPreparations = new ArrayList<>();
 
@@ -330,6 +338,12 @@ public class ParticipantAndInteractionCreatorGui {
         }
     }
 
+    /**
+     * Initializes and populates the {@code xrefQualifierCache} with controlled vocabulary terms
+     * fetched from the Ontology Lookup Service (OLS) using the MI identifier for Xref qualifiers.
+     * <p>
+     * This method is typically used to preload qualifiers for xref (cross-reference) annotations.
+     */
     private void setXrefQualifiers(){
         xrefQualifierCache.addAll(getTermsFromOls(DataAndMiID.XREF_QUALIFIER.miId));
     }
@@ -439,6 +453,18 @@ public class ParticipantAndInteractionCreatorGui {
         return experimentInfoPanel;
     }
 
+    /**
+     * Creates and returns a {@link JPanel} that contains components related to interaction details in the UI.
+     * <p>
+     * The panel includes:
+     * <ul>
+     *     <li>A checkbox or field for specifying multiple interaction parameters.</li>
+     *     <li>A figure legend component with tooltip for guiding users on interaction representations.</li>
+     * </ul>
+     * The panel layout is a 4-row {@link GridLayout}, and its size is set using {@code experimentPanelDimension}.
+     *
+     * @return a configured {@link JPanel} for interaction information
+     */
     public JPanel interactionInfoPanel() {
         JPanel interactionInfoPanel = new JPanel();
         interactionInfoPanel.setLayout(new GridLayout(4, 1));

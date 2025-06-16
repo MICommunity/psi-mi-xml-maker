@@ -13,7 +13,7 @@ public enum DataTypeAndColumn {
     INTERACTION_NUMBER("Interaction number", cell -> String.valueOf(cell.getNumericCellValue())),
     INTERACTION_TYPE("Interaction type"),
     INTERACTION_DETECTION_METHOD("Interaction detection method"),
-    INTERACTION_FIGURE_LEGEND("Interaction feature legend"),
+    INTERACTION_FIGURE_LEGEND("Interaction figure legend"),
 
     INTERACTION_PARAM_TYPE("Interaction parameter type"),
     INTERACTION_PARAM_VALUE("Interaction parameter value"),
@@ -81,11 +81,20 @@ public enum DataTypeAndColumn {
         this.initial = initial;
     }
 
-
     public static List<String> getNotInitialData(){
         final List<String> notInitialData = new ArrayList<>();
         for (DataTypeAndColumn dataType : DataTypeAndColumn.values()) {
             if (!dataType.initial) {
+                notInitialData.add(dataType.name);
+            }
+        }
+        return notInitialData;
+    }
+
+    public static List<String> getInitialData(){
+        final List<String> notInitialData = new ArrayList<>();
+        for (DataTypeAndColumn dataType : DataTypeAndColumn.values()) {
+            if (dataType.initial) {
                 notInitialData.add(dataType.name);
             }
         }

@@ -28,6 +28,7 @@ public class UniprotGeneralMapperGui {
      *
      * @param uniprotIdsGroup The {@link ButtonGroup} containing the possible UniProt IDs.
      * @param previousId The previous UniProt ID, used in the title of the panel.
+     * @param previousIdDb The previous id database.
      */
     public void getUniprotIdChoicePanel(ButtonGroup uniprotIdsGroup, String previousId, String previousIdDb) {
         JPanel buttonContainer = new JPanel();
@@ -85,6 +86,14 @@ public class UniprotGeneralMapperGui {
         }
     }
 
+    /**
+     * Creates and returns a JComboBox populated with participant type options.
+     * <p>
+     * The combo box includes the following items: "Participant type", "Gene",
+     * "Molecule", "Nucleic Acid", and "Protein".
+     *
+     * @return a {@code JComboBox<String>} containing participant type selections
+     */
     private JComboBox<String> createParticipantTypeComboBox() {
         JComboBox<String> comboBox = new JComboBox<>();
         String[] buttons = {"Participant type", "Gene", "Molecule", "Nucleic Acid", "Protein"};

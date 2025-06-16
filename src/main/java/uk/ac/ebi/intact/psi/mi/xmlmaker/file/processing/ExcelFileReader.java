@@ -10,6 +10,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.models.UniprotResult;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.events.InputSelectedEvent;
@@ -59,7 +60,7 @@ public class ExcelFileReader  {
 
     @Getter private List<String> uniprotIdNotFound = new ArrayList<>();
 
-    @Getter String sheetSelectedUpdate;
+    @Getter @Setter String sheetSelectedUpdate;
 
     @Getter private Workbook workbook;
 
@@ -331,6 +332,8 @@ public class ExcelFileReader  {
      * Reads a separated file, processes it, and updates identifiers using UniProt results.
      *
      * @param idColumnName      the name of the column containing the ID.
+     * @param previousIdDbColumnIndex      the column index of the previous ID db.
+     * @param organismColumnIndex      the organism column index.
      */
     public void checkAndInsertUniprotResultsSeparatedFormat(String idColumnName, int previousIdDbColumnIndex, int organismColumnIndex) {
         Iterator<List<String>> iterator = readFileWithSeparator();
@@ -378,6 +381,8 @@ public class ExcelFileReader  {
      *
      * @param sheetSelected     the name of the sheet to process.
      * @param idColumnName      the name of the column containing the ID.
+     * @param idDbColumnIndex      column index of the id database.
+     * @param organismColumnIndex      the organism column index.
      */
     public void checkAndInsertUniprotResultsWorkbook(String sheetSelected, String idColumnName, int idDbColumnIndex, int organismColumnIndex) {
         FileOutputStream fileOut = null;
