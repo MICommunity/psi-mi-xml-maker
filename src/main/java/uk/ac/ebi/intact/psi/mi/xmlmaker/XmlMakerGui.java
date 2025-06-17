@@ -376,8 +376,8 @@ public class XmlMakerGui {
                 @Override
                 protected Void doInBackground() {
                     try {
-                        interactionsCreatorGui.interactionsCreator.setColumnAndIndex(interactionsCreatorGui.getDataAndIndexes());
-                        interactionsCreatorGui.interactionsCreator.createParticipantsWithFileFormat();
+                        interactionsCreatorGui.xmlInteractionsCreator.setColumnAndIndex(interactionsCreatorGui.getDataAndIndexes());
+                        interactionsCreatorGui.xmlInteractionsCreator.createParticipantsWithFileFormat();
                     } catch (Exception ex) {
                         LOGGER.log(Level.SEVERE, "Error during save operation", ex);
                         SwingUtilities.invokeLater(() ->

@@ -6,7 +6,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFormater;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.InteractionsCreator;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.XmlInteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotGeneralMapper;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.UniprotResult;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
@@ -31,14 +31,14 @@ public class XmlMakerGuiTest {
     private static final int EXPECTED_INTERACTION_COUNT = 5;
 
     private ExcelFileReader reader;
-    private InteractionsCreator interactionsCreator;
+    private XmlInteractionsCreator xmlInteractionsCreator;
     private InteractionWriter interactionWriter;
 
     @BeforeEach
     public void setUp() {
         reader = new ExcelFileReader();
         interactionWriter = new InteractionWriter(reader);
-        interactionsCreator = new InteractionsCreator(reader, interactionWriter, mockColumnAndIndex());
+        xmlInteractionsCreator = new XmlInteractionsCreator(reader, interactionWriter, mockColumnAndIndex());
         int numberOfInitialData = DataTypeAndColumn.getInitialData().size();
         int numberOfNotInitialData = DataTypeAndColumn.getNotInitialData().size();
         int numberOfFeatures = 2;
@@ -109,8 +109,8 @@ public class XmlMakerGuiTest {
         interactionWriter.setName(fileName);
         interactionWriter.setSaveLocation(TEST_FILE_PATH);
 
-        interactionsCreator.setSheetSelected("Formatted data");
-        interactionsCreator.createParticipantsWithFileFormat();
+        xmlInteractionsCreator.setSheetSelected("Formatted data");
+        xmlInteractionsCreator.createParticipantsWithFileFormat();
 
         File writtenFile = new File(TEST_FILE_PATH + "test_sample/test_sample_0.xml");
         assertTrue(writtenFile.exists(), "XML file should exist");

@@ -14,7 +14,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
+
+import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Feature;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.models.VariableExperimentalCondition;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
@@ -54,8 +57,10 @@ public class FileFormater {
     private List<Feature> baitFeatures = new ArrayList<>();
     private List<Feature> preyFeatures = new ArrayList<>();
     private boolean addParameters;
+    private boolean addVariableExperimentalConditions;
 
     ParametersGui parametersGui;
+    VariableExperimentalConditionGui variableExperimentalConditionGui;
 
     String[] header = Arrays.stream(values())
             .filter(col -> col.initial)
@@ -72,6 +77,7 @@ public class FileFormater {
     public FileFormater(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
         this.parametersGui  = new ParametersGui(excelFileReader);
+        this.variableExperimentalConditionGui = new VariableExperimentalConditionGui(excelFileReader);
     }
 
     /**
@@ -101,43 +107,35 @@ public class FileFormater {
         switch (fileType) {
             case "xlsx":
                 LOGGER.info("Reading xlsx file: " + fileName);
-                getParametersPanel();
+                displayDataPanels();
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXlsx = new XSSFWorkbook();
-                addInteractionType();
-                addAllFeatures();
-                addInteractionParameters();
+                addDataToParticipants();
                 writeToExcel(participants, modifiedFileName + ".xlsx", header, workbookXlsx);
                 newFileName = modifiedFileName + ".xlsx";
                 break;
             case "xls":
                 LOGGER.info("Reading xls file: " + fileName);
-                getParametersPanel();
+                displayDataPanels();
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXls = new HSSFWorkbook();
-                addInteractionType();
-                addAllFeatures();
-                addInteractionParameters();
+                addDataToParticipants();
                 writeToExcel(participants, modifiedFileName + ".xls", header, workbookXls);
                 newFileName = modifiedFileName + ".xls";
                 break;
             case "csv":
                 LOGGER.info("Reading csv file: " + fileName);
-                getParametersPanel();
+                displayDataPanels();
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
-                addInteractionType();
-                addAllFeatures();
-                addInteractionParameters();
+                addDataToParticipants();
                 writeToFile(participants, modifiedFileName + ".csv", ',', header);
                 newFileName = modifiedFileName + ".csv";
                 break;
             case "tsv":
                 LOGGER.info("Reading tsv file: " + fileName);
+                displayDataPanels();
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
-                getParametersPanel();
-                addInteractionType();
-                addAllFeatures();
-                addInteractionParameters();
+                addDataToParticipants();
                 writeToFile(participants, modifiedFileName + ".tsv", '\t', header);
                 newFileName = modifiedFileName + ".tsv";
                 break;
@@ -148,6 +146,18 @@ public class FileFormater {
         participants.clear();
         XmlMakerUtils.showInfoDialog("File modified: " + modifiedFileName);
         excelFileReader.selectFileOpener(newFileName);
+    }
+
+    private void displayDataPanels(){
+        getVariableExperimentalConditionsPanel();
+        getParametersPanel();
+    }
+
+    private void addDataToParticipants(){
+        addInteractionType();
+        addAllFeatures();
+        addInteractionParameters();
+        addVariableConditions();
     }
 
     /**
@@ -523,6 +533,14 @@ public class FileFormater {
         }
     }
 
+    private void getVariableExperimentalConditionsPanel() {
+        if (addVariableExperimentalConditions) {
+
+            JPanel variableExperimentalConditionsPanel = variableExperimentalConditionGui.getVariableExperimentalConditionPanel();
+            JOptionPane.showConfirmDialog(null, variableExperimentalConditionsPanel,"Add experimental variable conditions", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        }
+    }
+
     /**
      * Adds parameter-related metadata (unit, base, exponent, type, uncertainty)
      * to each participant in the interaction dataset.
@@ -552,7 +570,7 @@ public class FileFormater {
 
                 checkAndAddToCurrentString(INTERACTION_PARAM_VALUE.name, parameter.getValueColumn(), participant);
                 checkAndAddToCurrentString(INTERACTION_PARAM_UNIT.name, parameter.getUnit(), participant);
-                checkAndAddToCurrentString(INTERACTION_PARAM_EXPONENT.name, parameter.getExponent(), participant); //todo: fetch value from file
+                checkAndAddToCurrentString(INTERACTION_PARAM_EXPONENT.name, parameter.getExponent(), participant);
                 checkAndAddToCurrentString(INTERACTION_PARAM_BASE.name, parameter.getBase(), participant);
                 checkAndAddToCurrentString(INTERACTION_PARAM_TYPE.name, parameter.getType(), participant);
                 checkAndAddToCurrentString(INTERACTION_PARAM_UNCERTAINTY.name, parameter.getUncertaintyColumn(), participant);
@@ -560,6 +578,29 @@ public class FileFormater {
             participant.put(INTERACTION_PARAM_VALUE.name, getValueFromFile(INTERACTION_PARAM_VALUE.name, participant));
             participant.put(INTERACTION_PARAM_UNCERTAINTY.name, getValueFromFile(INTERACTION_PARAM_UNCERTAINTY.name, participant));
         }
+    }
+
+    private void addVariableConditions(){
+        if (variableExperimentalConditionGui == null || variableExperimentalConditionGui.experimentalConditions == null) {
+            LOGGER.severe("Parameters GUI or parameters list is null");
+            return;
+        }
+        if (participants == null || participants.isEmpty()) {
+            LOGGER.severe("Participants list is null or empty");
+            return;
+        }
+
+        List<VariableExperimentalCondition> variableExperimentalConditions = variableExperimentalConditionGui.experimentalConditions;
+
+        for (Map<String, String> participant : participants) {
+            for  (VariableExperimentalCondition variableExperimentalCondition : variableExperimentalConditions) {
+                checkAndAddToCurrentString(EXPERIMENTAL_VARIABLE_CONDITION_DESCRIPTION.name, variableExperimentalCondition.getDescription(), participant);
+                checkAndAddToCurrentString(EXPERIMENTAL_VARIABLE_CONDITION_VALUE.name,  variableExperimentalCondition.getValueColumn(), participant);
+                checkAndAddToCurrentString(EXPERIMENTAL_VARIABLE_CONDITION_UNIT.name,  variableExperimentalCondition.getUnit(), participant);
+            }
+            participant.put(EXPERIMENTAL_VARIABLE_CONDITION_VALUE.name, getValueFromFile(EXPERIMENTAL_VARIABLE_CONDITION_VALUE.name, participant));
+        }
+
     }
 
     /**
@@ -603,7 +644,15 @@ public class FileFormater {
      */
     public String getValueFromFile(String key, Map<String, String> participant) {
         String columns = participant.get(key);
-        if (columns == null) return ";";
+        if (columns == null) return "";
+
+        if (columns.split(";").length == 0) return "";
+
+        if (columns.split(";").length == 1) {
+            String colName = columns.split(";")[0];
+            int colIndex = getColumnIndex(colName);
+            return getDataFromRow(colIndex, Integer.parseInt(participant.get(PARTICIPANT_ROW_INDEX.name)));
+        }
 
         return Arrays.stream(columns.split(";"))
                 .map(String::trim)

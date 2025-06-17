@@ -7,7 +7,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.InteractionsCreator;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.XmlInteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 
@@ -33,7 +33,7 @@ public class InteractionsCreatorGui extends JPanel {
     private final JTable table = new JTable();
 
     private final ExcelFileReader excelFileReader;
-    public final InteractionsCreator interactionsCreator;
+    public final XmlInteractionsCreator xmlInteractionsCreator;
     private List<List<String>> firstLines = new ArrayList<>();
     private boolean isUpdatingSheets = false;
 
@@ -60,7 +60,7 @@ public class InteractionsCreatorGui extends JPanel {
     public InteractionsCreatorGui(ExcelFileReader excelFileReader, InteractionWriter writer) {
         this.excelFileReader = excelFileReader;
         this.participantCreatorPanel = new JPanel(new BorderLayout());
-        this.interactionsCreator = new InteractionsCreator(excelFileReader, writer, getDataAndIndexes());
+        this.xmlInteractionsCreator = new XmlInteractionsCreator(excelFileReader, writer, getDataAndIndexes());
     }
 
     /**
@@ -86,7 +86,7 @@ public class InteractionsCreatorGui extends JPanel {
 
         sheets.addActionListener(e -> {
             if (!isUpdatingSheets) {
-                interactionsCreator.setSheetSelected(Objects.requireNonNull(sheets.getSelectedItem()).toString());
+                xmlInteractionsCreator.setSheetSelected(Objects.requireNonNull(sheets.getSelectedItem()).toString());
                 setUpColumns();
             }
         });
@@ -197,7 +197,7 @@ public class InteractionsCreatorGui extends JPanel {
         tableColumn.setPreferredWidth(150);
 
         JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
-        String defaultValue = interactionsCreator.getMostSimilarColumn(columnNames, headerValue);
+        String defaultValue = xmlInteractionsCreator.getMostSimilarColumn(columnNames, headerValue);
 
         if (columnNames.contains(defaultValue)) {
             comboBox.setSelectedItem(defaultValue);
@@ -328,7 +328,7 @@ public class InteractionsCreatorGui extends JPanel {
             tableColumn.setPreferredWidth(150);
 
             JComboBox<String> comboBox = new JComboBox<>(new Vector<>(columnNames));
-            String defaultValue = interactionsCreator.getMostSimilarColumn(columnNames, columnName);
+            String defaultValue = xmlInteractionsCreator.getMostSimilarColumn(columnNames, columnName);
 
             if (columnNames.contains(defaultValue)) {
                 comboBox.setSelectedItem(defaultValue);
@@ -424,7 +424,7 @@ public class InteractionsCreatorGui extends JPanel {
                 createInteractionDataTable();
                 addFeatureCells(value);
             });
-            interactionsCreator.setNumberOfFeature(value);
+            xmlInteractionsCreator.setNumberOfFeature(value);
         });
     }
 }

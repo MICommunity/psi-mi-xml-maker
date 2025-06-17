@@ -2,6 +2,8 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataAndMiID;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Feature;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -52,19 +54,19 @@ public class FeatureCreatorGui {
 
     private void setTypeOptions() {
         if (typeOptions.isEmpty()) {
-            typeOptions.addAll(getTermsFromOls(DataAndMiID.FEATURE_TYPE.miId));
+            typeOptions.addAll(CacheUtils.FEATURE_TYPES);
         }
     }
 
     private void setRangeTypeOptions() {
         if (rangeTypeOptions.isEmpty()) {
-            rangeTypeOptions.addAll(getTermsFromOls(DataAndMiID.FEATURE_RANGE_TYPE.miId));
+            rangeTypeOptions.addAll(CacheUtils.FEATURE_RANGE_TYPES);
         }
     }
 
     private void setRoleOptions() {
         if (roleOptions.isEmpty()) {
-            roleOptions.addAll(getTermsFromOls(DataAndMiID.FEATURE_ROLE.miId));
+            roleOptions.addAll(CacheUtils.FEATURE_ROLES);
         }
     }
 
@@ -80,6 +82,12 @@ public class FeatureCreatorGui {
         JPanel featureContainerPanel = new JPanel();
         featureContainerPanel.setLayout(new BoxLayout(featureContainerPanel, BoxLayout.Y_AXIS));
         featureMainPanel.setLayout(new BorderLayout(5, 5));
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        screenSize.width = (int) (screenSize.width * 0.9);
+        screenSize.height = (int) (screenSize.height * 0.8);
+
+        featureMainPanel.setPreferredSize(screenSize);
         featureMainPanel.add(getNumberOfFeaturesSpinner(featureContainerPanel), BorderLayout.NORTH);
         featureMainPanel.add(new JScrollPane(featureContainerPanel), BorderLayout.CENTER);
     }

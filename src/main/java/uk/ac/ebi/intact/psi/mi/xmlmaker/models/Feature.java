@@ -1,8 +1,7 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.models;
 
 import lombok.Getter;
 import lombok.Setter;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -42,7 +41,7 @@ public class Feature {
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
     public String getListAsString(List<String> list) {
-        return String.join(",", list);
+        return String.join(";", list);
     }
     public void setParametersAsString() {
         StringBuilder types = new StringBuilder();

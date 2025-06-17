@@ -10,6 +10,14 @@ import java.util.List;
 import java.util.function.Function;
 
 public enum DataTypeAndColumn {
+    //Experiment
+    EXPERIMENTAL_PREPARATION("Experimental Preparation"),
+    EXPERIMENTAL_VARIABLE_CONDITION_DESCRIPTION("Experimental variable condition description"),
+    EXPERIMENTAL_VARIABLE_CONDITION_VALUE("Experimental variable condition value"),
+    EXPERIMENTAL_VARIABLE_CONDITION_UNIT("Experimental variable condition unit"),
+    HOST_ORGANISM("Host organism"),
+
+    //Interaction
     INTERACTION_NUMBER("Interaction number", cell -> String.valueOf(cell.getNumericCellValue())),
     INTERACTION_TYPE("Interaction type"),
     INTERACTION_DETECTION_METHOD("Interaction detection method"),
@@ -22,8 +30,7 @@ public enum DataTypeAndColumn {
     INTERACTION_PARAM_EXPONENT("Interaction parameter exponent"),
     INTERACTION_PARAM_UNCERTAINTY("Interaction parameter uncertainty"),
 
-    HOST_ORGANISM("Host organism"),
-    EXPERIMENTAL_PREPARATION("Experimental Preparation"),
+    //Participant
 
     PARTICIPANT_NAME("Participant name"),
     PARTICIPANT_ID("Participant ID"),
@@ -34,27 +41,34 @@ public enum DataTypeAndColumn {
     EXPERIMENTAL_ROLE("Experimental role"),
     PARTICIPANT_IDENTIFICATION_METHOD("Participant identification method"),
     PARTICIPANT_ROW_INDEX("Participant row index"),
-
     PARTICIPANT_XREF("Participant xref"),
     PARTICIPANT_XREF_DB("Participant xref database"),
 
+    //Feature metadata
     FEATURE_SHORT_NAME("Feature short name", false),
     FEATURE_TYPE("Feature type", false),
+    FEATURE_ROLE("Feature role", false),
+
+    FEATURE_ORIGINAL_SEQUENCE("Feature original sequence", false),
+    FEATURE_NEW_SEQUENCE("Feature resulting sequence", false),
+
+    //Feature range
     FEATURE_START("Feature start", false),
     FEATURE_END("Feature end", false),
     FEATURE_RANGE_TYPE("Feature range type", false),
+
+    //Feature xref
     FEATURE_XREF("Feature xref", false),
     FEATURE_XREF_DB("Feature xref database", false),
     FEATURE_XREF_QUALIFIER("Feature xref qualifier", false),
+
+    //Feature parameter
     FEATURE_PARAM_TYPE("Feature parameter type", false),
     FEATURE_PARAM_VALUE("Feature parameter value", false),
     FEATURE_PARAM_UNIT("Feature parameter unit", false),
     FEATURE_PARAM_BASE("Feature parameter base", false),
     FEATURE_PARAM_EXPONENT("Feature parameter exponent", false),
     FEATURE_PARAM_UNCERTAINTY("Feature parameter uncertainty", false),
-    FEATURE_ORIGINAL_SEQUENCE("Feature original sequence", false),
-    FEATURE_NEW_SEQUENCE("Feature resulting sequence", false),
-    FEATURE_ROLE("Feature role", false),
     ;
 
     public final String name;

@@ -3,7 +3,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui;
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.InteractionsCreator;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.XmlInteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GUIUtils;
 
@@ -20,7 +20,7 @@ import static java.awt.Toolkit.*;
  * specify a save location, select a date, and initiate the XML generation process.
  * Dependencies:
  * - InteractionWriter for handling the XML creation logic.
- * - InteractionsCreator for creating interaction data.
+ * - XmlInteractionsCreator for creating interaction data.
  * - ExcelFileReader for reading publication-related data.
  * Usage:
  * Create an instance of this class with the required dependencies and integrate
@@ -114,7 +114,7 @@ public class InteractionWriterGui {
         JLabel numberOfInteractionsLabel = new JLabel("Number of Interactions per file:");
         numberOfInteractionsField = new JTextField("1000",20);
         GUIUtils.addChangeListener(numberOfInteractionsField, change ->
-                InteractionsCreator.setMAX_INTERACTIONS_PER_FILE(Integer.parseInt(numberOfInteractionsField.getText())));
+                XmlInteractionsCreator.setMAX_INTERACTIONS_PER_FILE(Integer.parseInt(numberOfInteractionsField.getText())));
 
         saveLocationPanel.add(numberOfInteractionsLabel);
         saveLocationPanel.add(numberOfInteractionsField);

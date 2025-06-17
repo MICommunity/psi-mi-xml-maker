@@ -3,6 +3,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,56 +32,52 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
  */
 @Getter
 public class ParticipantAndInteractionCreatorGui {
+
+    //experiment details
+    private final JComboBox<String> hostOrganism = new JComboBox<>();
     private final JComboBox<String> interactionDetectionMethodCombobox = new JComboBox<>();
     private final JComboBox<String> participantDetectionMethodCombobox = new JComboBox<>();
+    @Getter private final JCheckBox addVariableExperimentalCondition = new JCheckBox("Add Variable Experimental Condition");
 
+    //interaction details
     private final JTextField interactionFigureLegend = new JTextField("Interaction Figure Legend");
+    @Getter private final JCheckBox multipleInteractionParameters = new JCheckBox("Add parameters");
 
-    private final JComboBox<String> hostOrganism = new JComboBox<>();
-
-    private final List<JComboBox<String>> baitExperimentalPreparationList = new ArrayList<>();
-    private final List<String> baitExperimentalPreparationNames = new ArrayList<>();
-
+    //bait information
+    private final JComboBox<String> baitIdDatabase = new JComboBox<>();
     private final JComboBox<String> baitBiologicalRole = new JComboBox<>();
     private final JComboBox<String> baitOrganism = new JComboBox<>();
-    private final JComboBox<String> baitIdDatabase = new JComboBox<>();
+    private final JComboBox<String> baitExpressedInOrganism = new JComboBox<>();
+    private final JSpinner numberOfBaitExperimentalPrep = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
+    private final List<JComboBox<String>> baitExperimentalPreparationList = new ArrayList<>();
+    private final List<String> baitExperimentalPreparationNames = new ArrayList<>();
+    private final JPanel baitExperimentalPreparationPanel = new JPanel(new GridLayout(2, 1));
+    FeatureCreatorGui baitFeatureCreator = new FeatureCreatorGui(this);
 
-    private final List<JComboBox<String>> preyExperimentalPreparationList = new ArrayList<>();
-    private final List<String> preyExperimentalPreparationNames = new ArrayList<>();
-
+    //prey information
+    private final JComboBox<String> preyIdDatabase = new JComboBox<>();
     private final JComboBox<String> preyBiologicalRole = new JComboBox<>();
     private final JComboBox<String> preyOrganism = new JComboBox<>();
-    private final JComboBox<String> preyIdDatabase = new JComboBox<>();
-
     private final JComboBox<String> preyExpressedInOrganism = new JComboBox<>();
-    private final JComboBox<String> baitExpressedInOrganism = new JComboBox<>();
-
-    @Getter
-    private final JSpinner numberOfBaitExperimentalPrep = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
     private final JSpinner numberOfPreyExperimentalPrep = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
-
-    private final JPanel baitExperimentalPreparationPanel = new JPanel(new GridLayout(2, 1));
+    private final List<JComboBox<String>> preyExperimentalPreparationList = new ArrayList<>();
+    private final List<String> preyExperimentalPreparationNames = new ArrayList<>();
     private final JPanel preyExperimentalPreparationPanel = new JPanel(new GridLayout(2, 1));
+    FeatureCreatorGui preyFeatureCreator = new FeatureCreatorGui(this);
 
+    //caches
+    private final List<String> dbCache = new ArrayList<>();
+    private final List<String> xrefQualifierCache = new ArrayList<>();
+
+    //UI dimensions
     private final int HEIGHT = 300;
     private final int SCREEN_WIDTH = Toolkit.getDefaultToolkit().getScreenSize().width - 100;
     private final int THIRD_WIDTH = SCREEN_WIDTH / 3;
     private final int SIXTH_WIDTH = SCREEN_WIDTH / 6;
-
     private final Dimension participantPanelDimension = new Dimension(THIRD_WIDTH, HEIGHT);
     private final Dimension experimentPanelDimension = new Dimension(SIXTH_WIDTH, HEIGHT);
 
-    private final List<String> dbCache = new ArrayList<>();
-    private final List<String> xrefQualifierCache = new ArrayList<>();
-
-    FeatureCreatorGui baitFeatureCreator = new FeatureCreatorGui(this);
-    FeatureCreatorGui preyFeatureCreator = new FeatureCreatorGui(this);
-
     private final ExcelFileReader excelFileReader;
-
-
-    @Getter
-    private final JCheckBox multipleInteractionParameters = new JCheckBox("Add parameters");
 
     public ParticipantAndInteractionCreatorGui(ExcelFileReader excelFileReader) {
         this.excelFileReader = excelFileReader;
@@ -133,7 +130,7 @@ public class ParticipantAndInteractionCreatorGui {
      * Populates the bait and prey biological role dropdowns with predefined roles.
      */
     public void setBiologicalRole() {
-        for (String termName : getTermsFromOls(DataAndMiID.BIOLOGICAL_ROLE.miId)) {
+        for (String termName : CacheUtils.BIOLOGICAL_ROLES) {
             baitBiologicalRole.addItem(termName);
             preyBiologicalRole.addItem(termName);
         }
@@ -143,8 +140,7 @@ public class ParticipantAndInteractionCreatorGui {
      * Populates the bait and prey experimental preparation dropdowns.
      */
     public void setExperimentalPreparations() {
-
-        for (String termName : getTermsFromOls(DataAndMiID.EXPERIMENTAL_PREPARATION.miId)) {
+        for (String termName : CacheUtils.EXPERIMENTAL_PREPARATIONS) {
             preyExperimentalPreparationNames.add(termName);
             baitExperimentalPreparationNames.add(termName);
         }
@@ -155,7 +151,7 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public void setInteractionDetectionMethod() {
         interactionDetectionMethodCombobox.setToolTipText("Interaction Detection Method");
-        for (String termName : getTermsFromOls(DataAndMiID.INTERACTION_DETECTION_METHOD.miId)) {
+        for (String termName : CacheUtils.INTERACTION_DETECTION_METHODS) {
             interactionDetectionMethodCombobox.addItem(termName);
         }
     }
@@ -165,7 +161,7 @@ public class ParticipantAndInteractionCreatorGui {
      */
     public void setParticipantDetectionMethod() {
         participantDetectionMethodCombobox.setToolTipText("Participant Identification Method");
-        for (String termName : getTermsFromOls(DataAndMiID.PARTICIPANT_DETECTION_METHOD.miId)) {
+        for (String termName : CacheUtils.PARTICIPANT_DETECTION_METHODS) {
             participantDetectionMethodCombobox.addItem(termName);
         }
     }
@@ -331,7 +327,7 @@ public class ParticipantAndInteractionCreatorGui {
         baitIdDatabase.addItem("gene name");
         preyIdDatabase.addItem("gene name");
 
-        for (String termName : getTermsFromOls(DataAndMiID.DATABASES.miId)) {
+        for (String termName : CacheUtils.DATABASES) {
             baitIdDatabase.addItem(termName);
             preyIdDatabase.addItem(termName);
             dbCache.add(termName);
@@ -345,7 +341,7 @@ public class ParticipantAndInteractionCreatorGui {
      * This method is typically used to preload qualifiers for xref (cross-reference) annotations.
      */
     private void setXrefQualifiers(){
-        xrefQualifierCache.addAll(getTermsFromOls(DataAndMiID.XREF_QUALIFIER.miId));
+        xrefQualifierCache.addAll(CacheUtils.XREF_QUALIFIERS);
     }
 
     //PANELS
@@ -448,7 +444,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         experimentInfoPanel.add(setComboBoxDimension(interactionDetectionMethodCombobox, INTERACTION_DETECTION_METHOD.name));
         experimentInfoPanel.add(setComboBoxDimension(participantDetectionMethodCombobox, PARTICIPANT_DETECTION_METHOD.name));
-
+        experimentInfoPanel.add(addVariableExperimentalCondition);
 
         return experimentInfoPanel;
     }

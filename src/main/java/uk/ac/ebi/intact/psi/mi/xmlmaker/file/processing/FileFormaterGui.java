@@ -46,7 +46,6 @@ public class FileFormaterGui {
         this.excelFileReader = excelFileReader;
         fileFormater = new FileFormater(excelFileReader);
         this.participantAndInteractionCreatorGui = new ParticipantAndInteractionCreatorGui(excelFileReader);
-
     }
 
     /**
@@ -255,6 +254,7 @@ public class FileFormaterGui {
         JButton fileFormaterButton = new JButton("Format file");
         fileFormaterButton.addActionListener(e -> {
             Map<String, String> interactionData = participantAndInteractionCreatorGui.getParticipantDetails();
+            fileFormater.setAddVariableExperimentalConditions(participantAndInteractionCreatorGui.getAddVariableExperimentalCondition().isSelected());
             fileFormater.setAddParameters(participantAndInteractionCreatorGui.getMultipleInteractionParameters().isSelected());
             fileFormater.setBaitFeatures(participantAndInteractionCreatorGui.getBaitFeatureCreator().getBaitFeatures());
             fileFormater.setPreyFeatures(participantAndInteractionCreatorGui.getPreyFeatureCreator().getPreyFeatures());

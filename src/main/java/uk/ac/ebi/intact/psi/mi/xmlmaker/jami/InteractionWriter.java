@@ -30,7 +30,7 @@ import java.util.*;
  * based on interaction data. It utilizes the JAMI library for creating XML files
  * and provides functionality to write interaction data to XML files.
  * Dependencies:
- * - InteractionsCreator for creating and handling interaction objects.
+ * - XmlInteractionsCreator for creating and handling interaction objects.
  * - ExcelFileReader for reading the publication ID from an external file.
  * - XmlMakerUtils for utility functions.
  * Usage:

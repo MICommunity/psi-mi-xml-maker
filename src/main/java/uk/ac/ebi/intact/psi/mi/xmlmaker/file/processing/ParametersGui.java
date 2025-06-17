@@ -2,6 +2,8 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataAndMiID;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
+
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
 
 import javax.swing.*;
@@ -135,14 +137,14 @@ public class ParametersGui {
      * Initializes the cache of available parameter types from OLS.
      */
     private void setupParametersTypeCache() {
-        parametersTypeCache.addAll(getTermsFromOls(DataAndMiID.PARAMETER_TYPE.miId));
+        parametersTypeCache.addAll(CacheUtils.PARAMETER_TYPES);
     }
 
     /**
      * Initializes the cache of available units from OLS.
      */
     private void setupUnitCache() {
-        parametersUnitCache.addAll(getTermsFromOls(DataAndMiID.UNIT.miId));
+        parametersUnitCache.addAll(CacheUtils.UNITS);
     }
 
     /**
