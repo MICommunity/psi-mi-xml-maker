@@ -8,6 +8,7 @@ import lombok.Setter;
 public class VariableExperimentalCondition {
     String description;
     String unit;
+
     String valueColumn;
 
     public VariableExperimentalCondition() {}

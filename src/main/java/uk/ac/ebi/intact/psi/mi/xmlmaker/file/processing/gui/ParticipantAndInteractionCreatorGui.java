@@ -1,8 +1,9 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui;
 
 import lombok.Getter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.*;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
 
 import javax.swing.*;
@@ -77,10 +78,10 @@ public class ParticipantAndInteractionCreatorGui {
     private final Dimension participantPanelDimension = new Dimension(THIRD_WIDTH, HEIGHT);
     private final Dimension experimentPanelDimension = new Dimension(SIXTH_WIDTH, HEIGHT);
 
-    private final ExcelFileReader excelFileReader;
+    private final FileReader fileReader;
 
-    public ParticipantAndInteractionCreatorGui(ExcelFileReader excelFileReader) {
-        this.excelFileReader = excelFileReader;
+    public ParticipantAndInteractionCreatorGui(FileReader fileReader) {
+        this.fileReader = fileReader;
     }
 
     /**

@@ -1,8 +1,8 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFormaterGui;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.InteractionWriterGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.FileFormaterGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.SavingOptionsGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.VersionUtils;
@@ -37,10 +37,10 @@ public class XmlMakerGui {
     private static final int FRAME_WIDTH = getDefaultToolkit().getScreenSize().width - 50;
     private static final int FRAME_HEIGHT = getDefaultToolkit().getScreenSize().height - 50;
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGui.class.getName());
-    private final ExcelFileReader excelFileReader;
+    private final FileReader fileReader;
     private final UniprotMapperGui uniprotMapperGui;
     private final InteractionsCreatorGui interactionsCreatorGui;
-    private final InteractionWriterGui interactionWriterGui;
+    private final SavingOptionsGui savingOptionsGui;
     private final LoadingSpinner loadingSpinner;
     private final FileFormaterGui fileFormaterGui;
 
@@ -49,13 +49,13 @@ public class XmlMakerGui {
      */
     public XmlMakerGui() {
         this.loadingSpinner = new LoadingSpinner();
-        this.excelFileReader = new ExcelFileReader();
-        this.uniprotMapperGui = new UniprotMapperGui(excelFileReader, loadingSpinner);
-        this.fileFormaterGui = new FileFormaterGui(excelFileReader);
-        this.interactionWriterGui = new InteractionWriterGui(excelFileReader);
-        this.interactionsCreatorGui = new InteractionsCreatorGui(excelFileReader,
-                interactionWriterGui.getInteractionWriter());
-        excelFileReader.registerInputSelectedEventHandler(event -> setUpSheets());
+        this.fileReader = new FileReader();
+        this.uniprotMapperGui = new UniprotMapperGui(fileReader, loadingSpinner);
+        this.fileFormaterGui = new FileFormaterGui(fileReader);
+        this.savingOptionsGui = new SavingOptionsGui(fileReader);
+        this.interactionsCreatorGui = new InteractionsCreatorGui(fileReader,
+                savingOptionsGui.getXmlFileWriter());
+        fileReader.registerInputSelectedEventHandler(event -> setUpSheets());
     }
 
     /**
@@ -108,7 +108,7 @@ public class XmlMakerGui {
         saveButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         contentPanel.add(saveButton);
 
-        excelFileReader.registerInputSelectedEventHandler(event -> setUpSheets());
+        fileReader.registerInputSelectedEventHandler(event -> setUpSheets());
 
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -141,7 +141,7 @@ public class XmlMakerGui {
      * @return The JLabel showing the selected file.
      */
     private JLabel createFileLabel() {
-        return excelFileReader.getFileLabel();
+        return fileReader.getFileLabel();
     }
 
     /**
@@ -187,7 +187,7 @@ public class XmlMakerGui {
      * @return The JPanel for PSI-MI XML file creation.
      */
     private JPanel createSaveOptionsPanel() {
-        JPanel psiXmlMakerPanel = interactionWriterGui.createPsiMiXmlMakerPanel();
+        JPanel psiXmlMakerPanel = savingOptionsGui.createPsiMiXmlMakerPanel();
         psiXmlMakerPanel.setMaximumSize(new Dimension(FRAME_WIDTH, 200));
         psiXmlMakerPanel.setBorder(new TitledBorder("5. Save options"));
         return psiXmlMakerPanel;
@@ -253,7 +253,7 @@ public class XmlMakerGui {
             XmlMakerUtils.showErrorDialog("Unsupported file type. Please provide a valid file (.xls, .xlsx, .csv, or .tsv).");
             return;
         }
-        excelFileReader.selectFileOpener(filePath);
+        fileReader.selectFileOpener(filePath);
         setUpSheets();
     }
 
@@ -329,8 +329,8 @@ public class XmlMakerGui {
         publicationTitleField.setEditable(true);
         JButton textValidationButton = new JButton("Submit");
         textValidationButton.addActionListener(e -> {
-            excelFileReader.setPublicationId(publicationTitleField.getText());
-            excelFileReader.setPublicationDb(publicationDatabase.getText());
+            fileReader.setPublicationId(publicationTitleField.getText());
+            fileReader.setPublicationDb(publicationDatabase.getText());
         });
         pubmedInputPanel.add(publicationTitleField);
         pubmedInputPanel.add(publicationDatabase);
@@ -365,7 +365,7 @@ public class XmlMakerGui {
         JButton saveButton = new JButton("Create XML file(s)");
 
         saveButton.addActionListener(e -> {
-            if (excelFileReader.getPublicationId() == null) {
+            if (fileReader.getPublicationId() == null) {
                 XmlMakerUtils.showErrorDialog("Please provide a valid publication ID.");
                 return;
             }
@@ -458,14 +458,14 @@ public class XmlMakerGui {
      * different components of the application, ensuring that all relevant UI elements are
      * updated to reflect the available sheets.
      * This method performs the following steps:
-     * - Clears the existing sheet list in the `excelFileReader`.
+     * - Clears the existing sheet list in the `fileReader`.
      * - Retrieves the updated list of sheets from the Excel file using the `getSheets()` method.
      * - Calls the `setUpSheets()` method in the `fileFormaterGui`, `uniprotMapperGui`, and
      *   `interactionsCreatorGui` components to ensure that all related parts of the UI are updated.
      */
     private void setUpSheets() {
-        excelFileReader.sheets.clear();
-        excelFileReader.getSheets();
+        fileReader.sheets.clear();
+        fileReader.getSheets();
         fileFormaterGui.setUpSheets();
         uniprotMapperGui.setUpSheets();
         interactionsCreatorGui.setUpSheets();

@@ -4,9 +4,9 @@ import lombok.Getter;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.XmlFileWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.XmlInteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 /**
  * This class provides a graphical user interface for creating interaction participants
- * from an Excel file using the Apache POI library. It integrates with {@link ExcelFileReader}
+ * from an Excel file using the Apache POI library. It integrates with {@link FileReader}
  * to read data from Excel sheets and supports the selection of columns to process
  * for interaction creation.
  * The class extends {@link JPanel} and includes a table for displaying and configuring
@@ -28,11 +28,10 @@ import java.util.stream.Collectors;
  */
 public class InteractionsCreatorGui extends JPanel {
     private final JComboBox<String> sheets = new JComboBox<>();
-    private final List<JComboBox<String>> columnsList = new ArrayList<>();
     private final List<String> columnNames = new ArrayList<>();
     private final JTable table = new JTable();
 
-    private final ExcelFileReader excelFileReader;
+    private final FileReader fileReader;
     public final XmlInteractionsCreator xmlInteractionsCreator;
     private List<List<String>> firstLines = new ArrayList<>();
     private boolean isUpdatingSheets = false;
@@ -54,13 +53,13 @@ public class InteractionsCreatorGui extends JPanel {
     /**
      * Constructs an instance of {@code InteractionsCreatorGui}.
      *
-     * @param excelFileReader  The Excel file reader used to read data.
+     * @param fileReader  The Excel file reader used to read data.
      * @param writer Interaction writer
      */
-    public InteractionsCreatorGui(ExcelFileReader excelFileReader, InteractionWriter writer) {
-        this.excelFileReader = excelFileReader;
+    public InteractionsCreatorGui(FileReader fileReader, XmlFileWriter writer) {
+        this.fileReader = fileReader;
         this.participantCreatorPanel = new JPanel(new BorderLayout());
-        this.xmlInteractionsCreator = new XmlInteractionsCreator(excelFileReader, writer, getDataAndIndexes());
+        this.xmlInteractionsCreator = new XmlInteractionsCreator(fileReader, writer, getDataAndIndexes());
     }
 
     /**
@@ -102,7 +101,7 @@ public class InteractionsCreatorGui extends JPanel {
     }
 
     /**
-     * Populates the sheets combo box with available sheet names from the {@code ExcelFileReader}.
+     * Populates the sheets combo box with available sheet names from the {@code FileReader}.
      * If no sheets are found, the combo box is disabled and a default placeholder is set.
      * Otherwise, the combo box is enabled and updated with the available sheets.
      * Events are temporarily suppressed using {@code isUpdatingSheets} to prevent unintended triggers.
@@ -110,7 +109,7 @@ public class InteractionsCreatorGui extends JPanel {
     public void setUpSheets() {
         isUpdatingSheets = true; // Suppress events
 
-        if (excelFileReader.sheets.isEmpty()) {
+        if (fileReader.sheets.isEmpty()) {
             sheets.setEnabled(false);
             sheets.setSelectedIndex(0);
             sheets.addItem("Select sheet");
@@ -121,7 +120,7 @@ public class InteractionsCreatorGui extends JPanel {
             sheets.setEnabled(true);
             sheets.addItem("Select sheet");
             sheets.setToolTipText("Select sheet");
-            for (String sheetName : excelFileReader.sheets) {
+            for (String sheetName : fileReader.sheets) {
                 sheets.addItem(sheetName);
             }
         }
@@ -133,15 +132,14 @@ public class InteractionsCreatorGui extends JPanel {
      * Sets up the columns for the currently selected sheet.
      */
     public void setUpColumns() {
-        columnsList.clear();
         columnNames.clear();
         if (sheets.isEnabled()) {
             String selectedSheet = (String) sheets.getSelectedItem();
             if (selectedSheet != null && !selectedSheet.equals("Select sheet")) {
-                columnNames.addAll(excelFileReader.getColumns(selectedSheet));
+                columnNames.addAll(fileReader.getColumns(selectedSheet));
             }
         } else {
-            columnNames.addAll(excelFileReader.getColumns(""));
+            columnNames.addAll(fileReader.getColumns(""));
         }
         createInteractionDataTable();
     }
@@ -156,9 +154,9 @@ public class InteractionsCreatorGui extends JPanel {
         String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
 
-        if(excelFileReader.getCurrentFilePath() != null) {
+        if(fileReader.getCurrentFilePath() != null) {
             String sheetName = Objects.requireNonNull(sheets.getSelectedItem(), "Sheet selection is null").toString();
-            firstLines = excelFileReader.getFileFirstLines(sheetName, rows);
+            firstLines = fileReader.getFileFirstLines(sheetName, rows);
         }
 
         Object[][] data = new Object[rows][cols];
@@ -206,7 +204,6 @@ public class InteractionsCreatorGui extends JPanel {
         }
 
         comboBox.addActionListener(e -> setUpPreviewRows(columnIndex, headerValue));
-        columnsList.add(comboBox);
 
         tableColumn.setCellEditor(new DefaultCellEditor(comboBox) {
             @Override
@@ -255,10 +252,10 @@ public class InteractionsCreatorGui extends JPanel {
      */
     public Map<String, Integer> getDataAndIndexes() {
         List<String> tableColumnsNames = getTableColumnNames();
-        if (excelFileReader.getWorkbook() == null) {
+        if (fileReader.getWorkbook() == null) {
             getDataAndIndexesSeparatedFile(tableColumnsNames);
         } else {
-            Sheet sheet = excelFileReader.getWorkbook().getSheetAt(sheets.getSelectedIndex()-1);
+            Sheet sheet = fileReader.getWorkbook().getSheetAt(sheets.getSelectedIndex()-1);
             getDataAndIndexesWorkbook(tableColumnsNames, sheet);
         }
         return dataAndIndexes;
@@ -276,7 +273,7 @@ public class InteractionsCreatorGui extends JPanel {
             for (int j = 0; j < row.getLastCellNum(); j++) {
                 Cell cell = row.getCell(j);
                 if (table.getValueAt(0, i).equals("No data")) {
-                    dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
+                    dataAndIndexes.put(tableColumnsNames.get(i), fileReader.fileData.size() + 1);
                 }
                 if (FileUtils.getCellValueAsString(cell).equals(table.getValueAt(0, i).toString())) {
                     dataAndIndexes.put(tableColumnsNames.get(i), cell.getColumnIndex());
@@ -293,9 +290,9 @@ public class InteractionsCreatorGui extends JPanel {
     private void getDataAndIndexesSeparatedFile(List<String> tableColumnsNames){
         for (int i = 0; i < table.getColumnCount(); i++) {
             if (Objects.equals(table.getValueAt(0, i).toString(), "No data")){
-                dataAndIndexes.put(tableColumnsNames.get(i), excelFileReader.fileData.size() + 1);
+                dataAndIndexes.put(tableColumnsNames.get(i), fileReader.fileData.size() + 1);
             } else {
-                int index = excelFileReader.fileData.indexOf(table.getValueAt(0, i).toString());
+                int index = fileReader.fileData.indexOf(table.getValueAt(0, i).toString());
                 dataAndIndexes.put(tableColumnsNames.get(i), index);
             }
         }
@@ -336,7 +333,6 @@ public class InteractionsCreatorGui extends JPanel {
             }
 
             comboBox.addActionListener(e -> setUpPreviewRows(columnIndex, columnName));
-            columnsList.add(comboBox);
 
             tableColumn.setCellEditor(new DefaultCellEditor(comboBox) {
                 @Override
@@ -378,7 +374,7 @@ public class InteractionsCreatorGui extends JPanel {
      * @throws IndexOutOfBoundsException If the comboBoxIndex is out of bounds for the table.
      */
     public void setUpPreviewRows(int comboBoxIndex, String columnName) {
-        if (excelFileReader.getCurrentFilePath() == null) {
+        if (fileReader.getCurrentFilePath() == null) {
             return;
         }
 

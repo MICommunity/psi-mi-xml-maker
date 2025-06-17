@@ -29,13 +29,13 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * The {@code ExcelFileReader} class provides functionality for reading, processing,
+ * The {@code FileReader} class provides functionality for reading, processing,
  * and modifying Excel (XLS, XLSX) and delimited text files (CSV, TSV).
  * It integrates with UniprotMapper and MoleculeSetChecker to validate and update data.
  */
-public class ExcelFileReader  {
+public class FileReader {
 
-    private static final Logger LOGGER = Logger.getLogger(ExcelFileReader.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(FileReader.class.getName());
 
     // Dependencies
 
@@ -67,9 +67,9 @@ public class ExcelFileReader  {
     @Getter private final List<String> proteinsPartOfMoleculeSet = new ArrayList<>();
 
     public List<String> fileData;
-    public List<String> sheets = new ArrayList<>();
+    public final List<String> sheets = new ArrayList<>();
 
-    public ExcelFileReader() {
+    public FileReader() {
         this.fileName = null;
         this.currentFileLabel = new JLabel("No file selected");
     }

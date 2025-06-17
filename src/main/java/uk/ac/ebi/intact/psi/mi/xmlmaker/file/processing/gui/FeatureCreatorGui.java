@@ -1,7 +1,7 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui;
 
 import lombok.Getter;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataAndMiID;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Feature;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
 
@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -72,8 +73,8 @@ public class FeatureCreatorGui {
 
     public JPanel getFeatureMainPanel(boolean isBait) {
         this.bait = isBait;
-        ExcelFileReader excelFileReader = participantAndInteractionCreatorGui.getExcelFileReader();
-        this.fileColumns = excelFileReader.getColumns(excelFileReader.sheetSelectedUpdate);
+        FileReader fileReader = participantAndInteractionCreatorGui.getFileReader();
+        this.fileColumns = fileReader.getColumns(fileReader.getSheetSelectedUpdate());
         createFeaturesContainerPanel();
         return featureMainPanel;
     }
@@ -313,8 +314,8 @@ public class FeatureCreatorGui {
         xrefPanel.setLayout(new BorderLayout(5, 5));
         xrefPanel.setBorder(BorderFactory.createTitledBorder("Cross-reference"));
 
-        ExcelFileReader excelFileReader = participantAndInteractionCreatorGui.getExcelFileReader();
-        ParametersGui parametersGui = new ParametersGui(excelFileReader);
+        FileReader fileReader = participantAndInteractionCreatorGui.getFileReader();
+        ParametersGui parametersGui = new ParametersGui(fileReader);
 
         Feature currentFeature = bait ? baitFeatures.get(featureIndex) : preyFeatures.get(featureIndex);
 
@@ -338,7 +339,7 @@ public class FeatureCreatorGui {
             currentFeature.setInduceInteractionParameters(addParametersToInteractionButton.isSelected());
             JPanel parametersPanel = parametersGui.parametersContainer();
             JOptionPane.showConfirmDialog(null, parametersPanel,"Add parameters", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-            currentFeature.setParameters(parametersGui.parameters);
+            currentFeature.setParameters(parametersGui.getParameters());
             currentFeature.setParametersAsString();
         });
         return addParametersToInteractionButton;
@@ -378,8 +379,9 @@ public class FeatureCreatorGui {
 
         xrefDbComboBox.addActionListener(e -> {
             String selected = (String) xrefDbComboBox.getSelectedItem();
-            currentFeature.getXrefDb().set(xrefIndex,
-                    tooltipText.equals(selected) ? "" : selected);
+            currentFeature.setXrefDb(Collections.singletonList(tooltipText.equals(selected) ? "" : selected));
+//            currentFeature.getXrefDb().set(xrefIndex, tooltipText.equals(selected) ? "" : selected);
+            System.out.println(currentFeature.getXrefDb().get(xrefIndex));
         });
 
         xrefDbComboBox.revalidate();

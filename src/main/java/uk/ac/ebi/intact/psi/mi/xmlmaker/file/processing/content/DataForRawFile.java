@@ -1,8 +1,8 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content;
 
 import lombok.Getter;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.*;
 
 /**
  * The {@code DataForRawFile} enum is representing all the columns added to the formatted file.

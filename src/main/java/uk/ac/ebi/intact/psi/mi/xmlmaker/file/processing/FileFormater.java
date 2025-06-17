@@ -13,8 +13,10 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.*;
 
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.ParametersGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.VariableExperimentalConditionGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Feature;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.VariableExperimentalCondition;
@@ -40,14 +42,14 @@ import java.util.stream.Collectors;
  *
  * <p>Example usage:</p>
  * <pre>
- *     FileFormater fileFormater = new FileFormater(excelFileReader);
+ *     FileFormater fileFormater = new FileFormater(fileReader);
  *     fileFormater.selectFileFormater("data.xlsx", 0, 1, "Sheet1", true);
  * </pre>
  */
 @Getter
 @Setter
 public class FileFormater {
-    final ExcelFileReader excelFileReader;
+    final FileReader fileReader;
 
     private static final Logger LOGGER = Logger.getLogger(FileFormater.class.getName());
 
@@ -70,14 +72,14 @@ public class FileFormater {
     private final Map<String, Integer> participantCountMap = new HashMap<>();
 
     /**
-     * Constructs a FileFormater object with an ExcelFileReader.
+     * Constructs a FileFormater object with an FileReader.
      *
-     * @param excelFileReader The Excel file reader used to read input files.
+     * @param fileReader The Excel file reader used to read input files.
      */
-    public FileFormater(ExcelFileReader excelFileReader) {
-        this.excelFileReader = excelFileReader;
-        this.parametersGui  = new ParametersGui(excelFileReader);
-        this.variableExperimentalConditionGui = new VariableExperimentalConditionGui(excelFileReader);
+    public FileFormater(FileReader fileReader) {
+        this.fileReader = fileReader;
+        this.parametersGui  = new ParametersGui(fileReader);
+        this.variableExperimentalConditionGui = new VariableExperimentalConditionGui(fileReader);
     }
 
     /**
@@ -145,7 +147,7 @@ public class FileFormater {
         }
         participants.clear();
         XmlMakerUtils.showInfoDialog("File modified: " + modifiedFileName);
-        excelFileReader.selectFileOpener(newFileName);
+        fileReader.selectFileOpener(newFileName);
     }
 
     private void displayDataPanels(){
@@ -230,7 +232,7 @@ public class FileFormater {
                                           boolean binary, int baitNameColumnIndex,
                                           int preyNameColumnIndex) {
 
-        Iterator<List<String>> iterator = excelFileReader.readFileWithSeparator();
+        Iterator<List<String>> iterator = fileReader.readFileWithSeparator();
 
         formatFile(iterator,
                 row -> row.get(baitColumnIndex),
@@ -255,7 +257,7 @@ public class FileFormater {
                                 String sheetSelected, boolean binary,
                                 int baitNameColumnIndex, int preyNameColumnIndex) {
 
-        Iterator<Row> iterator = excelFileReader.readWorkbookSheet(sheetSelected);
+        Iterator<Row> iterator = fileReader.readWorkbookSheet(sheetSelected);
 
         formatFile(iterator,
                 row -> FileUtils.getCellValueAsString(row.getCell(baitColumnIndex)),
@@ -533,9 +535,12 @@ public class FileFormater {
         }
     }
 
+    /**
+     * Displays a dialog box for the user to enter interaction variable experimental conditions definitions.
+     * This is triggered if the `addVariableExperimentalConditions` flag is true.
+     */
     private void getVariableExperimentalConditionsPanel() {
         if (addVariableExperimentalConditions) {
-
             JPanel variableExperimentalConditionsPanel = variableExperimentalConditionGui.getVariableExperimentalConditionPanel();
             JOptionPane.showConfirmDialog(null, variableExperimentalConditionsPanel,"Add experimental variable conditions", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         }
@@ -550,17 +555,17 @@ public class FileFormater {
      * </p>
      */
     private void addInteractionParameters() {
-        if (parametersGui == null || parametersGui.parameters == null) {
+        if (parametersGui == null || parametersGui.getParameters().isEmpty()) {
             LOGGER.severe("Parameters GUI or parameters list is null");
             return;
         }
 
-        if (participants == null || participants.isEmpty()) {
+        if (participants.isEmpty()) {
             LOGGER.severe("Participants list is null or empty");
             return;
         }
 
-        List<Parameter> parameters = parametersGui.parameters;
+        List<Parameter> parameters = parametersGui.getParameters();
 
         for (Map<String, String> participant : participants) {
             if (participant == null) continue;
@@ -580,17 +585,21 @@ public class FileFormater {
         }
     }
 
+    /**
+     * Adds variableExperimentalCondition-related metadata
+     * to each participant in the interaction dataset.
+     */
     private void addVariableConditions(){
-        if (variableExperimentalConditionGui == null || variableExperimentalConditionGui.experimentalConditions == null) {
+        if (variableExperimentalConditionGui == null || variableExperimentalConditionGui.getExperimentalConditions().isEmpty()) {
             LOGGER.severe("Parameters GUI or parameters list is null");
             return;
         }
-        if (participants == null || participants.isEmpty()) {
+        if (participants.isEmpty()) {
             LOGGER.severe("Participants list is null or empty");
             return;
         }
 
-        List<VariableExperimentalCondition> variableExperimentalConditions = variableExperimentalConditionGui.experimentalConditions;
+        List<VariableExperimentalCondition> variableExperimentalConditions = variableExperimentalConditionGui.getExperimentalConditions();
 
         for (Map<String, String> participant : participants) {
             for  (VariableExperimentalCondition variableExperimentalCondition : variableExperimentalConditions) {
@@ -673,7 +682,7 @@ public class FileFormater {
      * @return The index of the column, or -1 if not found.
      */
     private int getColumnIndex(String columnName){
-        List<String> columns = excelFileReader.getColumns(excelFileReader.sheetSelectedUpdate);
+        List<String> columns = fileReader.getColumns(fileReader.sheetSelectedUpdate);
         return columns.indexOf(columnName);
     }
 
@@ -685,8 +694,8 @@ public class FileFormater {
      * @return The cell value as a string, or an empty string if not found.
      */
     private String getDataFromRow(int columnIndex, int rowIndex) {
-        if (excelFileReader.getWorkbook() != null) {
-            Sheet sheet = excelFileReader.getWorkbook().getSheet(excelFileReader.sheetSelectedUpdate);
+        if (fileReader.getWorkbook() != null) {
+            Sheet sheet = fileReader.getWorkbook().getSheet(fileReader.sheetSelectedUpdate);
             Row row = sheet.getRow(rowIndex);
             if (row == null || columnIndex < 0) {
                 return "";
@@ -697,8 +706,8 @@ public class FileFormater {
             } else {
                 return "";
             }
-        } else if (excelFileReader.readFileWithSeparator() != null) {
-            Iterator<List<String>> iterator = excelFileReader.readFileWithSeparator();
+        } else if (fileReader.readFileWithSeparator() != null) {
+            Iterator<List<String>> iterator = fileReader.readFileWithSeparator();
             int currentRow = 0;
             while (iterator.hasNext()) {
                 List<String> row = iterator.next();

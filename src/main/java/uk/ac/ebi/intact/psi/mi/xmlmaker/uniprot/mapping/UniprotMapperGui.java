@@ -3,7 +3,7 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import javax.swing.*;
 import java.awt.*;
 import java.util.logging.Logger;
@@ -20,18 +20,18 @@ public class UniprotMapperGui extends JPanel {
     private final JComboBox<String> idColumn = new JComboBox<>();
     private final JComboBox<String> organismColumn = new JComboBox<>();
     private final JComboBox<String> idDbColumn = new JComboBox<>();
-    private final ExcelFileReader excelFileReader;
+    private final FileReader fileReader;
     private static final Logger LOGGER = Logger.getLogger(UniprotMapperGui.class.getName());
     private final LoadingSpinner loadingSpinner;
     private boolean isUpdatingSheets = false;
 
     /**
      * Constructs a new instance of the UniprotMapperGui class.
-     * @param excelFileReader The ExcelFileReader instance to interact with the Excel file.
+     * @param fileReader The FileReader instance to interact with the Excel file.
      * @param loadingSpinner The loading spinner for display
      */
-    public UniprotMapperGui(ExcelFileReader excelFileReader, LoadingSpinner loadingSpinner) {
-        this.excelFileReader = excelFileReader;
+    public UniprotMapperGui(FileReader fileReader, LoadingSpinner loadingSpinner) {
+        this.fileReader = fileReader;
         this.loadingSpinner = loadingSpinner;
     }
 
@@ -96,7 +96,7 @@ public class UniprotMapperGui extends JPanel {
         isUpdatingSheets = true; // Suppress events
         setupComboBoxDefaults();
 
-        if (excelFileReader.sheets.isEmpty()) {
+        if (fileReader.sheets.isEmpty()) {
             sheets.addItem("Select sheet");
             sheets.setEnabled(false);
             sheets.setSelectedIndex(0);
@@ -105,7 +105,7 @@ public class UniprotMapperGui extends JPanel {
             sheets.removeAllItems();
             sheets.setEnabled(true);
             sheets.addItem("Select sheet");
-            for (String sheetName : excelFileReader.sheets) {
+            for (String sheetName : fileReader.sheets) {
                 sheets.addItem(sheetName);
             }
         }
@@ -133,7 +133,7 @@ public class UniprotMapperGui extends JPanel {
         if (sheets.isEnabled()) {
             selectedSheet = (String) sheets.getSelectedItem();
         }
-        for (String columnName : excelFileReader.getColumns(selectedSheet)) {
+        for (String columnName : fileReader.getColumns(selectedSheet)) {
             idColumn.addItem(columnName);
             organismColumn.addItem(columnName);
             idDbColumn.addItem(columnName);
@@ -196,9 +196,9 @@ public class UniprotMapperGui extends JPanel {
      */
     private void processSheet(String sheetSelected, String idColumn, int idDbColumnIndex, int organismColumnIndex) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
-            if (!excelFileReader.getUniprotIdNotFound().isEmpty()) {
-                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
+            fileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
+            if (!fileReader.getUniprotIdNotFound().isEmpty()) {
+                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + fileReader.getUniprotIdNotFound());
             }
             XmlMakerUtils.showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
@@ -214,9 +214,9 @@ public class UniprotMapperGui extends JPanel {
      */
     private void processFileWithoutSheet(String idColumn, int idDbColumn, int organismColumn) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
-            if (!excelFileReader.getUniprotIdNotFound().isEmpty()) {
-                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
+            fileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
+            if (!fileReader.getUniprotIdNotFound().isEmpty()) {
+                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + fileReader.getUniprotIdNotFound());
             }
             XmlMakerUtils.showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
@@ -229,8 +229,8 @@ public class UniprotMapperGui extends JPanel {
      * If any proteins are part of a molecule set, they are shown in a comma-separated list.
      */
     private void showMoleculeSetDialog() {
-        if (!excelFileReader.getProteinsPartOfMoleculeSet().isEmpty()) {
-            String participantsList = String.join(", ", excelFileReader.getProteinsPartOfMoleculeSet());
+        if (!fileReader.getProteinsPartOfMoleculeSet().isEmpty()) {
+            String participantsList = String.join(", ", fileReader.getProteinsPartOfMoleculeSet());
             JOptionPane.showMessageDialog(new JFrame(),"Those participants have been identified as part of a molecule set: " + participantsList,
                     "INFORMATION", JOptionPane.INFORMATION_MESSAGE);
         }

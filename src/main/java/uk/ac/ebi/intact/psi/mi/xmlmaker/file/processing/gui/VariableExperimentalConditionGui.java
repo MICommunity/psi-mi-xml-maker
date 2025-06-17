@@ -1,5 +1,7 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui;
 
+import lombok.Getter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.VariableExperimentalCondition;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
@@ -10,12 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class VariableExperimentalConditionGui {
-    List<String> experimentalConditionUnitCache = new ArrayList<>();
-    List<VariableExperimentalCondition> experimentalConditions = new ArrayList<>();
+    private final List<String> experimentalConditionUnitCache = new ArrayList<>();
+    @Getter
+    private final List<VariableExperimentalCondition> experimentalConditions = new ArrayList<>();
 
-    ExcelFileReader excelFileReader;
-    public VariableExperimentalConditionGui(ExcelFileReader excelFileReader) {
-        this.excelFileReader = excelFileReader;
+    final FileReader fileReader;
+    public VariableExperimentalConditionGui(FileReader fileReader) {
+        this.fileReader = fileReader;
         setupUnitCache();
 
     }
@@ -109,10 +112,10 @@ public class VariableExperimentalConditionGui {
         JComboBox<String> valueColumnComboBox = new JComboBox<>();
         XmlMakerUtils.setComboBoxDimension(valueColumnComboBox, "Value");
         valueColumnComboBox.setEditable(true);
-        for (String valueColumn: excelFileReader.getColumns(excelFileReader.sheetSelectedUpdate)){
+        for (String valueColumn: fileReader.getColumns(fileReader.getSheetSelectedUpdate())){
             valueColumnComboBox.addItem(valueColumn);
         }
-        valueColumnComboBox.addActionListener(e -> {variableExperimentalCondition.setValueColumn(valueColumnComboBox.getSelectedItem().toString());});
+        valueColumnComboBox.addActionListener(e -> variableExperimentalCondition.setValueColumn(valueColumnComboBox.getSelectedItem().toString()));
         return valueColumnComboBox;
     }
 }

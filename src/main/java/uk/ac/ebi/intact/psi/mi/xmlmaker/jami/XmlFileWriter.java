@@ -12,7 +12,7 @@ import psidev.psi.mi.jami.xml.PsiXmlVersion;
 import psidev.psi.mi.jami.xml.cache.InMemoryLightIdentityObjectCache;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -26,24 +26,24 @@ import java.nio.file.Path;
 import java.util.*;
 
 /**
- * InteractionWriter is a Spring component responsible for creating PSI-MI XML files
+ * XmlFileWriter is a Spring component responsible for creating PSI-MI XML files
  * based on interaction data. It utilizes the JAMI library for creating XML files
  * and provides functionality to write interaction data to XML files.
  * Dependencies:
  * - XmlInteractionsCreator for creating and handling interaction objects.
- * - ExcelFileReader for reading the publication ID from an external file.
+ * - FileReader for reading the publication ID from an external file.
  * - XmlMakerUtils for utility functions.
  * Usage:
  * This class is designed to be used as a Spring-managed bean.
  * Use the `interactionsWriter` method to generate and save a PSI-MI XML file.
  */
-public class InteractionWriter {
+public class XmlFileWriter {
 
-    private static final Logger LOGGER = LogManager.getLogger(InteractionWriter.class);
+    private static final Logger LOGGER = LogManager.getLogger(XmlFileWriter.class);
 
     public String publicationId;
     public String publicationDb;
-    private final ExcelFileReader excelFileReader;
+    private final FileReader fileReader;
 
     private int fileCounter = 0;
     @Getter @Setter
@@ -54,14 +54,14 @@ public class InteractionWriter {
     public final List<String> skippedParticipants = new ArrayList<>();
 
     /**
-     * Constructs an InteractionWriter instance with the given dependencies.
+     * Constructs an XmlFileWriter instance with the given dependencies.
      *
-     * @param excelFileReader an instance of ExcelFileReader
+     * @param fileReader an instance of FileReader
      */
-    public InteractionWriter(ExcelFileReader excelFileReader) {
-        this.excelFileReader = excelFileReader;
-        publicationId = this.excelFileReader.getPublicationId();
-        publicationDb = this.excelFileReader.getPublicationDb();
+    public XmlFileWriter(FileReader fileReader) {
+        this.fileReader = fileReader;
+        publicationId = this.fileReader.getPublicationId();
+        publicationDb = this.fileReader.getPublicationDb();
     }
 
     /**
@@ -94,8 +94,8 @@ public class InteractionWriter {
             return false;
         }
 
-        publicationId = excelFileReader.getPublicationId();
-        publicationDb = excelFileReader.getPublicationDb();
+        publicationId = fileReader.getPublicationId();
+        publicationDb = fileReader.getPublicationDb();
         if (publicationId == null || publicationDb == null) {
             XmlMakerUtils.showErrorDialog("Publication ID or publication database is null. Please enter the publication ID.");
             LOGGER.error("Impossible to find publication ID.");

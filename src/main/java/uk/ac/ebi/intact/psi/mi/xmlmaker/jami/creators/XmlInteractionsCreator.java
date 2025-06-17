@@ -6,11 +6,11 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.XmlFileWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.*;
 
 /**
  * The XmlInteractionsCreator class is responsible for processing Excel files or directory-based input files
@@ -52,22 +52,22 @@ public class XmlInteractionsCreator {
     private final List<Map<String, String>> dataList = new ArrayList<>();
 
     // Dependencies
-    private final ExcelFileReader excelFileReader;
-    private final InteractionWriter interactionWriter;
+    private final FileReader fileReader;
+    private final XmlFileWriter xmlFileWriter;
     private final XmlMakerUtils utils = new XmlMakerUtils();
 
     /**
      * Constructs an XmlInteractionsCreator with the specified Excel reader, Uniprot mapper GUI, and column-to-index mapping.
      *
      * @param reader           the Excel file reader for fetching data from Excel files.
-     * @param writer           the InteractionWriter
+     * @param writer           the XmlFileWriter
      * @param columnAndIndex   the mapping of column names to their corresponding indices in the dataset.
      */
-    public XmlInteractionsCreator(ExcelFileReader reader, InteractionWriter writer, Map<String, Integer> columnAndIndex) {
-        this.excelFileReader = reader;
-        this.interactionWriter = writer;
+    public XmlInteractionsCreator(FileReader reader, XmlFileWriter writer, Map<String, Integer> columnAndIndex) {
+        this.fileReader = reader;
+        this.xmlFileWriter = writer;
         this.columnAndIndex = columnAndIndex;
-        this.publicationId = excelFileReader.publicationId;
+        this.publicationId = fileReader.publicationId;
     }
 
     /**
@@ -78,7 +78,7 @@ public class XmlInteractionsCreator {
         xmlModelledInteractions.clear();
         dataList.clear();
 
-        if (excelFileReader.getWorkbook() == null) {
+        if (fileReader.getWorkbook() == null) {
             fetchDataFileWithSeparator(columnAndIndex);
         } else {
             fetchDataWithWorkbook(columnAndIndex);
@@ -99,10 +99,10 @@ public class XmlInteractionsCreator {
                 LOGGER.warning(requiredColumn.name + " is required but missing or empty.");
 
                 if (!(data.get(PARTICIPANT_NAME.name) == null) || !data.get(PARTICIPANT_NAME.name).trim().isBlank()) {
-                    interactionWriter.skippedParticipants.add(data.get(PARTICIPANT_NAME.name));
+                    xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_NAME.name));
                 }
                 else if (!(data.get(PARTICIPANT_ID.name) == null) || !data.get(PARTICIPANT_ID.name).trim().isBlank()) {
-                    interactionWriter.skippedParticipants.add(data.get(PARTICIPANT_ID.name));
+                    xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_ID.name));
                 }
                 return null;
             }
@@ -297,8 +297,8 @@ public class XmlInteractionsCreator {
      * @param columnAndIndex the mapping of column names to their corresponding indices in the dataset.
      */
     public void fetchDataFileWithSeparator(Map<String, Integer> columnAndIndex) {
-        Iterator<List<String>> data = excelFileReader.readFileWithSeparator();
-        int expectedNumberOfColumns = excelFileReader.fileData.size();
+        Iterator<List<String>> data = fileReader.readFileWithSeparator();
+        int expectedNumberOfColumns = fileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
         String currentInteractionNumber = "0";
 
@@ -349,8 +349,8 @@ public class XmlInteractionsCreator {
      * @param columnAndIndex a map containing column names and their corresponding indices.
      */
     public void fetchDataWithWorkbook(Map<String, Integer> columnAndIndex) {
-        Iterator<Row> data = excelFileReader.readWorkbookSheet(sheetSelected);
-        int expectedNumberOfColumns = excelFileReader.fileData.size();
+        Iterator<Row> data = fileReader.readWorkbookSheet(sheetSelected);
+        int expectedNumberOfColumns = fileReader.fileData.size();
         int interactionNumberColumn = columnAndIndex.get(INTERACTION_NUMBER.name);
         String currentInteractionNumber = "0";
 
@@ -493,7 +493,7 @@ public class XmlInteractionsCreator {
             Organism organism = createOrganism(hostOrganism);
 
             CvTerm detectionMethod = XmlMakerUtils.fetchTerm(interactionDetectionMethod);
-            Publication publication = new BibRef(excelFileReader.getPublicationId());
+            Publication publication = new BibRef(fileReader.getPublicationId());
             XmlExperiment experiment;
 
             if (organism == null || hostOrganism.isBlank()) {
@@ -662,7 +662,7 @@ public class XmlInteractionsCreator {
     private void launchWriting() {
         if (xmlModelledInteractions.size() >= MAX_INTERACTIONS_PER_FILE || isFileFinished) {
             LOGGER.info("Processing " + xmlModelledInteractions.size() + " interactions.");
-            interactionWriter.writeInteractions(xmlModelledInteractions);
+            xmlFileWriter.writeInteractions(xmlModelledInteractions);
             xmlModelledInteractions.clear();
         }
     }

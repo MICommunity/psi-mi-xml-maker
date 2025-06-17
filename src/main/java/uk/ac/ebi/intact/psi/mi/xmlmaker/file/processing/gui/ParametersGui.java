@@ -1,6 +1,7 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui;
 
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataAndMiID;
+import lombok.Getter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
 
@@ -16,20 +17,21 @@ import java.util.List;
  * Dynamically builds a list of {@link Parameter} configurations from an Excel sheet.
  */
 public class ParametersGui {
-    final List<String> parametersTypeCache = new ArrayList<>();
-    final List<String> parametersUnitCache = new ArrayList<>();
-    final List<Parameter> parameters = new ArrayList<>();
-    final ExcelFileReader excelFileReader;
+    private final List<String> parametersTypeCache = new ArrayList<>();
+    private final List<String> parametersUnitCache = new ArrayList<>();
+    @Getter
+    private final List<Parameter> parameters = new ArrayList<>();
+    private final FileReader fileReader;
 
     /**
      * Constructs a {@link ParametersGui} with reference to the Excel file reader.
      *
-     * @param excelFileReader The Excel file reader used to populate combo boxes.
+     * @param fileReader The Excel file reader used to populate combo boxes.
      */
-    public ParametersGui(ExcelFileReader excelFileReader) {
+    public ParametersGui(FileReader fileReader) {
         setupParametersTypeCache();
         setupUnitCache();
-        this.excelFileReader = excelFileReader;
+        this.fileReader = fileReader;
     }
 
     /**
@@ -206,6 +208,6 @@ public class ParametersGui {
      * @return A list of value column names.
      */
     private List<String> getValueColumn(){
-        return excelFileReader.getColumns(excelFileReader.sheetSelectedUpdate);
+        return fileReader.getColumns(fileReader.getSheetSelectedUpdate());
     }
 }

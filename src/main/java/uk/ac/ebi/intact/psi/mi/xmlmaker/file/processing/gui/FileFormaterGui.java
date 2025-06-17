@@ -1,5 +1,7 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui;
 
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFormater;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
@@ -24,11 +26,11 @@ import static java.awt.Toolkit.*;
  * </ul>
  *
  * This class interacts with {@code FileFormater} to process the selected file
- * and {@code ExcelFileReader} to retrieve sheet and column information.
+ * and {@code FileReader} to retrieve sheet and column information.
  *
  */
 public class FileFormaterGui {
-    final ExcelFileReader excelFileReader;
+    final FileReader fileReader;
     final FileFormater fileFormater;
     private final JComboBox<String> sheets = new JComboBox<>();
     private final JComboBox<String> baitColumn = new JComboBox<>();
@@ -42,10 +44,10 @@ public class FileFormaterGui {
 
     private static final Logger LOGGER = Logger.getLogger(FileFormaterGui.class.getName());
 
-    public FileFormaterGui(ExcelFileReader excelFileReader) {
-        this.excelFileReader = excelFileReader;
-        fileFormater = new FileFormater(excelFileReader);
-        this.participantAndInteractionCreatorGui = new ParticipantAndInteractionCreatorGui(excelFileReader);
+    public FileFormaterGui(FileReader fileReader) {
+        this.fileReader = fileReader;
+        fileFormater = new FileFormater(fileReader);
+        this.participantAndInteractionCreatorGui = new ParticipantAndInteractionCreatorGui(fileReader);
     }
 
     /**
@@ -75,14 +77,14 @@ public class FileFormaterGui {
     private boolean isUpdatingSheets = false;
 
     /**
-     * Populates the sheets combo box with available sheets from the ExcelFileReader.
+     * Populates the sheets combo box with available sheets from the FileReader.
      * If no sheets are available, disables the combo box.
      */
     public void setUpSheets() {
         isUpdatingSheets = true; // Suppress events
         setupComboBoxDefaults();
 
-        if (excelFileReader.sheets.isEmpty()) {
+        if (fileReader.sheets.isEmpty()) {
             sheets.addItem("* Select sheet");
             sheets.setToolTipText("* Select sheet");
             sheets.setEnabled(false);
@@ -93,7 +95,7 @@ public class FileFormaterGui {
             sheets.setEnabled(true);
             sheets.addItem("* Select sheet");
             sheets.setToolTipText("* Select sheet");
-            for (String sheetName : excelFileReader.sheets) {
+            for (String sheetName : fileReader.sheets) {
                 sheets.addItem(sheetName);
             }
         }
@@ -140,7 +142,7 @@ public class FileFormaterGui {
         if (sheets.isEnabled()) {
             selectedSheet = (String) sheets.getSelectedItem();
         }
-        for (String columnName : excelFileReader.getColumns(selectedSheet)) {
+        for (String columnName : fileReader.getColumns(selectedSheet)) {
             baitColumn.addItem(columnName);
             preyColumn.addItem(columnName);
             baitNameColumn.addItem(columnName);
@@ -159,7 +161,7 @@ public class FileFormaterGui {
     public void formatFile(boolean binary, Map<String, String> interactionData) {
         try {
             fileFormater.setInteractionData(interactionData);
-            fileFormater.selectFileFormater(excelFileReader.getCurrentFilePath(),
+            fileFormater.selectFileFormater(fileReader.getCurrentFilePath(),
                     baitColumn.getSelectedIndex()-1,
                     preyColumn.getSelectedIndex()-1,
                     baitNameColumn.getSelectedIndex() -1,

@@ -1,4 +1,4 @@
-package uk.ac.ebi.intact.psi.mi.xmlmaker.jami;
+package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,8 +1,8 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui;
 
 import lombok.Getter;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.XmlFileWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.XmlInteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GUIUtils;
@@ -15,34 +15,34 @@ import java.io.File;
 import static java.awt.Toolkit.*;
 
 /**
- * InteractionWriterGui provides a graphical user interface (GUI) for generating
- * PSI-MI XML files using the InteractionWriter class. The GUI allows users to
+ * SavingOptionsGui provides a graphical user interface (GUI) for generating
+ * PSI-MI XML files using the XmlFileWriter class. The GUI allows users to
  * specify a save location, select a date, and initiate the XML generation process.
  * Dependencies:
- * - InteractionWriter for handling the XML creation logic.
+ * - XmlFileWriter for handling the XML creation logic.
  * - XmlInteractionsCreator for creating interaction data.
- * - ExcelFileReader for reading publication-related data.
+ * - FileReader for reading publication-related data.
  * Usage:
  * Create an instance of this class with the required dependencies and integrate
  * the panel returned by `createPsiMiXmlMakerPanel` into a JFrame or other container.
  */
-public class InteractionWriterGui {
+public class SavingOptionsGui {
     @Getter
-    private final InteractionWriter interactionWriter;
+    private final XmlFileWriter xmlFileWriter;
     private JTextField filenameField;
     private JTextField saveLocationField;
     private JTextField numberOfInteractionsField;
-    private final ExcelFileReader excelFileReader;
+    private final FileReader fileReader;
     private JFileChooser directoryChooser;
 
     /**
-     * Constructs an InteractionWriterGui instance with the given dependencies.
+     * Constructs an SavingOptionsGui instance with the given dependencies.
      *
-     * @param excelFileReader an instance of ExcelFileReader for reading publication-related data
+     * @param fileReader an instance of FileReader for reading publication-related data
      */
-    public InteractionWriterGui(ExcelFileReader excelFileReader) {
-        this.interactionWriter = new InteractionWriter(excelFileReader);
-        this.excelFileReader = excelFileReader;
+    public SavingOptionsGui(FileReader fileReader) {
+        this.xmlFileWriter = new XmlFileWriter(fileReader);
+        this.fileReader = fileReader;
     }
 
     /**
@@ -101,11 +101,11 @@ public class InteractionWriterGui {
         filenameField = new JTextField(20);
         JLabel saveLocationLabel = new JLabel("Directory:");
         saveLocationField = new JTextField(20);
-        GUIUtils.addChangeListener(saveLocationField, change -> interactionWriter.setSaveLocation(saveLocationField.getText()));
-        GUIUtils.addChangeListener(filenameField, change -> interactionWriter.setName(filenameField.getText()));
+        GUIUtils.addChangeListener(saveLocationField, change -> xmlFileWriter.setSaveLocation(saveLocationField.getText()));
+        GUIUtils.addChangeListener(filenameField, change -> xmlFileWriter.setName(filenameField.getText()));
         JButton browseButton = getBrowseButton();
 
-        excelFileReader.registerInputSelectedEventHandler(event -> {
+        fileReader.registerInputSelectedEventHandler(event -> {
             filenameField.setText(FileUtils.getFileName(event.getSelectedFile().getName()));
             saveLocationField.setText(event.getSelectedFile().getParent());
             directoryChooser.setSelectedFile(event.getSelectedFile().getParentFile());

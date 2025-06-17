@@ -2,10 +2,10 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFormater;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.DataTypeAndColumn;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.InteractionWriter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.XmlFileWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.XmlInteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotGeneralMapper;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.UniprotResult;
@@ -13,7 +13,6 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,15 +29,15 @@ public class XmlMakerGuiTest {
     private static final String INTERACTION_ID_ATTRIBUTE = "interaction id=";
     private static final int EXPECTED_INTERACTION_COUNT = 5;
 
-    private ExcelFileReader reader;
+    private FileReader reader;
     private XmlInteractionsCreator xmlInteractionsCreator;
-    private InteractionWriter interactionWriter;
+    private XmlFileWriter xmlFileWriter;
 
     @BeforeEach
     public void setUp() {
-        reader = new ExcelFileReader();
-        interactionWriter = new InteractionWriter(reader);
-        xmlInteractionsCreator = new XmlInteractionsCreator(reader, interactionWriter, mockColumnAndIndex());
+        reader = new FileReader();
+        xmlFileWriter = new XmlFileWriter(reader);
+        xmlInteractionsCreator = new XmlInteractionsCreator(reader, xmlFileWriter, mockColumnAndIndex());
         int numberOfInitialData = DataTypeAndColumn.getInitialData().size();
         int numberOfNotInitialData = DataTypeAndColumn.getNotInitialData().size();
         int numberOfFeatures = 2;
@@ -106,8 +105,8 @@ public class XmlMakerGuiTest {
         reader.setPublicationId("1234");
         reader.setPublicationDb("pubmed");
 
-        interactionWriter.setName(fileName);
-        interactionWriter.setSaveLocation(TEST_FILE_PATH);
+        xmlFileWriter.setName(fileName);
+        xmlFileWriter.setSaveLocation(TEST_FILE_PATH);
 
         xmlInteractionsCreator.setSheetSelected("Formatted data");
         xmlInteractionsCreator.createParticipantsWithFileFormat();
@@ -122,7 +121,7 @@ public class XmlMakerGuiTest {
 
     private int countOccurrencesInFile(File file) throws IOException {
         int count = 0;
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new java.io.FileReader(file))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 count += (line.split(XmlMakerGuiTest.INTERACTION_ID_ATTRIBUTE, -1).length - 1);
@@ -160,7 +159,7 @@ public class XmlMakerGuiTest {
 
     @Test
     public void testFormaterCsv(){
-        ExcelFileReader reader = new ExcelFileReader();
+        FileReader reader = new FileReader();
         reader.selectFileOpener(TEST_FILE_PATH + "Book1.csv");
         FileFormater formater = new FileFormater(reader);
         formater.selectFileFormater(TEST_FILE_PATH + "Book1.csv", 0, 2, 1, 3, "", false);
@@ -173,7 +172,7 @@ public class XmlMakerGuiTest {
 
     @Test
     public void testFormaterExcel(){
-        ExcelFileReader reader = new ExcelFileReader();
+        FileReader reader = new FileReader();
         reader.selectFileOpener(TEST_FILE_PATH + "Book1.xlsx");
         FileFormater formater = new FileFormater(reader);
         formater.selectFileFormater(TEST_FILE_PATH + "Book1.xlsx", 0, 2, 1, 3, "Book1", false);
@@ -185,7 +184,7 @@ public class XmlMakerGuiTest {
 
     @Test
     public void testFetchFromFile(){
-        ExcelFileReader reader = new ExcelFileReader();
+        FileReader reader = new FileReader();
         reader.selectFileOpener(TEST_FILE_PATH + "Book1.xlsx");
         FileFormater formater = new FileFormater(reader);
         reader.setSheetSelectedUpdate("Book1");
