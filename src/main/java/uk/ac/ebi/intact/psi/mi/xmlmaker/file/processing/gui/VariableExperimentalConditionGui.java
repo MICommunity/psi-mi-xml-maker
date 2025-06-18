@@ -4,12 +4,13 @@ import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.VariableExperimentalCondition;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 public class VariableExperimentalConditionGui {
     private final List<String> experimentalConditionUnitCache = new ArrayList<>();
@@ -91,7 +92,7 @@ public class VariableExperimentalConditionGui {
 
     private JComboBox<String> getUnitComboBox(VariableExperimentalCondition variableExperimentalCondition) {
         JComboBox<String> unitComboBox = new JComboBox<>();
-        XmlMakerUtils.setComboBoxDimension(unitComboBox, "Unit");
+        setComboBoxDimension(unitComboBox, "Unit");
         unitComboBox.setEditable(true);
         for (String unit: experimentalConditionUnitCache){
             unitComboBox.addItem(unit);
@@ -102,7 +103,7 @@ public class VariableExperimentalConditionGui {
 
     private JComboBox<String> getDescriptionComboBox(VariableExperimentalCondition variableExperimentalCondition) {
         JComboBox<String> descriptionComboBox = new JComboBox<>();
-        XmlMakerUtils.setComboBoxDimension(descriptionComboBox, "Description");
+        setComboBoxDimension(descriptionComboBox, "Description");
         descriptionComboBox.setEditable(true);
         descriptionComboBox.addActionListener(e-> variableExperimentalCondition.setDescription(descriptionComboBox.getSelectedItem().toString()));
         return descriptionComboBox;
@@ -110,7 +111,7 @@ public class VariableExperimentalConditionGui {
 
     private JComboBox<String> getValueColumnComboBox(VariableExperimentalCondition variableExperimentalCondition) {
         JComboBox<String> valueColumnComboBox = new JComboBox<>();
-        XmlMakerUtils.setComboBoxDimension(valueColumnComboBox, "Value");
+        setComboBoxDimension(valueColumnComboBox, "Value");
         valueColumnComboBox.setEditable(true);
         for (String valueColumn: fileReader.getColumns(fileReader.getSheetSelectedUpdate())){
             valueColumnComboBox.addItem(valueColumn);

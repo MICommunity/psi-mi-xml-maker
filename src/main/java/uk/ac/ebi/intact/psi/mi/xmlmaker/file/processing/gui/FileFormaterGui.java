@@ -2,7 +2,6 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFormater;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,6 +10,7 @@ import java.util.Objects;
 import java.util.logging.Logger;
 
 import static java.awt.Toolkit.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 /**
  * The {@code FileFormaterGui} class provides a graphical user interface
@@ -170,7 +170,7 @@ public class FileFormaterGui {
                     binary);
 
         } catch (Exception e) {
-            XmlMakerUtils.showErrorDialog("Error during file formatting, please check that the mandatory columns are correctly selected.");
+            showErrorDialog("Error during file formatting, please check that the mandatory columns are correctly selected.");
             LOGGER.warning("Error during file formatting: " + e);
         }
     }
@@ -190,13 +190,13 @@ public class FileFormaterGui {
 
         sheetsPanel.setBorder(BorderFactory.createTitledBorder(" 2.1 Select in the file"));
 
-        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(sheets, "* Select sheet"));
+        sheetsPanel.add(setComboBoxDimension(sheets, "* Select sheet"));
 
-        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(baitColumn, "* Select baits id column"));
-        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(baitNameColumn, "Select baits name column"));
+        sheetsPanel.add(setComboBoxDimension(baitColumn, "* Select baits id column"));
+        sheetsPanel.add(setComboBoxDimension(baitNameColumn, "Select baits name column"));
 
-        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(preyColumn, "* Select preys id column"));
-        sheetsPanel.add(XmlMakerUtils.setComboBoxDimension(preyNameColumn, "Select preys name column"));
+        sheetsPanel.add(setComboBoxDimension(preyColumn, "* Select preys id column"));
+        sheetsPanel.add(setComboBoxDimension(preyNameColumn, "Select preys name column"));
 
         sheets.addActionListener(e -> {
             if (!isUpdatingSheets) {

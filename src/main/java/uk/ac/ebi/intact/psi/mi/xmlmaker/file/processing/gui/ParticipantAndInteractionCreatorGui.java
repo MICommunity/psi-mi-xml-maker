@@ -3,7 +3,6 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui;
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.*;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
 
 import javax.swing.*;
@@ -13,6 +12,7 @@ import java.util.List;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile.*;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 /**
  * The {@code ParticipantAndInteractionCreatorGui} class provides a graphical user interface

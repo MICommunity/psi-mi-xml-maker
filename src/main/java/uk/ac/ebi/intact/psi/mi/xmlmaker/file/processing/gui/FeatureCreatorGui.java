@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 public class FeatureCreatorGui {
     final JPanel featureMainPanel = new JPanel();

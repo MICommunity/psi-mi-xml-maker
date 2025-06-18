@@ -21,16 +21,16 @@ public class CacheUtils {
     public static final List<String> PARAMETER_TYPES;
 
     static {
-        UNITS = XmlMakerUtils.getTermsFromOls(DataAndMiID.UNIT.miId);
-        XREF_QUALIFIERS = XmlMakerUtils.getTermsFromOls(DataAndMiID.XREF_QUALIFIER.miId);
-        FEATURE_TYPES = XmlMakerUtils.getTermsFromOls(DataAndMiID.FEATURE_TYPE.miId);
-        FEATURE_RANGE_TYPES = XmlMakerUtils.getTermsFromOls(DataAndMiID.FEATURE_RANGE_TYPE.miId);
-        FEATURE_ROLES = XmlMakerUtils.getTermsFromOls(DataAndMiID.FEATURE_ROLE.miId);
-        DATABASES = XmlMakerUtils.getTermsFromOls(DataAndMiID.DATABASES.miId);
-        PARTICIPANT_DETECTION_METHODS = XmlMakerUtils.getTermsFromOls(DataAndMiID.PARTICIPANT_DETECTION_METHOD.miId);
-        INTERACTION_DETECTION_METHODS = XmlMakerUtils.getTermsFromOls(DataAndMiID.INTERACTION_DETECTION_METHOD.miId);
-        EXPERIMENTAL_PREPARATIONS = XmlMakerUtils.getTermsFromOls(DataAndMiID.EXPERIMENTAL_PREPARATION.miId);
-        BIOLOGICAL_ROLES = XmlMakerUtils.getTermsFromOls(DataAndMiID.BIOLOGICAL_ROLE.miId);
-        PARAMETER_TYPES = XmlMakerUtils.getTermsFromOls(DataAndMiID.PARAMETER_TYPE.miId);
+        UNITS = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.UNIT.miId);
+        XREF_QUALIFIERS = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.XREF_QUALIFIER.miId);
+        FEATURE_TYPES = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.FEATURE_TYPE.miId);
+        FEATURE_RANGE_TYPES = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.FEATURE_RANGE_TYPE.miId);
+        FEATURE_ROLES = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.FEATURE_ROLE.miId);
+        DATABASES = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.DATABASES.miId);
+        PARTICIPANT_DETECTION_METHODS = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.PARTICIPANT_DETECTION_METHOD.miId);
+        INTERACTION_DETECTION_METHODS = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.INTERACTION_DETECTION_METHOD.miId);
+        EXPERIMENTAL_PREPARATIONS = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.EXPERIMENTAL_PREPARATION.miId);
+        BIOLOGICAL_ROLES = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.BIOLOGICAL_ROLE.miId);
+        PARAMETER_TYPES = XmlMakerUtils.fetchTermsFromOls(DataAndMiID.PARAMETER_TYPE.miId);
     }
 }

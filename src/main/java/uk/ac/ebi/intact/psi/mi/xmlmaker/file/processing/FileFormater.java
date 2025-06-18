@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -14,6 +13,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils.*;
+
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.ParametersGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.VariableExperimentalConditionGui;
@@ -21,7 +23,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Feature;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.VariableExperimentalCondition;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
+
 
 import javax.swing.*;
 import java.io.*;
@@ -30,8 +32,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-
 
 /**
  * The {@code FileFormater} class processes interaction data from CSV, TSV, XLS, and XLSX files,
@@ -80,6 +80,7 @@ public class FileFormater {
         this.fileReader = fileReader;
         this.parametersGui  = new ParametersGui(fileReader);
         this.variableExperimentalConditionGui = new VariableExperimentalConditionGui(fileReader);
+        setFileReader(fileReader);
     }
 
     /**
@@ -143,10 +144,10 @@ public class FileFormater {
                 break;
             default:
                 LOGGER.warning("Unsupported file format: " + fileType);
-                XmlMakerUtils.showErrorDialog("Unsupported file format! Supported formats: .csv, .tsv, .xls, .xlsx");
+                showErrorDialog("Unsupported file format! Supported formats: .csv, .tsv, .xls, .xlsx");
         }
         participants.clear();
-        XmlMakerUtils.showInfoDialog("File modified: " + modifiedFileName);
+        showInfoDialog("File modified: " + modifiedFileName);
         fileReader.selectFileOpener(newFileName);
     }
 
@@ -642,86 +643,4 @@ public class FileFormater {
             participant.merge(key, value, (previous, current) -> safe(previous) + safe(current));
         }
     }
-
-    /**
-     * Retrieves cell values from Excel based on column names stored in the participant map.
-     * Useful for feature-related data stored as column references (e.g., "columnA;columnB").
-     *
-     * @param key  Key to retrieve the semicolon-separated column references.
-     * @param participant         The participant map with metadata.
-     * @return                    Concatenated values resolved from the Excel sheet.
-     */
-    public String getValueFromFile(String key, Map<String, String> participant) {
-        String columns = participant.get(key);
-        if (columns == null) return "";
-
-        if (columns.split(";").length == 0) return "";
-
-        if (columns.split(";").length == 1) {
-            String colName = columns.split(";")[0];
-            int colIndex = getColumnIndex(colName);
-            return getDataFromRow(colIndex, Integer.parseInt(participant.get(PARTICIPANT_ROW_INDEX.name)));
-        }
-
-        return Arrays.stream(columns.split(";"))
-                .map(String::trim)
-                .filter(c -> !c.isEmpty())
-                .map(colName -> {
-                    int colIndex = getColumnIndex(colName);
-                    return colIndex >= 0
-                            ? getDataFromRow(colIndex, Integer.parseInt(participant.get(PARTICIPANT_ROW_INDEX.name)))
-                            : colName;
-                })
-                .collect(Collectors.joining(";")) + ";";
-    }
-
-    /**
-     * Retrieves the index of a column by its name from the selected Excel sheet.
-     *
-     * @param columnName The name of the column.
-     * @return The index of the column, or -1 if not found.
-     */
-    private int getColumnIndex(String columnName){
-        List<String> columns = fileReader.getColumns(fileReader.sheetSelectedUpdate);
-        return columns.indexOf(columnName);
-    }
-
-    /**
-     * Gets the cell value from a specific column and row, supporting both Excel and delimited files.
-     *
-     * @param columnIndex The index of the column.
-     * @param rowIndex    The index of the row.
-     * @return The cell value as a string, or an empty string if not found.
-     */
-    private String getDataFromRow(int columnIndex, int rowIndex) {
-        if (fileReader.getWorkbook() != null) {
-            Sheet sheet = fileReader.getWorkbook().getSheet(fileReader.sheetSelectedUpdate);
-            Row row = sheet.getRow(rowIndex);
-            if (row == null || columnIndex < 0) {
-                return "";
-            }
-            Cell cell = row.getCell(columnIndex);
-            if (cell != null) {
-                return FileUtils.getCellValueAsString(cell);
-            } else {
-                return "";
-            }
-        } else if (fileReader.readFileWithSeparator() != null) {
-            Iterator<List<String>> iterator = fileReader.readFileWithSeparator();
-            int currentRow = 0;
-            while (iterator.hasNext()) {
-                List<String> row = iterator.next();
-                if (currentRow == rowIndex - 1) { // -1 because the indexing works differently for files with separator
-                    if (columnIndex >= 0 && columnIndex < row.size()) {
-                        return row.get(columnIndex);
-                    } else {
-                        return "";
-                    }
-                }
-                currentRow++;
-            }
-        }
-        return "";
-    }
-
 }

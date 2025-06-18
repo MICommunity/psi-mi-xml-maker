@@ -10,12 +10,10 @@ import uk.ac.ebi.pride.utilities.ols.web.service.model.Identifier;
 import uk.ac.ebi.pride.utilities.ols.web.service.model.Term;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.*;
 import java.util.stream.Collectors;
@@ -45,40 +43,31 @@ public class XmlMakerUtils {
         }
     }
 
+    //Connection
     /**
-     * Displays an error message in a dialog box.
-     * @param message message to display
+     * Creates an HTTP connection for a given URL.
+     * @param urlString url to connect
+     * @throws IOException if error
+     * @return URLConnection
      */
-    public static void showErrorDialog(String message) {
-        LOGGER.severe("Error: " + message);
-        JOptionPane.showMessageDialog(new JFrame(), message, "ERROR", JOptionPane.ERROR_MESSAGE);
+    public static HttpURLConnection createConnection(String urlString) throws IOException {
+        LOGGER.fine("Creating HTTP connection to URL: " + urlString);
+        URL url = new URL(urlString);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        return connection;
     }
 
     /**
-     * Displays an error message in a dialog box.
-     * @param message message to display
-     * @return boolean answer from user
+     * Encodes a string for safe use in a URL.
+     * @param input to convert in URL format.
+     * @return string compatible with URL.
      */
-    public static boolean showConfirmDialog(String message) {
-        int choice = JOptionPane.showConfirmDialog(
-                new JFrame(),
-                message,
-                "Confirmation",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
-
-        return choice == JOptionPane.OK_OPTION;
+    public static String encodeForURL(String input) {
+        return URLEncoder.encode(input, StandardCharsets.UTF_8);
     }
 
-    /**
-     * Displays an informational message in a dialog box.
-     * @param message message to display
-     */
-    public static void showInfoDialog(String message) {
-        JOptionPane.showMessageDialog(new JFrame(), message, "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
-    }
-
+    //Fetchers
     /**
      * Fetches the Taxonomy ID for a given organism name using the OLS API.
      * @param organismName organism to fetch
@@ -106,20 +95,6 @@ public class XmlMakerUtils {
             LOGGER.log(Level.SEVERE, "Exception occurred while fetching TaxID for organism: " + organismName, e);
         }
         return null;
-    }
-
-    /**
-     * Creates an HTTP connection for a given URL.
-     * @param urlString url to connect
-     * @throws IOException if error
-     * @return URLConnection
-     */
-    public static HttpURLConnection createConnection(String urlString) throws IOException {
-        LOGGER.fine("Creating HTTP connection to URL: " + urlString);
-        URL url = new URL(urlString);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        return connection;
     }
 
     /**
@@ -160,15 +135,6 @@ public class XmlMakerUtils {
 
         nameToTaxIdCache.put(organismName, taxId);
         return taxId;
-    }
-
-    /**
-     * Encodes a string for safe use in a URL.
-     * @param input to convert in URL format.
-     * @return string compatible with URL.
-     */
-    public static String encodeForURL(String input) {
-        return URLEncoder.encode(input, StandardCharsets.UTF_8);
     }
 
     /**
@@ -216,6 +182,32 @@ public class XmlMakerUtils {
     }
 
     /**
+     * Retrieves a list of term names from the OLS (Ontology Lookup Service) for a given MI (Molecular Interaction) ID.
+     * The method uses the provided MI ID to query the OLS and fetch the child terms associated with it.
+     * Only terms that do not have children are added to the result list.
+     *
+     * @param miId The MI identifier (in OBO format) used to retrieve the child terms from OLS.
+     * @return A sorted list of term names that are child terms of the provided MI ID, which do not have further children.
+     */
+    public static List<String> fetchTermsFromOls(String miId){
+        List<String> termsNames = new ArrayList<>();
+
+        Identifier identifier = new Identifier(miId, Identifier.IdentifierType.OBO);
+        List<Term> terms = olsClient.getTermChildren(identifier, "mi", 9999);
+
+        for (Term term : terms) {
+            XmlCvTerm xmlTerm = new XmlCvTerm(term.getLabel(), term.getOboId().getIdentifier());
+            nameToCvTerm.put(term.getName(), xmlTerm);
+            termsNames.add(term.getName());
+        }
+
+        termsNames = termsNames.stream().distinct().collect(Collectors.toList());
+        termsNames.sort(String::compareTo);
+
+        return termsNames;
+    }
+
+    /**
      * Extracts the OBO (Open Biomedical Ontologies) ID from a JSON response.
      * @param json OLS response
      * @return OLS MI identifier.
@@ -249,6 +241,7 @@ public class XmlMakerUtils {
         return null;
     }
 
+    //Others
     /**
      * Calculates the Levenshtein Distance between two strings. The Levenshtein
      * Distance is a measure of the number of single-character edits (insertions,
@@ -298,46 +291,6 @@ public class XmlMakerUtils {
     }
 
     /**
-     * Configures combo box dimensions and adds the default item to the combo box.
-     *
-     * @param comboBox    The combo box to be configured.
-     * @param defaultItem The default item to add to the combo box.
-     * @return The configured combo box.
-     */
-    public static JComboBox<String> setComboBoxDimension(JComboBox<String> comboBox, String defaultItem) {
-        comboBox.addItem(defaultItem);
-        comboBox.setPreferredSize(new Dimension(200, 50));
-        comboBox.setMaximumSize(new Dimension(200, 50));
-        return comboBox;
-    }
-
-    /**
-     * Retrieves a list of term names from the OLS (Ontology Lookup Service) for a given MI (Molecular Interaction) ID.
-     * The method uses the provided MI ID to query the OLS and fetch the child terms associated with it.
-     * Only terms that do not have children are added to the result list.
-     *
-     * @param miId The MI identifier (in OBO format) used to retrieve the child terms from OLS.
-     * @return A sorted list of term names that are child terms of the provided MI ID, which do not have further children.
-     */
-    public static List<String> getTermsFromOls(String miId){
-        List<String> termsNames = new ArrayList<>();
-
-        Identifier identifier = new Identifier(miId, Identifier.IdentifierType.OBO);
-        List<Term> terms = olsClient.getTermChildren(identifier, "mi", 9999);
-
-        for (Term term : terms) {
-            XmlCvTerm xmlTerm = new XmlCvTerm(term.getLabel(), term.getOboId().getIdentifier());
-                nameToCvTerm.put(term.getName(), xmlTerm);
-                termsNames.add(term.getName());
-        }
-
-        termsNames = termsNames.stream().distinct().collect(Collectors.toList());
-        termsNames.sort(String::compareTo);
-
-        return termsNames;
-    }
-
-    /**
      * Checks if the given value is null or matches the specified keyName.
      * If the value is null or equal to the keyName, an empty string is returned.
      * Otherwise, the string representation of the value is returned.
@@ -354,4 +307,5 @@ public class XmlMakerUtils {
         String stringValue = value.toString();
         return stringValue.equals(keyName) ? "" : stringValue;
     }
+
 }

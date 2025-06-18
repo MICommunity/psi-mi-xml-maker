@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils.*;
 
 public class XmlMakerGuiTest {
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGuiTest.class.getName());
@@ -168,6 +169,11 @@ public class XmlMakerGuiTest {
         assertTrue(writtenFile.exists(), "Formatted file should exist");
         assertTrue(writtenFile.length() > 0, "Formatted file should not be empty");
         boolean deleted = writtenFile.delete();
+        if (deleted){
+            LOGGER.info(writtenFile + "successfully deleted.");
+        } else {
+            LOGGER.warning("Failed to delete file " + writtenFile + "." );
+        }
     }
 
     @Test
@@ -180,6 +186,11 @@ public class XmlMakerGuiTest {
         assertTrue(writtenFile.exists(), "Formatted file should exist");
         assertTrue(writtenFile.length() > 0, "Formatted file should not be empty");
         boolean deleted = writtenFile.delete();
+        if (deleted){
+            LOGGER.info(writtenFile + "successfully deleted.");
+        } else {
+            LOGGER.warning("Failed to delete file " + writtenFile + "." );
+        }
     }
 
     @Test
@@ -193,12 +204,17 @@ public class XmlMakerGuiTest {
 
         Map<String, String> participant = participants.get(0);
 
-        String result = formater.getValueFromFile(DataTypeAndColumn.PARTICIPANT_ID.name, participant);
+        String result = getValueFromFile(DataTypeAndColumn.PARTICIPANT_ID.name, participant);
 
         assertEquals("100;", result);
 
         File writtenFile = new File(TEST_FILE_PATH + "Book1_xmlMakerFormatted.xlsx");
         boolean deleted = writtenFile.delete();
+        if (deleted){
+            LOGGER.info(writtenFile + "successfully deleted.");
+        } else {
+            LOGGER.warning("Failed to delete file " + writtenFile + "." );
+        }
     }
 
 }

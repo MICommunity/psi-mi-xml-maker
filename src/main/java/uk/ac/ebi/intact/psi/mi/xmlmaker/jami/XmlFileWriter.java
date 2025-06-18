@@ -25,6 +25,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
+
+
 /**
  * XmlFileWriter is a Spring component responsible for creating PSI-MI XML files
  * based on interaction data. It utilizes the JAMI library for creating XML files
@@ -89,7 +92,7 @@ public class XmlFileWriter {
      */
     private boolean validateInputs(List<XmlInteractionEvidence> interactions) {
         if (interactions == null || interactions.isEmpty()) {
-            XmlMakerUtils.showErrorDialog("No interactions provided for writing.");
+            showErrorDialog("No interactions provided for writing.");
             LOGGER.error("No interactions provided for writing.");
             return false;
         }
@@ -97,7 +100,7 @@ public class XmlFileWriter {
         publicationId = fileReader.getPublicationId();
         publicationDb = fileReader.getPublicationDb();
         if (publicationId == null || publicationDb == null) {
-            XmlMakerUtils.showErrorDialog("Publication ID or publication database is null. Please enter the publication ID.");
+            showErrorDialog("Publication ID or publication database is null. Please enter the publication ID.");
             LOGGER.error("Impossible to find publication ID.");
             return false;
         }
@@ -221,15 +224,15 @@ public class XmlFileWriter {
             LOGGER.info("PSI-XML writing completed successfully. File saved at: {}", saveLocation);
 
         } catch (Exception e) {
-            XmlMakerUtils.showErrorDialog("Error during PSI-XML writing, please check that the columns are correctly associated" +
+            showErrorDialog("Error during PSI-XML writing, please check that the columns are correctly associated" +
                     "and that the file is correctly formatted. \n" + e.getMessage());
             LOGGER.error("Error during PSI-XML writing", e);
         } finally {
             closeWriter(xmlInteractionWriter);
             if (!skippedParticipants.isEmpty()) {
-                XmlMakerUtils.showInfoDialog("Participant skipped because of missing data: " + skippedParticipants);
+                showInfoDialog("Participant skipped because of missing data: " + skippedParticipants);
             }
-            XmlMakerUtils.showInfoDialog("PSI-XML writing completed successfully. File saved at: " + saveLocation);
+            showInfoDialog("PSI-XML writing completed successfully. File saved at: " + saveLocation);
         }
     }
 

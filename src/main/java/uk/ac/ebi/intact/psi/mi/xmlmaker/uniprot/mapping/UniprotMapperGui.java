@@ -2,11 +2,12 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import javax.swing.*;
 import java.awt.*;
 import java.util.logging.Logger;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 /**
  * The UniprotMapperGui class provides a graphical user interface (GUI) for interacting with an Excel file
@@ -47,13 +48,13 @@ public class UniprotMapperGui extends JPanel {
         uniprotPanel.setMaximumSize(new Dimension(Toolkit.getDefaultToolkit().getScreenSize().width - 50, 200));
         setupComboBoxDefaults();
 
-        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(sheets, "Select sheet"));
+        uniprotPanel.add(setComboBoxDimension(sheets, "Select sheet"));
         sheets.setToolTipText("Select sheet");
-        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(idColumn, "Select ID column"));
+        uniprotPanel.add(setComboBoxDimension(idColumn, "Select ID column"));
         idColumn.setToolTipText("Select ID column");
-        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(idDbColumn, "Select ID database column"));
+        uniprotPanel.add(setComboBoxDimension(idDbColumn, "Select ID database column"));
         idDbColumn.setToolTipText("Select ID database column");
-        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(organismColumn, "Select Organism column"));
+        uniprotPanel.add(setComboBoxDimension(organismColumn, "Select Organism column"));
         organismColumn.setToolTipText("Select Organism column");
 
         sheets.addActionListener(e -> {
@@ -162,13 +163,13 @@ public class UniprotMapperGui extends JPanel {
 
                     if (sheets.isEnabled()) {
                         if (isInvalidSelection(sheetSelected, idColumnSelectedItem)) {
-                            SwingUtilities.invokeLater(() -> XmlMakerUtils.showErrorDialog("Please select valid sheet and ID column"));
+                            SwingUtilities.invokeLater(() -> showErrorDialog("Please select valid sheet and ID column"));
                             return null;
                         }
                         processSheet(sheetSelected, idColumnSelectedItem, idDbColumnIndex, organismColumnIndex);
                     } else {
                         if (idColumnSelectedItem == null || idColumnSelectedItem.equals("Select column to process")) {
-                            SwingUtilities.invokeLater(() -> XmlMakerUtils.showErrorDialog("Please select valid sheet and ID column"));
+                            SwingUtilities.invokeLater(() -> showErrorDialog("Please select valid sheet and ID column"));
                             return null;
                         }
                         processFileWithoutSheet(idColumnSelectedItem, idDbColumnIndex, organismColumnIndex);
@@ -198,9 +199,9 @@ public class UniprotMapperGui extends JPanel {
         try {
             fileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
             if (!fileReader.getUniprotIdNotFound().isEmpty()) {
-                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + fileReader.getUniprotIdNotFound());
+                showInfoDialog("Inactive Uniprot IDs: " + fileReader.getUniprotIdNotFound());
             }
-            XmlMakerUtils.showInfoDialog("UniProt IDs successfully updated");
+            showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
         }
@@ -216,9 +217,9 @@ public class UniprotMapperGui extends JPanel {
         try {
             fileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
             if (!fileReader.getUniprotIdNotFound().isEmpty()) {
-                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + fileReader.getUniprotIdNotFound());
+                showInfoDialog("Inactive Uniprot IDs: " + fileReader.getUniprotIdNotFound());
             }
-            XmlMakerUtils.showInfoDialog("UniProt IDs successfully updated");
+            showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
         }

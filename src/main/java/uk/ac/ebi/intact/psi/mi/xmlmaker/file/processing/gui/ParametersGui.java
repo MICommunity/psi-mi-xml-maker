@@ -5,7 +5,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
 
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 import javax.swing.*;
 import java.awt.*;

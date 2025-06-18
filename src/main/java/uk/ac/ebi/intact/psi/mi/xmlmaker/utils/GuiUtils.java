@@ -7,11 +7,16 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
+import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Objects;
+import java.util.logging.Logger;
 
-public class GUIUtils {
+public class GuiUtils {
+    private static final Logger LOGGER = Logger.getLogger(GuiUtils.class.getName());
+
+
     /**
      * Installs a listener to receive notification when the text of any
      * {@code JTextComponent} is changed. Internally, it installs a
@@ -63,4 +68,53 @@ public class GUIUtils {
         Document d = text.getDocument();
         if (d != null) d.addDocumentListener(dl);
     }
+
+    /**
+     * Configures combo box dimensions and adds the default item to the combo box.
+     *
+     * @param comboBox    The combo box to be configured.
+     * @param defaultItem The default item to add to the combo box.
+     * @return The configured combo box.
+     */
+    public static JComboBox<String> setComboBoxDimension(JComboBox<String> comboBox, String defaultItem) {
+        comboBox.addItem(defaultItem);
+        comboBox.setPreferredSize(new Dimension(200, 50));
+        comboBox.setMaximumSize(new Dimension(200, 50));
+        return comboBox;
+    }
+
+    /**
+     * Displays an error message in a dialog box.
+     * @param message message to display
+     */
+    public static void showErrorDialog(String message) {
+        LOGGER.severe("Error: " + message);
+        JOptionPane.showMessageDialog(new JFrame(), message, "ERROR", JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * Displays an error message in a dialog box.
+     * @param message message to display
+     * @return boolean answer from user
+     */
+    public static boolean showConfirmDialog(String message) {
+        int choice = JOptionPane.showConfirmDialog(
+                new JFrame(),
+                message,
+                "Confirmation",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        return choice == JOptionPane.OK_OPTION;
+    }
+
+    /**
+     * Displays an informational message in a dialog box.
+     * @param message message to display
+     */
+    public static void showInfoDialog(String message) {
+        JOptionPane.showMessageDialog(new JFrame(), message, "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
+    }
+
 }

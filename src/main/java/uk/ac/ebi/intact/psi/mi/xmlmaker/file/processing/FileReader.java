@@ -12,7 +12,6 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.UniprotResult;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.*;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.events.InputSelectedEvent;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 
@@ -27,6 +26,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 /**
  * The {@code FileReader} class provides functionality for reading, processing,
@@ -95,13 +96,13 @@ public class FileReader {
         try {
             if (!handleFileByType(fileType, filePath)) {
                 LOGGER.warning("Unsupported file format: " + fileType);
-                XmlMakerUtils.showErrorDialog("Unsupported file format! Supported formats: .csv, .tsv, .xls, .xlsx");
+                showErrorDialog("Unsupported file format! Supported formats: .csv, .tsv, .xls, .xlsx");
                 return;
             }
             fireInputSelectedEvent(new InputSelectedEvent(file));
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error reading file: " + fileName, e);
-            XmlMakerUtils.showErrorDialog("Unable to read file: " + e.getMessage());
+            showErrorDialog("Unable to read file: " + e);
         }
     }
 
@@ -216,7 +217,7 @@ public class FileReader {
 
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Unable to read file with separator", e);
-            XmlMakerUtils.showErrorDialog("Error reading file: " + e.getMessage());
+            showErrorDialog("Error reading file: " + e.getMessage());
         }
         return iterator;
     }
@@ -341,7 +342,7 @@ public class FileReader {
         int idColumnIndex = fileData.indexOf(idColumnName);
 
         if (idColumnIndex == -1) {
-            XmlMakerUtils.showErrorDialog("ID column not found: " + idColumnName);
+            showErrorDialog("ID column not found: " + idColumnName);
             LOGGER.severe("ID column not found: " + idColumnName);
             return;
         }
@@ -369,7 +370,7 @@ public class FileReader {
 
             alreadyParsed.clear();
         } catch (IOException e) {
-            XmlMakerUtils.showErrorDialog("Error writing file: " + e.getMessage());
+            showErrorDialog("Error writing file: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error writing file", e);
         }
 
@@ -393,14 +394,14 @@ public class FileReader {
             Sheet sheet = workbook.getSheet(sheetSelected);
             if (sheet == null) {
                 LOGGER.severe("Sheet not found: " + sheetSelected);
-                XmlMakerUtils.showErrorDialog("Sheet not found: " + sheetSelected);
+                showErrorDialog("Sheet not found: " + sheetSelected);
                 return;
             }
 
             Row headerRow = sheet.getRow(0);
             if (headerRow == null) {
                 LOGGER.severe("Header row is missing.");
-                XmlMakerUtils.showErrorDialog("Header row is missing.");
+                showErrorDialog("Header row is missing.");
                 return;
             }
 
@@ -420,7 +421,7 @@ public class FileReader {
             workbook.write(fileOut);
 
         } catch (IOException e) {
-            XmlMakerUtils.showErrorDialog("Error processing workbook: " + e.getMessage());
+            showErrorDialog("Error processing workbook: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error processing workbook", e);
         } finally {
             try {

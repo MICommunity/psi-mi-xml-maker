@@ -5,7 +5,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.XmlFileWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.XmlInteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GUIUtils;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -101,8 +101,8 @@ public class SavingOptionsGui {
         filenameField = new JTextField(20);
         JLabel saveLocationLabel = new JLabel("Directory:");
         saveLocationField = new JTextField(20);
-        GUIUtils.addChangeListener(saveLocationField, change -> xmlFileWriter.setSaveLocation(saveLocationField.getText()));
-        GUIUtils.addChangeListener(filenameField, change -> xmlFileWriter.setName(filenameField.getText()));
+        GuiUtils.addChangeListener(saveLocationField, change -> xmlFileWriter.setSaveLocation(saveLocationField.getText()));
+        GuiUtils.addChangeListener(filenameField, change -> xmlFileWriter.setName(filenameField.getText()));
         JButton browseButton = getBrowseButton();
 
         fileReader.registerInputSelectedEventHandler(event -> {
@@ -113,7 +113,7 @@ public class SavingOptionsGui {
 
         JLabel numberOfInteractionsLabel = new JLabel("Number of Interactions per file:");
         numberOfInteractionsField = new JTextField("1000",20);
-        GUIUtils.addChangeListener(numberOfInteractionsField, change ->
+        GuiUtils.addChangeListener(numberOfInteractionsField, change ->
                 XmlInteractionsCreator.setMAX_INTERACTIONS_PER_FILE(Integer.parseInt(numberOfInteractionsField.getText())));
 
         saveLocationPanel.add(numberOfInteractionsLabel);

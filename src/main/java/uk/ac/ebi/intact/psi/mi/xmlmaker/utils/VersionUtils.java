@@ -6,6 +6,9 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
+
+
 /**
  * Utility class for managing the versioning and update functionality of the PSI-MI XML Maker application.
  * <p>
@@ -68,7 +71,7 @@ public class VersionUtils {
             initialiseUrls(latestVersion);
 
             if (!latestVersion.equals(currentVersion)) {
-                XmlMakerUtils.showInfoDialog("Update available! You're on version: " + currentVersion + ", latest version: " + latestVersion);
+                showInfoDialog("Update available! You're on version: " + currentVersion + ", latest version: " + latestVersion);
                 LOGGER.warning("Current version: " + currentVersion + ", latest version: " + latestVersion);
                 downloadDependingOnOs();
             }
@@ -190,7 +193,7 @@ public class VersionUtils {
         }
 
         try {
-            boolean restartNow = XmlMakerUtils.showConfirmDialog(
+            boolean restartNow = showConfirmDialog(
                     "Update downloaded successfully. Restart now to apply the update?");
 
             if (restartNow) {

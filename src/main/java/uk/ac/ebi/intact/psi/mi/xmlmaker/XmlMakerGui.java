@@ -6,7 +6,6 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.SavingOptionsGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.InteractionsCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.VersionUtils;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -23,6 +22,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static java.awt.Toolkit.getDefaultToolkit;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 
 /**
@@ -237,7 +237,7 @@ public class XmlMakerGui {
             return true;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed to import file", e);
-            XmlMakerUtils.showErrorDialog("Failed to import file. Ensure it is a valid format.");
+            showErrorDialog("Failed to import file. Ensure it is a valid format.");
         }
         return false;
     }
@@ -250,7 +250,7 @@ public class XmlMakerGui {
     public void processFile(File file) {
         String filePath = file.getAbsolutePath();
         if (!isValidFileType(filePath)) {
-            XmlMakerUtils.showErrorDialog("Unsupported file type. Please provide a valid file (.xls, .xlsx, .csv, or .tsv).");
+            showErrorDialog("Unsupported file type. Please provide a valid file (.xls, .xlsx, .csv, or .tsv).");
             return;
         }
         fileReader.selectFileOpener(filePath);
@@ -350,7 +350,7 @@ public class XmlMakerGui {
         if (result != JFileChooser.APPROVE_OPTION) return;
         File selectedFile = chooser.getSelectedFile();
         if (selectedFile == null) {
-            XmlMakerUtils.showErrorDialog("No file was selected.");
+            showErrorDialog("No file was selected.");
             return;
         }
         processFile(selectedFile);
@@ -366,7 +366,7 @@ public class XmlMakerGui {
 
         saveButton.addActionListener(e -> {
             if (fileReader.getPublicationId() == null) {
-                XmlMakerUtils.showErrorDialog("Please provide a valid publication ID.");
+                showErrorDialog("Please provide a valid publication ID.");
                 return;
             }
 
@@ -381,7 +381,7 @@ public class XmlMakerGui {
                     } catch (Exception ex) {
                         LOGGER.log(Level.SEVERE, "Error during save operation", ex);
                         SwingUtilities.invokeLater(() ->
-                                XmlMakerUtils.showErrorDialog("An error occurred while saving the file." +
+                                showErrorDialog("An error occurred while saving the file." +
                                         " Please verify that all columns are associated correctly. " + ex)
                         );
                     }

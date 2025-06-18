@@ -9,7 +9,6 @@ import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.UniprotResult;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import javax.swing.*;
 import java.io.BufferedReader;
@@ -17,6 +16,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 /**
  * This class is responsible for fetching and processing UniProt results based on a given protein, previous database,
@@ -50,7 +51,7 @@ public class UniprotGeneralMapper {
         try {
             return getUniprotIds(getUniprotResponse(protein, previousDb, organism));
         } catch (Exception e) {
-            XmlMakerUtils.showErrorDialog("Error fetching UniProt results, please check your internet connection");
+            showErrorDialog("Error fetching UniProt results, please check your internet connection");
             LOGGER.error("Error fetching UniProt results for protein '{}': {}", protein, e.getMessage(), e);
         }
         return null;

@@ -31,7 +31,6 @@ public enum DataTypeAndColumn {
     INTERACTION_PARAM_UNCERTAINTY("Interaction parameter uncertainty"),
 
     //Participant
-
     PARTICIPANT_NAME("Participant name"),
     PARTICIPANT_ID("Participant ID"),
     PARTICIPANT_ID_DB("Participant ID database"),
