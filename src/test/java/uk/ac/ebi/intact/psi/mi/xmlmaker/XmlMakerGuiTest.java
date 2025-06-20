@@ -4,7 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileFormater;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.*;
+
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.XmlFileWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.XmlInteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotGeneralMapper;
@@ -39,8 +40,8 @@ public class XmlMakerGuiTest {
         reader = new FileReader();
         xmlFileWriter = new XmlFileWriter(reader);
         xmlInteractionsCreator = new XmlInteractionsCreator(reader, xmlFileWriter, mockColumnAndIndex());
-        int numberOfInitialData = DataTypeAndColumn.getInitialData().size();
-        int numberOfNotInitialData = DataTypeAndColumn.getNotInitialData().size();
+        int numberOfInitialData = getInitialData().size();
+        int numberOfNotInitialData = getNotInitialData().size();
         int numberOfFeatures = 2;
 
         EXPECTED_COLUMN_COUNT = numberOfInitialData +  (numberOfNotInitialData * numberOfFeatures);
@@ -145,8 +146,8 @@ public class XmlMakerGuiTest {
 
     private Map<String, Integer> mockColumnAndIndex() {
         Map<String, Integer> columnAndIndex = new HashMap<>();
-        for (int i = 0; i < DataTypeAndColumn.values().length; i++) {
-            columnAndIndex.put(DataTypeAndColumn.values()[i].name, i);
+        for (int i = 0; i < values().length; i++) {
+            columnAndIndex.put(values()[i].name, i);
         }
         return columnAndIndex;
     }
@@ -204,9 +205,9 @@ public class XmlMakerGuiTest {
 
         Map<String, String> participant = participants.get(0);
 
-        String result = getValueFromFile(DataTypeAndColumn.PARTICIPANT_ID.name, participant);
+        String result = getValueFromFile(PARTICIPANT_ID.name, participant);
 
-        assertEquals("100;", result);
+        assertEquals("100", result);
 
         File writtenFile = new File(TEST_FILE_PATH + "Book1_xmlMakerFormatted.xlsx");
         boolean deleted = writtenFile.delete();

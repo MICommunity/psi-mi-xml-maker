@@ -6,7 +6,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import psidev.psi.mi.jami.model.*;
 import psidev.psi.mi.jami.xml.model.extension.xml300.*;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.XmlFileWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
@@ -18,7 +18,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.getDataKey;
 
 /**
  * The XmlInteractionsCreator class is responsible for processing Excel files or directory-based input files
@@ -92,32 +93,40 @@ public class XmlInteractionsCreator {
      * @return The constructed {@link XmlParticipantEvidence}, or null if required fields are missing.
      */
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
-        DataTypeAndColumn[] required = {PARTICIPANT_NAME, PARTICIPANT_ID, PARTICIPANT_ID_DB, PARTICIPANT_ORGANISM};
+        String participantExperimentalRole = data.get(EXPERIMENTAL_ROLE.name);
 
-        for (DataTypeAndColumn requiredColumn : required) {
-            if (data.get(requiredColumn.name) == null || data.get(requiredColumn.name).trim().isBlank()) {
+        InputData[] required = {PARTICIPANT_NAME, PARTICIPANT_ID, PARTICIPANT_ID_DB, PARTICIPANT_ORGANISM};
+
+        for (InputData requiredColumn : required) {
+            String key = getDataKey(requiredColumn, data);
+            if (data.get(key) == null || data.get(key).trim().isBlank()) {
                 LOGGER.warning(requiredColumn.name + " is required but missing or empty.");
 
-                if (!(data.get(PARTICIPANT_NAME.name) == null) || !data.get(PARTICIPANT_NAME.name).trim().isBlank()) {
+                if (data.get(PARTICIPANT_NAME.name) != null && !data.get(PARTICIPANT_NAME.name).trim().isBlank()) {
                     xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_NAME.name));
                 }
-                else if (!(data.get(PARTICIPANT_ID.name) == null) || !data.get(PARTICIPANT_ID.name).trim().isBlank()) {
+                else if (data.get(PARTICIPANT_ID.name) != null && !data.get(PARTICIPANT_ID.name).trim().isBlank()) {
                     xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_ID.name));
                 }
                 return null;
             }
         }
 
-        Map<DataTypeAndColumn, CvTerm> terms = fetchCvTermsFromData(data);
-        List<CvTerm> experimentalPreparations = getExperimentalPreparations(data.get(EXPERIMENTAL_PREPARATION.name));
+        // Fetch CV terms using the updated key logic
+        Map<InputData, CvTerm> terms = fetchCvTermsFromData(data);
+
+        // Use getDataKey for experimental preparations
+        List<CvTerm> experimentalPreparations = getExperimentalPreparations(data.get(getDataKey(EXPERIMENTAL_PREPARATION, data)));
+
+        // Use getDataKey for other fields
         CvTerm participantIdDb = terms.get(PARTICIPANT_ID_DB);
         CvTerm experimentalRole = terms.get(EXPERIMENTAL_ROLE);
-        CvTerm xref= terms.get(PARTICIPANT_XREF);
+        CvTerm xref = terms.get(PARTICIPANT_XREF);
         CvTerm xrefDb = terms.get(PARTICIPANT_XREF_DB);
         CvTerm participantIdentificationMethod = terms.get(PARTICIPANT_IDENTIFICATION_METHOD);
-        String name = Objects.requireNonNull(data.get(PARTICIPANT_NAME.name), "The participant name cannot be null");
-        String participantId = data.get(PARTICIPANT_ID.name);
-        String participantOrganism = data.get(PARTICIPANT_ORGANISM.name);
+        String name = Objects.requireNonNull(data.get(getDataKey(PARTICIPANT_NAME, data)), "The participant name cannot be null");
+        String participantId = data.get(getDataKey(PARTICIPANT_ID, data));
+        String participantOrganism = data.get(getDataKey(PARTICIPANT_ORGANISM, data));
 
         Xref uniqueId = new XmlXref(participantIdDb, participantId);
 
@@ -134,7 +143,7 @@ public class XmlInteractionsCreator {
 
         XmlParticipantEvidence participantEvidence = new XmlParticipantEvidence(participant);
 
-        String participantExpressedInOrganism = data.get(PARTICIPANT_EXPRESSED_IN_ORGANISM.name);
+        String participantExpressedInOrganism = data.get(PARTICIPANT_EXPRESSED_IN_ORGANISM.name + participantExperimentalRole);
         setParticipantExpressedInOrganism(participantEvidence, participantExpressedInOrganism);
 
         if (experimentalRole != null) {
@@ -273,22 +282,22 @@ public class XmlInteractionsCreator {
      * Asynchronously fetches controlled vocabulary terms from participant data.
      *
      * @param data The participant data map.
-     * @return A map of {@link DataTypeAndColumn} to resolved {@link CvTerm}s.
+     * @return A map of {@link InputData} to resolved {@link CvTerm}s.
      */
-    private Map<DataTypeAndColumn, CvTerm> fetchCvTermsFromData(Map<String, String> data) {
-        Map<DataTypeAndColumn, CompletableFuture<CvTerm>> futureTerms = Stream.of(PARTICIPANT_TYPE, PARTICIPANT_ID_DB,
-                        EXPERIMENTAL_ROLE, EXPERIMENTAL_PREPARATION, PARTICIPANT_IDENTIFICATION_METHOD,
-                        PARTICIPANT_XREF, PARTICIPANT_XREF_DB)
-                .map(type -> Map.entry(type, data.get(type.name)))
+    private Map<InputData, CvTerm> fetchCvTermsFromData(Map<String, String> data) {
+        return Stream.of(PARTICIPANT_TYPE, PARTICIPANT_ID_DB, EXPERIMENTAL_ROLE, EXPERIMENTAL_PREPARATION, PARTICIPANT_IDENTIFICATION_METHOD, PARTICIPANT_XREF, PARTICIPANT_XREF_DB)
+                .map(type -> Map.entry(type, data.get(getDataKey(type, data))))
                 .filter(e -> e.getValue() != null)
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         e -> CompletableFuture.supplyAsync(() -> XmlMakerUtils.fetchTerm(e.getValue()))
-                ));
-
-        return futureTerms.entrySet().stream()
+                ))
+                .entrySet().stream()
                 .filter(e -> e.getValue().join() != null)
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().join()));
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().join()
+                ));
     }
 
     /**
@@ -442,12 +451,19 @@ public class XmlInteractionsCreator {
         }
 
         Map<String, String> dataMap = new HashMap<>();
-        for (DataTypeAndColumn column : DataTypeAndColumn.values()) {
+        for (InputData column : InputData.values()) {
             if (column.initial) {
+                String key = column.name;
+                if (column.experimentalRoleDependent) {
+                    String experimentalRole = datum.get(columnAndIndex.get(EXPERIMENTAL_ROLE.name));
+                    if (experimentalRole != null && !experimentalRole.trim().isEmpty()) {
+                        key = column.name + experimentalRole;
+                    }
+                }
                 if (columnAndIndex.get(column.name) < datum.size()) {
-                    dataMap.put(column.name, datum.get(columnAndIndex.get(column.name)));
+                    dataMap.put(key, datum.get(columnAndIndex.get(column.name)));
                 } else {
-                    dataMap.put(column.name, "");
+                    dataMap.put(key, "");
                 }
             }
             for (int i = 0; i < numberOfFeature; i++) {
@@ -599,11 +615,11 @@ public class XmlInteractionsCreator {
             XmlParticipantEvidence newParticipant = createParticipant(participant);
             interaction.addParticipant(newParticipant);
 
-            interactionDetectionMethod = participant.get(DataTypeAndColumn.INTERACTION_DETECTION_METHOD.name);
-            participantIdentificationMethod = participant.get(DataTypeAndColumn.PARTICIPANT_IDENTIFICATION_METHOD.name);
-            hostOrganism = participant.get(DataTypeAndColumn.HOST_ORGANISM.name);
-            interactionType = participant.get(DataTypeAndColumn.INTERACTION_TYPE.name);
-            interactionFigureLegend = participant.get(DataTypeAndColumn.INTERACTION_FIGURE_LEGEND.name);
+            interactionDetectionMethod = participant.get(INTERACTION_DETECTION_METHOD.name);
+            participantIdentificationMethod = participant.get(PARTICIPANT_IDENTIFICATION_METHOD.name);
+            hostOrganism = participant.get(HOST_ORGANISM.name);
+            interactionType = participant.get(INTERACTION_TYPE.name);
+            interactionFigureLegend = participant.get(INTERACTION_FIGURE_LEGEND.name);
 
             String parameterType = participant.get(INTERACTION_PARAM_TYPE.name);
             String parameterValue = participant.get(INTERACTION_PARAM_VALUE.name);

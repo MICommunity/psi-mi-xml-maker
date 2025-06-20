@@ -3,8 +3,11 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileWriter;
+
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
@@ -21,19 +24,24 @@ public class UniprotMapperGui extends JPanel {
     private final JComboBox<String> idColumn = new JComboBox<>();
     private final JComboBox<String> organismColumn = new JComboBox<>();
     private final JComboBox<String> idDbColumn = new JComboBox<>();
+
     private final FileReader fileReader;
-    private static final Logger LOGGER = Logger.getLogger(UniprotMapperGui.class.getName());
+    private final FileWriter fileWriter;
+
     private final LoadingSpinner loadingSpinner;
     private boolean isUpdatingSheets = false;
+
+    private static final Logger LOGGER = Logger.getLogger(UniprotMapperGui.class.getName());
 
     /**
      * Constructs a new instance of the UniprotMapperGui class.
      * @param fileReader The FileReader instance to interact with the Excel file.
      * @param loadingSpinner The loading spinner for display
      */
-    public UniprotMapperGui(FileReader fileReader, LoadingSpinner loadingSpinner) {
+    public UniprotMapperGui(FileReader fileReader, LoadingSpinner loadingSpinner, FileWriter fileWriter) {
         this.fileReader = fileReader;
         this.loadingSpinner = loadingSpinner;
+        this.fileWriter = fileWriter;
     }
 
     /**
@@ -197,9 +205,9 @@ public class UniprotMapperGui extends JPanel {
      */
     private void processSheet(String sheetSelected, String idColumn, int idDbColumnIndex, int organismColumnIndex) {
         try {
-            fileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
-            if (!fileReader.getUniprotIdNotFound().isEmpty()) {
-                showInfoDialog("Inactive Uniprot IDs: " + fileReader.getUniprotIdNotFound());
+            fileWriter.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
+            if (!fileWriter.getUniprotIdNotFound().isEmpty()) {
+                showInfoDialog("Inactive Uniprot IDs: " + fileWriter.getUniprotIdNotFound());
             }
             showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
@@ -215,9 +223,10 @@ public class UniprotMapperGui extends JPanel {
      */
     private void processFileWithoutSheet(String idColumn, int idDbColumn, int organismColumn) {
         try {
-            fileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
-            if (!fileReader.getUniprotIdNotFound().isEmpty()) {
-                showInfoDialog("Inactive Uniprot IDs: " + fileReader.getUniprotIdNotFound());
+            fileWriter.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
+            List<String> uniprotIdNotFound = fileWriter.getUniprotIdNotFound();
+            if (!uniprotIdNotFound.isEmpty()) {
+                showInfoDialog("Inactive Uniprot IDs: " + uniprotIdNotFound);
             }
             showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
@@ -230,8 +239,8 @@ public class UniprotMapperGui extends JPanel {
      * If any proteins are part of a molecule set, they are shown in a comma-separated list.
      */
     private void showMoleculeSetDialog() {
-        if (!fileReader.getProteinsPartOfMoleculeSet().isEmpty()) {
-            String participantsList = String.join(", ", fileReader.getProteinsPartOfMoleculeSet());
+        if (!fileWriter.getProteinsPartOfMoleculeSet().isEmpty()) {
+            String participantsList = String.join(", ", fileWriter.getProteinsPartOfMoleculeSet());
             JOptionPane.showMessageDialog(new JFrame(),"Those participants have been identified as part of a molecule set: " + participantsList,
                     "INFORMATION", JOptionPane.INFORMATION_MESSAGE);
         }

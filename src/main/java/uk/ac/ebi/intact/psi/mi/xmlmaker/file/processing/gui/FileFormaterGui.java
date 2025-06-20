@@ -77,8 +77,8 @@ public class FileFormaterGui {
     private boolean isUpdatingSheets = false;
 
     /**
-     * Populates the sheets combo box with available sheets from the FileReader.
-     * If no sheets are available, disables the combo box.
+     * Populates the sheet combo box with available sheets from the FileReader.
+     * If no sheets are available, disable the combo box.
      */
     public void setUpSheets() {
         isUpdatingSheets = true; // Suppress events
@@ -172,6 +172,7 @@ public class FileFormaterGui {
         } catch (Exception e) {
             showErrorDialog("Error during file formatting, please check that the mandatory columns are correctly selected.");
             LOGGER.warning("Error during file formatting: " + e);
+            e.printStackTrace();
         }
     }
 

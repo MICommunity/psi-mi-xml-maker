@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import psidev.psi.mi.jami.model.CvTerm;
 import psidev.psi.mi.jami.xml.model.extension.xml300.XmlCvTerm;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
 import uk.ac.ebi.pride.utilities.ols.web.service.model.Identifier;
@@ -17,6 +18,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.*;
 import java.util.stream.Collectors;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.EXPERIMENTAL_ROLE;
 
 /**
  * Utility class for XML creation and management tasks in the PSI-MI context.
@@ -308,4 +311,13 @@ public class XmlMakerUtils {
         return stringValue.equals(keyName) ? "" : stringValue;
     }
 
+    public static String getDataKey(InputData column, Map<String, String> data) {
+        if (column.experimentalRoleDependent) {
+            String experimentalRole = data.get(EXPERIMENTAL_ROLE.name);
+            if (experimentalRole != null && !experimentalRole.trim().isEmpty()) {
+                return column.name + experimentalRole;
+            }
+        }
+        return column.name;
+    }
 }

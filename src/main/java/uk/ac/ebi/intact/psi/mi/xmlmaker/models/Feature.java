@@ -22,14 +22,14 @@ public class Feature {
     private boolean fetchFromFile;
     private String role;
 
-    private List<String> xref = new ArrayList<>();
-    private List<String> xrefDb = new ArrayList<>();
-    private List<String> xrefQualifier  = new ArrayList<>();
+    private List<String> xref;
+    private List<String> xrefDb;
+    private List<String> xrefQualifier;
 
     private boolean induceInteractionParameters;
     private int number;
 
-    private List<Parameter> parameters = new ArrayList<>();
+    private List<Parameter> parameters;
 
     private String parameterTypes = "";
     private String parameterValues = "";
@@ -40,9 +40,55 @@ public class Feature {
 
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
 
+    public Feature() {
+        this.xref = new ArrayList<>();
+        this.xrefDb = new ArrayList<>();
+        this.xrefQualifier = new ArrayList<>();
+        this.parameters = new ArrayList<>();
+    }
+
+    // Safe setters for lists
+    public void setXref(List<String> xref) {
+        this.xref = new ArrayList<>(xref);
+    }
+
+    public void setXrefDb(List<String> xrefDb) {
+        this.xrefDb = new ArrayList<>(xrefDb);
+    }
+
+    public void setXrefQualifier(List<String> xrefQualifier) {
+        this.xrefQualifier = new ArrayList<>(xrefQualifier);
+    }
+
+    public void addXref(String xref) {
+        this.xref.add(xref);
+    }
+
+    public void removeXref(int index) {
+        this.xref.remove(index);
+    }
+
+    public void addXrefDb(String xrefDb) {
+        this.xrefDb.add(xrefDb);
+    }
+
+    public void removeXrefDb(int index) {
+        this.xrefDb.remove(index);
+    }
+
+    public void addXrefQualifier(String qualifier) {
+        this.xrefQualifier.add(qualifier);
+    }
+
+    public void removeXrefQualifier(int qualifier) {
+        this.xref.remove(qualifier);
+    }
+
+
     public String getListAsString(List<String> list) {
         return String.join(";", list);
     }
+
     public void setParametersAsString() {
         StringBuilder types = new StringBuilder();
         StringBuilder values = new StringBuilder();
@@ -74,9 +120,7 @@ public class Feature {
         pcs.firePropertyChange("fetchFromFile", oldValue, fetchFromFile);
     }
 
-
     public void addFetchFromFileListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener("fetchFromFile", listener);
     }
-
 }

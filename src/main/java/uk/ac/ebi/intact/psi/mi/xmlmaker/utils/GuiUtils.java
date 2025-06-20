@@ -80,6 +80,8 @@ public class GuiUtils {
         comboBox.addItem(defaultItem);
         comboBox.setPreferredSize(new Dimension(200, 50));
         comboBox.setMaximumSize(new Dimension(200, 50));
+        comboBox.setToolTipText(defaultItem);
+        comboBox.setSelectedItem(defaultItem);
         return comboBox;
     }
 

@@ -10,7 +10,10 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile.*;
+//import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile.*;
+//import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.*;
+
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
@@ -204,32 +207,35 @@ public class ParticipantAndInteractionCreatorGui {
     public Map<String, String> getParticipantDetails() {
         Map<String, String> participantDetails = new HashMap<>();
 
-        participantDetails.put(BAIT_ID_DB.nameAndExperimentalRole,
-                isValueNull(baitIdDatabase.getSelectedItem(), BAIT_ID_DB.name));
-        participantDetails.put(PREY_ID_DB.nameAndExperimentalRole,
-                isValueNull(preyIdDatabase.getSelectedItem(), PREY_ID_DB.name));
-        participantDetails.put(INTERACTION_DETECTION_METHOD.nameAndExperimentalRole,
+        //common
+        participantDetails.put(INTERACTION_DETECTION_METHOD.name,
                 isValueNull(interactionDetectionMethodCombobox.getSelectedItem(), INTERACTION_DETECTION_METHOD.name));
-        participantDetails.put(BAIT_EXPERIMENTAL_PREPARATION.nameAndExperimentalRole,
-                isValueNull(getBaitExperimentalPreparationsAsString(), BAIT_EXPERIMENTAL_PREPARATION.name));
-        participantDetails.put(PREY_EXPERIMENTAL_PREPARATION.nameAndExperimentalRole,
-                isValueNull(getPreyExperimentalPreparationsAsString(), PREY_EXPERIMENTAL_PREPARATION.name));
-        participantDetails.put(PARTICIPANT_DETECTION_METHOD.nameAndExperimentalRole,
-                isValueNull(participantDetectionMethodCombobox.getSelectedItem(), PARTICIPANT_DETECTION_METHOD.name));
-        participantDetails.put(BAIT_BIOLOGICAL_ROLE.nameAndExperimentalRole,
-                isValueNull(baitBiologicalRole.getSelectedItem(), BAIT_BIOLOGICAL_ROLE.name));
-        participantDetails.put(PREY_BIOLOGICAL_ROLE.nameAndExperimentalRole,
-                isValueNull(preyBiologicalRole.getSelectedItem(), PREY_BIOLOGICAL_ROLE.name));
+        participantDetails.put(INTERACTION_FIGURE_LEGEND.name, interactionFigureLegend.getText());
+        participantDetails.put(PARTICIPANT_IDENTIFICATION_METHOD.name,
+                isValueNull(participantDetectionMethodCombobox.getSelectedItem(), PARTICIPANT_IDENTIFICATION_METHOD.name));
+        participantDetails.put(HOST_ORGANISM.name, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(hostOrganism.getSelectedItem()).toString()), HOST_ORGANISM.name));
 
-        participantDetails.put(INTERACTION_FIGURE_LEGEND.nameAndExperimentalRole, interactionFigureLegend.getText());
+        //bait
+        participantDetails.put(PARTICIPANT_ID_DB.name + BAIT.name,
+                isValueNull(baitIdDatabase.getSelectedItem(), PARTICIPANT_ID_DB + BAIT.name));
+        participantDetails.put(EXPERIMENTAL_PREPARATION.name + BAIT.name,
+                isValueNull(getBaitExperimentalPreparationsAsString(), EXPERIMENTAL_PREPARATION.name + BAIT.name));
+        participantDetails.put(PARTICIPANT_BIOLOGICAL_ROLE.name + BAIT.name,
+                isValueNull(baitBiologicalRole.getSelectedItem(), PARTICIPANT_BIOLOGICAL_ROLE.name + BAIT.name));
+        participantDetails.put(PARTICIPANT_ORGANISM.name + BAIT.name,
+                isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()), PARTICIPANT_ORGANISM.name + BAIT.name));
+        participantDetails.put(PARTICIPANT_EXPRESSED_IN_ORGANISM.name + BAIT.name, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(baitExpressedInOrganism.getSelectedItem()).toString()), PARTICIPANT_EXPRESSED_IN_ORGANISM.name + BAIT.name));
 
-        participantDetails.put(BAIT_ORGANISM.nameAndExperimentalRole,
-                isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()), BAIT_ORGANISM.name));
-        participantDetails.put(PREY_ORGANISM.nameAndExperimentalRole,
-                isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), PREY_ORGANISM.name));
-        participantDetails.put(HOST_ORGANISM.nameAndExperimentalRole, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(hostOrganism.getSelectedItem()).toString()), HOST_ORGANISM.name));
-        participantDetails.put(PREY_EXPRESSED_IN_ORGANISM.nameAndExperimentalRole, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(preyExpressedInOrganism.getSelectedItem()).toString()), PREY_EXPRESSED_IN_ORGANISM.name));
-        participantDetails.put(BAIT_EXPRESSED_IN_ORGANISM.nameAndExperimentalRole, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(baitExpressedInOrganism.getSelectedItem()).toString()), BAIT_EXPRESSED_IN_ORGANISM.name));
+        //prey
+        participantDetails.put(PARTICIPANT_ID_DB.name + PREY.name,
+                isValueNull(preyIdDatabase.getSelectedItem(), PARTICIPANT_ID_DB + PREY.name));
+        participantDetails.put(EXPERIMENTAL_PREPARATION.name + PREY.name,
+                isValueNull(getPreyExperimentalPreparationsAsString(), EXPERIMENTAL_PREPARATION.name + PREY.name));
+        participantDetails.put(PARTICIPANT_BIOLOGICAL_ROLE.name + PREY.name,
+                isValueNull(preyBiologicalRole.getSelectedItem(), PARTICIPANT_BIOLOGICAL_ROLE.name + PREY.name));
+        participantDetails.put(PARTICIPANT_ORGANISM.name + PREY.name,
+                isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), PARTICIPANT_ORGANISM.name + PREY.name));
+        participantDetails.put(PARTICIPANT_EXPRESSED_IN_ORGANISM.name + PREY.name, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(preyExpressedInOrganism.getSelectedItem()).toString()), PARTICIPANT_EXPRESSED_IN_ORGANISM.name + PREY.name));
 
         return participantDetails;
     }
@@ -281,7 +287,7 @@ public class ParticipantAndInteractionCreatorGui {
         List<String> selectedPreparations = new ArrayList<>();
 
         for (JComboBox<String> comboBox : baitExperimentalPreparationList) {
-            String selectedValue = isValueNull(comboBox.getSelectedItem(), DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name);
+            String selectedValue = isValueNull(comboBox.getSelectedItem(), EXPERIMENTAL_PREPARATION.name);
             if (selectedValue != null && !selectedValue.isEmpty()) {
                 selectedPreparations.add(selectedValue);
             }
@@ -302,7 +308,7 @@ public class ParticipantAndInteractionCreatorGui {
         List<String> selectedPreparations = new ArrayList<>();
 
         for (JComboBox<String> comboBox : preyExperimentalPreparationList) {
-            String selectedValue = isValueNull(comboBox.getSelectedItem(), DataTypeAndColumn.EXPERIMENTAL_PREPARATION.name);
+            String selectedValue = isValueNull(comboBox.getSelectedItem(), EXPERIMENTAL_PREPARATION.name);
             if (selectedValue != null && !selectedValue.isEmpty()) {
                 selectedPreparations.add(selectedValue);
             }
@@ -362,11 +368,11 @@ public class ParticipantAndInteractionCreatorGui {
         baitPanel.setMaximumSize(participantPanelDimension);
 
 
-        baitPanel.add(setComboBoxDimension(baitIdDatabase, BAIT_ID_DB.name));
-        baitPanel.add(setComboBoxDimension(baitBiologicalRole, BAIT_BIOLOGICAL_ROLE.name));
-        baitBiologicalRole.setToolTipText("Bait Biological Role");
-        baitPanel.add(setComboBoxDimension(baitOrganism, BAIT_ORGANISM.name));
-        baitPanel.add(setComboBoxDimension(baitExpressedInOrganism, BAIT_EXPRESSED_IN_ORGANISM.name));
+        baitPanel.add(setComboBoxDimension(baitIdDatabase, PARTICIPANT_ID_DB.name));
+        baitPanel.add(setComboBoxDimension(baitBiologicalRole, PARTICIPANT_BIOLOGICAL_ROLE.name));
+
+        baitPanel.add(setComboBoxDimension(baitOrganism, PARTICIPANT_ORGANISM.name));
+        baitPanel.add(setComboBoxDimension(baitExpressedInOrganism, PARTICIPANT_EXPRESSED_IN_ORGANISM.name));
 
         numberOfBaitExperimentalPrep.setPreferredSize(new Dimension(200, 100));
         numberOfBaitExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Experimental preparations"));
@@ -401,11 +407,10 @@ public class ParticipantAndInteractionCreatorGui {
         preyPanel.setBorder(BorderFactory.createTitledBorder(" 2.4 Select preys information"));
         preyPanel.setMaximumSize(participantPanelDimension);
 
-        preyPanel.add(setComboBoxDimension(preyIdDatabase, PREY_ID_DB.name));
-        preyPanel.add(setComboBoxDimension(preyBiologicalRole, PREY_BIOLOGICAL_ROLE.name));
-        preyBiologicalRole.setToolTipText("Prey Biological Role");
-        preyPanel.add(setComboBoxDimension(preyOrganism, PREY_ORGANISM.name));
-        preyPanel.add(setComboBoxDimension(preyExpressedInOrganism, PREY_EXPRESSED_IN_ORGANISM.name));
+        preyPanel.add(setComboBoxDimension(preyIdDatabase, PARTICIPANT_ID_DB.name));
+        preyPanel.add(setComboBoxDimension(preyBiologicalRole, PARTICIPANT_BIOLOGICAL_ROLE.name));
+        preyPanel.add(setComboBoxDimension(preyOrganism, PARTICIPANT_ORGANISM.name));
+        preyPanel.add(setComboBoxDimension(preyExpressedInOrganism, PARTICIPANT_EXPRESSED_IN_ORGANISM.name));
 
         numberOfPreyExperimentalPrep.setPreferredSize(new Dimension(200, 100));
         numberOfPreyExperimentalPrep.setBorder(BorderFactory.createTitledBorder("Experimental preparations"));
@@ -444,7 +449,7 @@ public class ParticipantAndInteractionCreatorGui {
         experimentInfoPanel.add(setComboBoxDimension(hostOrganism, HOST_ORGANISM.name));
 
         experimentInfoPanel.add(setComboBoxDimension(interactionDetectionMethodCombobox, INTERACTION_DETECTION_METHOD.name));
-        experimentInfoPanel.add(setComboBoxDimension(participantDetectionMethodCombobox, PARTICIPANT_DETECTION_METHOD.name));
+        experimentInfoPanel.add(setComboBoxDimension(participantDetectionMethodCombobox, PARTICIPANT_IDENTIFICATION_METHOD.name));
         experimentInfoPanel.add(addVariableExperimentalCondition);
 
         return experimentInfoPanel;
@@ -477,5 +482,4 @@ public class ParticipantAndInteractionCreatorGui {
 
         return interactionInfoPanel;
     }
-
 }

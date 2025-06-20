@@ -15,7 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.*;
+//import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.*;
 
 /**
  * Utility class responsible for constructing {@link XmlFeatureEvidence} objects from structured input data.
@@ -63,8 +64,8 @@ public class XmlFeatureEvidenceCreator {
         FeatureData featureData = new FeatureData();
         featureData.featureShortName = data.get(FEATURE_SHORT_NAME.name + featureIndexString);
         featureData.featureType = data.get(FEATURE_TYPE.name + featureIndexString);
-        featureData.featureStart = data.get(FEATURE_START.name + featureIndexString);
-        featureData.featureEnd = data.get(FEATURE_END.name + featureIndexString);
+        featureData.featureStart = data.get(FEATURE_START_LOCATION.name + featureIndexString);
+        featureData.featureEnd = data.get(FEATURE_END_LOCATION.name + featureIndexString);
         featureData.featureRangeType = data.get(FEATURE_RANGE_TYPE.name + featureIndexString);
         featureData.featureXref = data.get(FEATURE_XREF.name + featureIndexString);
         featureData.featureXrefDb = data.get(FEATURE_XREF_DB.name + featureIndexString);

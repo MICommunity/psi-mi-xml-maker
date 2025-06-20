@@ -5,7 +5,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.XmlFileWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators.XmlInteractionsCreator;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping.UniprotMapperGui;
@@ -43,7 +43,7 @@ public class InteractionsCreatorGui extends JPanel {
     public JPanel participantCreatorPanel ;
     public final Map<String, Integer> dataAndIndexes = new HashMap<>();
     final ArrayList<String> dataNeededForInteractor = new ArrayList<>(
-            Arrays.stream(DataTypeAndColumn.values())
+            Arrays.stream(InputData.values())
                     .filter(dataType -> dataType.initial)
                     .map(dataType -> dataType.name)
                     .collect(Collectors.toList())
@@ -149,7 +149,7 @@ public class InteractionsCreatorGui extends JPanel {
      */
     private void createInteractionDataTable() {
         int rows = 5;
-        int cols = dataNeededForInteractor.size() + (int) numberOfFeatures.getValue() * DataTypeAndColumn.getNotInitialData().size();
+        int cols = dataNeededForInteractor.size() + (int) numberOfFeatures.getValue() * InputData.getNotInitialData().size();
         String defaultCellValue = "Select from file";
         String otherRowsValue = "N/A";
         String defaultColumnTitle = "Title";
@@ -304,7 +304,7 @@ public class InteractionsCreatorGui extends JPanel {
      * @param featureIndex The index of the feature being added.
      */
     public void addFeatureCells(int featureIndex) {
-        List<String> featureCells = DataTypeAndColumn.getNotInitialData();
+        List<String> featureCells = InputData.getNotInitialData();
         featureCells = featureCells.stream()
                 .map(data -> data + "_" + featureIndex)
                 .collect(Collectors.toList());
@@ -404,12 +404,12 @@ public class InteractionsCreatorGui extends JPanel {
     }
 
     /**
-     * Adds a change listener to the number of features spinner.
+     * Adds a change listener to the number of feature spinner.
      * When the spinner value changes, this method performs the following actions:
      * <ul>
      *     <li>Invokes the `createInteractionDataTable` method to create or refresh the interaction data table.</li>
      *     <li>Calls the `addFeatureCells` method to add or update feature cells based on the new spinner value.</li>
-     *     <li>Sets the number of features in the interactions creator using the updated spinner value.</li>
+     *     <li>Sets the number of features in the interaction creator using the updated spinner value.</li>
      * </ul>
      * This method ensures that all relevant UI components and data are updated when the user adjusts the number of features.
      */

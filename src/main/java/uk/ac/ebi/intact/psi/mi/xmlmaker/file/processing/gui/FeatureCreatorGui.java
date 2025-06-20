@@ -9,68 +9,65 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
+/**
+ * A GUI component for creating and managing biological feature definitions.
+ * This class provides a user interface for defining features (such as protein domains or modifications)
+ * that can be associated with bait or prey molecules in protein interaction experiments.
+ *
+ * <p>The GUI allows users to:
+ * <ul>
+ *   <li>Define multiple features with various attributes</li>
+ *   <li>Specify feature locations, types, and roles</li>
+ *   <li>Toggle between manual entry and file-based data fetching</li>
+ *   <li>Manage cross-references for features</li>
+ * </ul>
+ */
 public class FeatureCreatorGui {
+    private static final int MAX_FEATURES = 10;
+    private static final double SCREEN_SIZE_RATIO = 0.9;
+
     final JPanel featureMainPanel = new JPanel();
 
-    private final List<String> locationOptions = new ArrayList<>();
-    private final List<String> typeOptions = new ArrayList<>();
-    private final List<String> rangeTypeOptions = new ArrayList<>();
-    private final List<String> roleOptions = new ArrayList<>();
+    private final List<String> locationOptions = List.of("c-term", "n-term", "undetermined");
+    private final List<String> typeOptions = new ArrayList<>(CacheUtils.FEATURE_TYPES);
+    private final List<String> rangeTypeOptions = new ArrayList<>(CacheUtils.FEATURE_RANGE_TYPES);
+    private final List<String> roleOptions = new ArrayList<>(CacheUtils.FEATURE_ROLES);
 
     @Getter
     private final List<Feature> baitFeatures = new ArrayList<>();
     @Getter
     private final List<Feature> preyFeatures = new ArrayList<>();
 
+    @Getter
     private boolean bait;
 
     private final ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui;
+
+    @Getter
     private List<String> fileColumns = new ArrayList<>();
 
+    /**
+     * Constructs a new FeatureCreatorGui with reference to its parent component.
+     *
+     * @param participantAndInteractionCreatorGui the parent GUI component
+     */
     public FeatureCreatorGui(ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui) {
         this.participantAndInteractionCreatorGui = participantAndInteractionCreatorGui;
-        loadOptions();
     }
 
-    private void loadOptions() {
-        setLocationOptions();
-        setTypeOptions();
-        setRangeTypeOptions();
-        setRoleOptions();
-    }
-
-    private void setLocationOptions() {
-        if (locationOptions.isEmpty()){
-            locationOptions.add("c-term");
-            locationOptions.add("n-term");
-            locationOptions.add("undetermined");
-        }
-    }
-
-    private void setTypeOptions() {
-        if (typeOptions.isEmpty()) {
-            typeOptions.addAll(CacheUtils.FEATURE_TYPES);
-        }
-    }
-
-    private void setRangeTypeOptions() {
-        if (rangeTypeOptions.isEmpty()) {
-            rangeTypeOptions.addAll(CacheUtils.FEATURE_RANGE_TYPES);
-        }
-    }
-
-    private void setRoleOptions() {
-        if (roleOptions.isEmpty()) {
-            roleOptions.addAll(CacheUtils.FEATURE_ROLES);
-        }
-    }
-
+    /**
+     * Returns the main panel configured for either bait or prey features.
+     *
+     * @param isBait true if configuring bait features, false for prey features
+     * @return the fully configured main panel
+     */
     public JPanel getFeatureMainPanel(boolean isBait) {
         this.bait = isBait;
         FileReader fileReader = participantAndInteractionCreatorGui.getFileReader();
@@ -79,390 +76,275 @@ public class FeatureCreatorGui {
         return featureMainPanel;
     }
 
+    /**
+     * Creates the container panel that holds all feature panels.
+     */
     private void createFeaturesContainerPanel() {
         JPanel featureContainerPanel = new JPanel();
         featureContainerPanel.setLayout(new BoxLayout(featureContainerPanel, BoxLayout.Y_AXIS));
         featureMainPanel.setLayout(new BorderLayout(5, 5));
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        screenSize.width = (int) (screenSize.width * 0.9);
-        screenSize.height = (int) (screenSize.height * 0.8);
+        screenSize.width = (int) (screenSize.width * SCREEN_SIZE_RATIO);
+        screenSize.height = (int) (screenSize.height * SCREEN_SIZE_RATIO);
 
         featureMainPanel.setPreferredSize(screenSize);
-        featureMainPanel.add(getNumberOfFeaturesSpinner(featureContainerPanel), BorderLayout.NORTH);
+        featureMainPanel.add(createFeatureCountSpinner(featureContainerPanel), BorderLayout.NORTH);
         featureMainPanel.add(new JScrollPane(featureContainerPanel), BorderLayout.CENTER);
     }
 
-    private JSpinner getNumberOfFeaturesSpinner(JPanel panelToUpdate) {
-        JSpinner featureCountSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
-
-        featureCountSpinner.setBorder(BorderFactory.createTitledBorder("Select number of features"));
-        featureCountSpinner.addChangeListener(e -> {
-            int value = (int) featureCountSpinner.getValue();
-            SwingUtilities.invokeLater(() -> updateFeaturePanel(panelToUpdate, value));
-        });
-
-        updateFeaturePanel(panelToUpdate, (int) featureCountSpinner.getValue());
-        return featureCountSpinner;
+    /**
+     * Creates and configures the spinner control for selecting number of features.
+     *
+     * @param panelToUpdate the panel that will be updated when spinner value changes
+     * @return the configured JSpinner instance
+     */
+    private JSpinner createFeatureCountSpinner(JPanel panelToUpdate) {
+        JSpinner spinner = new JSpinner(new SpinnerNumberModel(1, 1, MAX_FEATURES, 1));
+        spinner.setBorder(BorderFactory.createTitledBorder("Select number of features"));
+        spinner.addChangeListener(e -> updateFeaturePanel(panelToUpdate, (int) spinner.getValue()));
+        updateFeaturePanel(panelToUpdate, (int) spinner.getValue());
+        return spinner;
     }
 
-    private void updateFeaturePanel(JPanel featureContainerPanel, int count) {
-        int currentCount = featureContainerPanel.getComponentCount();
+    /**
+     * Updates the feature panels based on the requested count.
+     *
+     * @param container the container panel holding feature panels
+     * @param count the desired number of feature panels
+     */
+    private void updateFeaturePanel(JPanel container, int count) {
+        int currentCount = container.getComponentCount();
+        List<Feature> features = bait ? baitFeatures : preyFeatures;
+
         for (int i = currentCount; i < count; i++) {
-            featureContainerPanel.add(createFeaturePanel());
+            container.add(createFeaturePanel());
         }
 
         for (int i = currentCount - 1; i >= count; i--) {
-            featureContainerPanel.remove(i);
-            if (bait){
-                baitFeatures.remove(i);
-            } else {
-                preyFeatures.remove(i);
-            }
+            container.remove(i);
+            features.remove(i);
         }
 
-        featureContainerPanel.revalidate();
-        featureContainerPanel.repaint();
+        container.revalidate();
+        container.repaint();
     }
 
+    /**
+     * Creates an individual feature definition panel.
+     *
+     * @return the configured feature panel
+     */
     private JPanel createFeaturePanel() {
-        Feature feature = new Feature();
-        JPanel featurePanel = new JPanel();
-        featurePanel.setBorder(BorderFactory.createTitledBorder("Feature"));
-        featurePanel.setLayout(new GridLayout(0, 3));
+        Feature feature = createNewFeature();
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(4,0));
+        panel.setBorder(BorderFactory.createTitledBorder("Feature"));
+
         AtomicBoolean fetchFromFile = new AtomicBoolean(false);
+        panel.add(createFetchFromFileToggle(fetchFromFile));
 
-        JCheckBox fetchFromFileToggle = new JCheckBox("Fetch from file");
-        fetchFromFileToggle.setSelected(fetchFromFile.get());
-        featurePanel.add(fetchFromFileToggle);
+        Map<String, JComboBox<String>> comboBoxes = createComboBoxes(feature);
+        addComboBoxesToPanel(panel, comboBoxes);
+        setupFetchFromFileListener(fetchFromFile, comboBoxes, feature);
 
-        JComboBox<String> startLocationComboBox = createComboBox(locationOptions, "Start location");
-        JComboBox<String> endLocationComboBox = createComboBox(locationOptions, "End location");
-        JComboBox<String> rangeTypeComboBox = createComboBox(rangeTypeOptions, "Range type");
-        JComboBox<String> typeComboBox = createComboBox(typeOptions, "* Feature type");
-        JComboBox<String> originalSequenceComboBox = createComboBox(new ArrayList<>(), "Original sequence");
-        originalSequenceComboBox.setEditable(true);
-        JComboBox<String> newSequenceComboBox = createComboBox(new ArrayList<>(), "New sequence");
-        newSequenceComboBox.setEditable(true);
-        JComboBox<String> shortLabelTextField = createComboBox(typeOptions, "* Feature short label");
-        JComboBox<String> roleCombobox = createComboBox(roleOptions, "Feature role");
+        panel.add(new FeatureXrefGui(participantAndInteractionCreatorGui, this)
+                .createFeatureXrefContainerPanel(feature.getNumber()));
 
-        ActionListener updateListeners = e -> {
-            Object start = getComboBoxValue(startLocationComboBox);
-            String startTooltip = startLocationComboBox.getToolTipText();
-            feature.setStartLocation(start != null && !start.toString().equals(startTooltip) ? start.toString() : "");
+        return panel;
+    }
 
-            Object end = getComboBoxValue(endLocationComboBox);
-            String endTooltip = endLocationComboBox.getToolTipText();
-            feature.setEndLocation(end != null && !end.toString().equals(endTooltip) ? end.toString() : "");
+    /**
+     * Creates a new feature instance and adds it to the appropriate list.
+     *
+     * @return the newly created Feature instance
+     */
+    private Feature createNewFeature() {
+        Feature feature = new Feature();
+        List<Feature> targetList = bait ? baitFeatures : preyFeatures;
+        feature.setNumber(targetList.size());
+        targetList.add(feature);
+        return feature;
+    }
 
-            Object range = getComboBoxValue(rangeTypeComboBox);
-            String rangeTooltip = rangeTypeComboBox.getToolTipText();
-            feature.setRangeType(range != null && !range.toString().equals(rangeTooltip) ? range.toString() : "");
+    /**
+     * Creates the "Fetch from file" toggle checkbox.
+     *
+     * @param fetchFlag the atomic boolean to bind to the checkbox state
+     * @return the configured JCheckBox
+     */
+    private JCheckBox createFetchFromFileToggle(AtomicBoolean fetchFlag) {
+        JCheckBox checkBox = new JCheckBox("Fetch from file");
+        checkBox.setSelected(fetchFlag.get());
+        return checkBox;
+    }
 
-            Object type = getComboBoxValue(typeComboBox);
-            String typeTooltip = typeComboBox.getToolTipText();
-            feature.setType(type != null && !type.toString().equals(typeTooltip) ? type.toString() : "");
+    /**
+     * Creates all combo boxes needed for feature definition.
+     *
+     * @param feature the feature instance to bind to the combo boxes
+     * @return a map of combo boxes keyed by their purpose
+     */
+    private Map<String, JComboBox<String>> createComboBoxes(Feature feature) {
+        Map<String, JComboBox<String>> comboBoxes = new LinkedHashMap<>();
 
-            Object original = getComboBoxValue(originalSequenceComboBox);
-            String originalTooltip = originalSequenceComboBox.getToolTipText();
-            feature.setOriginalSequence(original != null && !original.toString().equals(originalTooltip) ? original.toString() : "");
+        comboBoxes.put("shortLabel", createComboBox(typeOptions, "* Feature short label"));
+        comboBoxes.put("type", createComboBox(typeOptions, "* Feature type"));
+        comboBoxes.put("startLocation", createComboBox(locationOptions, "Start location"));
+        comboBoxes.put("endLocation", createComboBox(locationOptions, "End location"));
+        comboBoxes.put("rangeType", createComboBox(rangeTypeOptions, "Range type"));
+        comboBoxes.put("originalSequence", createEditableComboBox(new ArrayList<>(), "Original sequence"));
+        comboBoxes.put("newSequence", createEditableComboBox(new ArrayList<>(), "New sequence"));
+        comboBoxes.put("role", createComboBox(roleOptions, "Feature role"));
 
-            Object newSequence = getComboBoxValue(newSequenceComboBox);
-            String newSequenceTooltip = newSequenceComboBox.getToolTipText();
-            feature.setNewSequence(newSequence != null && !newSequence.toString().equals(newSequenceTooltip) ? newSequence.toString() : "");
+        ActionListener updateListener = e -> updateFeatureProperties(feature, comboBoxes);
+        comboBoxes.values().forEach(cb -> cb.addActionListener(updateListener));
 
-            Object shortLabel = getComboBoxValue(shortLabelTextField);
-            String shortLabelTooltip = shortLabelTextField.getToolTipText();
-            feature.setShortName(shortLabel != null && !shortLabel.toString().equals(shortLabelTooltip) ? shortLabel.toString() : "");
+        return comboBoxes;
+    }
 
-            Object role = getComboBoxValue(roleCombobox);
-            String roleToolTip = roleCombobox.getToolTipText();
-            feature.setRole(role != null && !role.toString().equals(roleToolTip) ? role.toString() : "");
-        };
+    /**
+     * Adds all combo boxes to the feature panel in the correct order.
+     *
+     * @param panel the target panel to receive combo boxes
+     * @param comboBoxes the map of combo boxes to add
+     */
+    private void addComboBoxesToPanel(JPanel panel, Map<String, JComboBox<String>> comboBoxes) {
+        panel.add(comboBoxes.get("shortLabel"));
+        panel.add(comboBoxes.get("type"));
+        panel.add(comboBoxes.get("startLocation"));
+        panel.add(comboBoxes.get("endLocation"));
+        panel.add(comboBoxes.get("rangeType"));
+        panel.add(comboBoxes.get("originalSequence"));
+        panel.add(comboBoxes.get("newSequence"));
+        panel.add(comboBoxes.get("role"));
+    }
 
-        startLocationComboBox.addActionListener(updateListeners);
-        endLocationComboBox.addActionListener(updateListeners);
-        rangeTypeComboBox.addActionListener(updateListeners);
-        typeComboBox.addActionListener(updateListeners);
-        originalSequenceComboBox.addActionListener(updateListeners);
-        newSequenceComboBox.addActionListener(updateListeners);
-        shortLabelTextField.addActionListener(updateListeners);
-        roleCombobox.addActionListener(updateListeners);
+    /**
+     * Sets up the action listener for the "Fetch from file" toggle.
+     *
+     * @param fetchFlag the atomic boolean tracking the toggle state
+     * @param comboBoxes the map of combo boxes to update
+     * @param feature the feature instance being configured
+     */
+    private void setupFetchFromFileListener(AtomicBoolean fetchFlag,
+                                            Map<String, JComboBox<String>> comboBoxes,
+                                            Feature feature) {
+        JCheckBox toggle = (JCheckBox) (comboBoxes.get("shortLabel").getParent()).getComponent(0);
 
-        if (bait) {
-            feature.setNumber(baitFeatures.size());
-            baitFeatures.add(feature);
-        } else {
-            feature.setNumber(preyFeatures.size());
-            preyFeatures.add(feature);
-        }
-
-        featurePanel.add(shortLabelTextField);
-        featurePanel.add(typeComboBox);
-
-        featurePanel.add(startLocationComboBox);
-        featurePanel.add(endLocationComboBox);
-        featurePanel.add(rangeTypeComboBox);
-
-        featurePanel.add(originalSequenceComboBox);
-        featurePanel.add(newSequenceComboBox);
-        featurePanel.add(roleCombobox);
-
-        featurePanel.add(createFeatureXrefContainerPanel(feature.getNumber()));
-
-        fetchFromFileToggle.addActionListener(e -> {
-            boolean fetch = fetchFromFileToggle.isSelected();
-            fetchFromFile.set(fetch);
+        toggle.addActionListener(e -> {
+            boolean fetch = toggle.isSelected();
+            fetchFlag.set(fetch);
             feature.setFetchFromFile(fetch);
 
-            updateComboBoxData(typeComboBox, fetch ? fileColumns : typeOptions);
-            updateComboBoxData(startLocationComboBox, fetch ? fileColumns : locationOptions);
-            updateComboBoxData(endLocationComboBox, fetch ? fileColumns : locationOptions);
-            updateComboBoxData(rangeTypeComboBox, fetch ? fileColumns : rangeTypeOptions);
-            updateComboBoxData(originalSequenceComboBox, fetch ? fileColumns : new ArrayList<>());
-            updateComboBoxData(newSequenceComboBox, fetch ? fileColumns : new ArrayList<>());
-            updateComboBoxData(roleCombobox, fetch ? fileColumns : roleOptions);
-            updateComboBoxData(shortLabelTextField, fetch ? fileColumns : new ArrayList<>());
+            comboBoxes.forEach((key, cb) -> {
+                String tooltip = cb.getToolTipText();
+                List<String> options;
+
+                if (fetch) {
+                    options = new ArrayList<>(fileColumns);
+                } else {
+                    options = new ArrayList<>(getDefaultOptions(key));
+                }
+
+                options.add(0, tooltip);
+
+                DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(options.toArray(new String[0]));
+                cb.setModel(model);
+
+                cb.setSelectedIndex(0);
+            });
         });
-
-        return featurePanel;
     }
 
-    private Object getComboBoxValue(JComboBox<String> comboBox) {
-        return comboBox.isEditable() ? comboBox.getEditor().getItem() : comboBox.getSelectedItem();
+    /**
+     * Gets the default options for a given combo box type.
+     *
+     * @param key the identifier for the combo box type
+     * @return the list of default options for the specified combo box
+     */
+    private List<String> getDefaultOptions(String key) {
+        switch (key) {
+            case "startLocation":
+            case "endLocation":
+                return locationOptions;
+            case "rangeType":
+                return rangeTypeOptions;
+            case "type":
+                return typeOptions;
+            case "role":
+                return roleOptions;
+            default:
+                return new ArrayList<>();
+        }
     }
 
-    private void updateComboBoxData(JComboBox<String> comboBox, List<String> items) {
+    /**
+     * Updates feature properties based on current combo box selections.
+     *
+     * @param feature the feature instance to update
+     * @param comboBoxes the map of combo boxes containing current values
+     */
+    private void updateFeatureProperties(Feature feature, Map<String, JComboBox<String>> comboBoxes) {
+        feature.setStartLocation(getValidComboBoxValue(comboBoxes.get("startLocation")));
+        feature.setEndLocation(getValidComboBoxValue(comboBoxes.get("endLocation")));
+        feature.setRangeType(getValidComboBoxValue(comboBoxes.get("rangeType")));
+        feature.setType(getValidComboBoxValue(comboBoxes.get("type")));
+        feature.setOriginalSequence(getValidComboBoxValue(comboBoxes.get("originalSequence")));
+        feature.setNewSequence(getValidComboBoxValue(comboBoxes.get("newSequence")));
+        feature.setShortName(getValidComboBoxValue(comboBoxes.get("shortLabel")));
+        feature.setRole(getValidComboBoxValue(comboBoxes.get("role")));
+    }
+
+    /**
+     * Extracts a valid value from a combo box, considering both editable and non-editable states.
+     *
+     * @param comboBox the combo box to extract value from
+     * @return the current valid value as a String
+     */
+    private String getValidComboBoxValue(JComboBox<String> comboBox) {
+        Object value = comboBox.isEditable() ? comboBox.getEditor().getItem() : comboBox.getSelectedItem();
         String tooltip = comboBox.getToolTipText();
-        comboBox.removeAllItems();
-
-        if (tooltip != null) {
-            comboBox.addItem(tooltip);
-        }
-
-        for (String item : items) {
-            if (!item.equals(tooltip)) {
-                comboBox.addItem(item);
-            }
-        }
+        return (value != null && !value.toString().equals(tooltip)) ? value.toString() : "";
     }
 
+    /**
+     * Creates a combo box with the specified options and tooltip, where the tooltip text
+     * is also set as the first selectable item in the combo box.
+     *
+     * @param options the list of options to populate (tooltip will be prepended)
+     * @param tooltip the tooltip text that will also appear as first item
+     * @return the configured JComboBox
+     */
     private JComboBox<String> createComboBox(List<String> options, String tooltip) {
         JComboBox<String> comboBox = new JComboBox<>();
+
+        List<String> combinedOptions = new ArrayList<>();
+        combinedOptions.add(tooltip);
+        combinedOptions.addAll(options);
+
+        comboBox.setModel(new DefaultComboBoxModel<>(combinedOptions.toArray(new String[0])));
+
         setComboBoxDimension(comboBox, tooltip);
-        for (String option : options) {
-            comboBox.addItem(option);
-        }
         comboBox.setEditable(true);
         comboBox.setToolTipText(tooltip);
+
+        comboBox.setSelectedIndex(0);
 
         return comboBox;
     }
 
-    private JPanel createFeatureXrefContainerPanel(int featureIndex) {
-        JPanel containerPanel = new JPanel();
-        containerPanel.setLayout(new BorderLayout(5, 5));
-        containerPanel.setBorder(BorderFactory.createTitledBorder("Cross-references"));
-
-        JPanel xrefPanelListContainer = new JPanel();
-        xrefPanelListContainer.setLayout(new BoxLayout(xrefPanelListContainer, BoxLayout.Y_AXIS));
-
-        JSpinner xrefCountSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
-        xrefCountSpinner.setSize(new Dimension(20,20));
-        xrefCountSpinner.setMaximumSize(new Dimension(20,20));
-        xrefCountSpinner.setBorder(BorderFactory.createTitledBorder("Select number of cross-references"));
-        xrefCountSpinner.addChangeListener(e -> {
-            int count = (int) xrefCountSpinner.getValue();
-            updateFeatureXrefPanel(xrefPanelListContainer, count, featureIndex);
-        });
-
-        containerPanel.add(xrefCountSpinner, BorderLayout.NORTH);
-        containerPanel.add(xrefPanelListContainer, BorderLayout.CENTER);
-
-        updateFeatureXrefPanel(xrefPanelListContainer, 1, featureIndex);
-
-        return containerPanel;
-    }
-
-    private void updateFeatureXrefPanel(JPanel xrefPanelListContainer, int numberOfXref, int featureIndex) {
-        Feature currentFeature = bait ? baitFeatures.get(featureIndex) : preyFeatures.get(featureIndex);
-
-        while (currentFeature.getXref().size() < numberOfXref) {
-            currentFeature.getXref().add("");
-            currentFeature.getXrefDb().add("");
-            currentFeature.getXrefQualifier().add("");
-        }
-        while (currentFeature.getXref().size() > numberOfXref) {
-            int last = currentFeature.getXref().size() - 1;
-            currentFeature.getXref().remove(last);
-            currentFeature.getXrefDb().remove(last);
-            currentFeature.getXrefQualifier().remove(last);
-        }
-
-        xrefPanelListContainer.removeAll();
-        for (int i = 0; i < numberOfXref; i++) {
-            xrefPanelListContainer.add(createFeatureXrefPanel(featureIndex, i));
-        }
-
-        xrefPanelListContainer.revalidate();
-        xrefPanelListContainer.repaint();
-    }
-
-    private JPanel createFeatureXrefPanel(int featureIndex, int xrefIndex) {
-        JPanel xrefPanel = new JPanel();
-        xrefPanel.setLayout(new BorderLayout(5, 5));
-        xrefPanel.setBorder(BorderFactory.createTitledBorder("Cross-reference"));
-
-        FileReader fileReader = participantAndInteractionCreatorGui.getFileReader();
-        ParametersGui parametersGui = new ParametersGui(fileReader);
-
-        Feature currentFeature = bait ? baitFeatures.get(featureIndex) : preyFeatures.get(featureIndex);
-
-        JComboBox<String> xrefTextField = getXrefTextField(currentFeature, xrefIndex);
-        JComboBox<String> xrefDbComboBox = getXrefDbComboBox(currentFeature, xrefIndex);
-        JComboBox<String> xrefQualifierComboBox = getXrefDQualifierCombobox(currentFeature, xrefIndex);
-
-        JCheckBox addParametersToInteractionButton = getJCheckBox(currentFeature, parametersGui);
-
-        xrefPanel.add(xrefTextField, BorderLayout.NORTH);
-        xrefPanel.add(xrefDbComboBox, BorderLayout.LINE_START);
-        xrefPanel.add(xrefQualifierComboBox, BorderLayout.LINE_END);
-        xrefPanel.add(addParametersToInteractionButton, BorderLayout.SOUTH);
-
-        return xrefPanel;
-    }
-
-    private static JCheckBox getJCheckBox(Feature currentFeature, ParametersGui parametersGui) {
-        JCheckBox addParametersToInteractionButton = new JCheckBox("Add parameters to feature");
-        addParametersToInteractionButton.addActionListener(e -> {
-            currentFeature.setInduceInteractionParameters(addParametersToInteractionButton.isSelected());
-            JPanel parametersPanel = parametersGui.parametersContainer();
-            JOptionPane.showConfirmDialog(null, parametersPanel,"Add parameters", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-            currentFeature.setParameters(parametersGui.getParameters());
-            currentFeature.setParametersAsString();
-        });
-        return addParametersToInteractionButton;
-    }
-
-    private JComboBox<String> getXrefDbComboBox(Feature currentFeature, int xrefIndex) {
-        JComboBox<String> xrefDbComboBox = new JComboBox<>();
-        final String tooltipText = "Database"; // Store default text
-
-        SwingUtilities.invokeLater(() -> {
-            xrefDbComboBox.setSelectedIndex(0);
-            for (String db: participantAndInteractionCreatorGui.getDbCache()) {
-                xrefDbComboBox.addItem(db);
-            }
-            xrefDbComboBox.setSelectedItem(currentFeature.getXrefDb().get(xrefIndex));
-        });
-
-        currentFeature.addFetchFromFileListener(e -> {
-            xrefDbComboBox.removeAllItems();
-            xrefDbComboBox.addItem(tooltipText);
-            xrefDbComboBox.setSelectedIndex(0);
-            if (currentFeature.isFetchFromFile()) {
-                for (String column : fileColumns) {
-                    xrefDbComboBox.addItem(column);
-                }
-            } else {
-                for (String db: participantAndInteractionCreatorGui.getDbCache()) {
-                    xrefDbComboBox.addItem(db);
-                }
-            }
-        });
-
-        setComboBoxDimension(xrefDbComboBox, tooltipText);
-        xrefDbComboBox.setToolTipText(tooltipText);
-        xrefDbComboBox.setEditable(true);
-        xrefDbComboBox.setSelectedItem(currentFeature.getXrefDb().get(xrefIndex));
-
-        xrefDbComboBox.addActionListener(e -> {
-            String selected = (String) xrefDbComboBox.getSelectedItem();
-            currentFeature.setXrefDb(Collections.singletonList(tooltipText.equals(selected) ? "" : selected));
-//            currentFeature.getXrefDb().set(xrefIndex, tooltipText.equals(selected) ? "" : selected);
-            System.out.println(currentFeature.getXrefDb().get(xrefIndex));
-        });
-
-        xrefDbComboBox.revalidate();
-        xrefDbComboBox.repaint();
-        return xrefDbComboBox;
-    }
-
-    private JComboBox<String> getXrefDQualifierCombobox(Feature currentFeature, int xrefIndex) {
-        JComboBox<String> xrefQualifierCombobox = new JComboBox<>();
-        final String tooltipText = "Qualifier"; // Store default text
-
-        SwingUtilities.invokeLater(() -> {
-            xrefQualifierCombobox.setSelectedIndex(0);
-            for (String qualifier: participantAndInteractionCreatorGui.getXrefQualifierCache()) {
-                xrefQualifierCombobox.addItem(qualifier);
-            }
-            xrefQualifierCombobox.setSelectedItem(currentFeature.getXrefQualifier().get(xrefIndex));
-        });
-
-        currentFeature.addFetchFromFileListener(e -> {
-            xrefQualifierCombobox.removeAllItems();
-            xrefQualifierCombobox.addItem(tooltipText);
-            xrefQualifierCombobox.setSelectedIndex(0);
-            if (currentFeature.isFetchFromFile()) {
-                for (String column : fileColumns) {
-                    xrefQualifierCombobox.addItem(column);
-                }
-            } else {
-                for (String qualifier: participantAndInteractionCreatorGui.getXrefQualifierCache()) {
-                    xrefQualifierCombobox.addItem(qualifier);
-                }
-            }
-        });
-
-        setComboBoxDimension(xrefQualifierCombobox, tooltipText);
-        xrefQualifierCombobox.setToolTipText(tooltipText);
-        xrefQualifierCombobox.setEditable(true);
-        xrefQualifierCombobox.setSelectedItem(currentFeature.getXrefQualifier().get(xrefIndex));
-
-        xrefQualifierCombobox.addActionListener(e -> {
-            String selected = (String) xrefQualifierCombobox.getSelectedItem();
-            currentFeature.getXrefQualifier().set(xrefIndex,
-                    tooltipText.equals(selected) ? "" : selected);
-        });
-
-        xrefQualifierCombobox.revalidate();
-        xrefQualifierCombobox.repaint();
-        return xrefQualifierCombobox;
-    }
-
-    private JComboBox<String> getXrefTextField(Feature currentFeature, int xrefIndex) {
-        JComboBox<String> xrefText = new JComboBox<>();
-        final String tooltipText = "Cross-reference label";
-
-        SwingUtilities.invokeLater(() -> {
-            xrefText.setSelectedIndex(0);
-            xrefText.setSelectedItem(currentFeature.getXref().get(xrefIndex));
-        });
-
-        currentFeature.addFetchFromFileListener(e -> {
-            xrefText.removeAllItems();
-            xrefText.addItem(tooltipText);
-            xrefText.setSelectedIndex(0);
-            if (currentFeature.isFetchFromFile()) {
-                for (String column : fileColumns) {
-                    xrefText.addItem(column);
-                }
-            }
-        });
-
-        setComboBoxDimension(xrefText, tooltipText);
-        xrefText.setToolTipText(tooltipText);
-        xrefText.setEditable(true);
-        xrefText.setSelectedItem(currentFeature.getXrefDb().get(xrefIndex));
-
-        xrefText.addActionListener(e -> {
-            String selected = (String) xrefText.getSelectedItem();
-            currentFeature.getXref().set(xrefIndex,
-                    tooltipText.equals(selected) ? "" : selected);
-        });
-
-        return xrefText;
+    /**
+     * Creates an editable combo box with the specified options and tooltip,
+     * where the tooltip text is the first selectable item.
+     *
+     * @param options the list of options to populate (tooltip will be prepended)
+     * @param tooltip the tooltip text that will also appear as first item
+     * @return the configured editable JComboBox
+     */
+    private JComboBox<String> createEditableComboBox(List<String> options, String tooltip) {
+        JComboBox<String> comboBox = createComboBox(options, tooltip);
+        comboBox.setEditable(true);
+        return comboBox;
     }
 }

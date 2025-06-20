@@ -1,22 +1,18 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing;
 
-import com.opencsv.CSVWriter;
-
 import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataForRawFile;
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.*;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils.*;
 
-
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.ParametersGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.VariableExperimentalConditionGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Feature;
@@ -27,7 +23,6 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -61,6 +56,7 @@ public class FileFormater {
     private boolean addParameters;
     private boolean addVariableExperimentalConditions;
 
+    FileWriter fileWriter;
     ParametersGui parametersGui;
     VariableExperimentalConditionGui variableExperimentalConditionGui;
 
@@ -72,12 +68,13 @@ public class FileFormater {
     private final Map<String, Integer> participantCountMap = new HashMap<>();
 
     /**
-     * Constructs a FileFormater object with an FileReader.
+     * Constructs a FileFormater object with a FileReader.
      *
      * @param fileReader The Excel file reader used to read input files.
      */
     public FileFormater(FileReader fileReader) {
         this.fileReader = fileReader;
+        this.fileWriter = new FileWriter(fileReader);
         this.parametersGui  = new ParametersGui(fileReader);
         this.variableExperimentalConditionGui = new VariableExperimentalConditionGui(fileReader);
         setFileReader(fileReader);
@@ -114,7 +111,7 @@ public class FileFormater {
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXlsx = new XSSFWorkbook();
                 addDataToParticipants();
-                writeToExcel(participants, modifiedFileName + ".xlsx", header, workbookXlsx);
+                fileWriter.writeToExcel(participants, modifiedFileName + ".xlsx", header, workbookXlsx);
                 newFileName = modifiedFileName + ".xlsx";
                 break;
             case "xls":
@@ -123,7 +120,7 @@ public class FileFormater {
                 formatExcelFile(baitColumnIndex, preyColumnIndex, sheetSelected, binary, baitNameColumnIndex, preyNameColumnIndex);
                 Workbook workbookXls = new HSSFWorkbook();
                 addDataToParticipants();
-                writeToExcel(participants, modifiedFileName + ".xls", header, workbookXls);
+                fileWriter.writeToExcel(participants, modifiedFileName + ".xls", header, workbookXls);
                 newFileName = modifiedFileName + ".xls";
                 break;
             case "csv":
@@ -131,7 +128,7 @@ public class FileFormater {
                 displayDataPanels();
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
                 addDataToParticipants();
-                writeToFile(participants, modifiedFileName + ".csv", ',', header);
+                fileWriter.writeToFile(participants, modifiedFileName + ".csv", ',', header);
                 newFileName = modifiedFileName + ".csv";
                 break;
             case "tsv":
@@ -139,7 +136,7 @@ public class FileFormater {
                 displayDataPanels();
                 formatSeparatedFormatFile(baitColumnIndex, preyColumnIndex, binary, baitNameColumnIndex, preyNameColumnIndex);
                 addDataToParticipants();
-                writeToFile(participants, modifiedFileName + ".tsv", '\t', header);
+                fileWriter.writeToFile(participants, modifiedFileName + ".tsv", '\t', header);
                 newFileName = modifiedFileName + ".tsv";
                 break;
             default:
@@ -284,95 +281,28 @@ public class FileFormater {
                                   String experimentalRole,
                                   int rowIndex) {
         Map<String, String> oneParticipant = new HashMap<>();
+
+        participantCountMap.put(interactionNumber, participantCountMap.getOrDefault(interactionNumber, 0) + 1);
+
+        for (InputData field : InputData.values()) {
+            if (!field.experimentalRoleDependent && field.initial) {
+                oneParticipant.put(field.name, interactionData.get(field.name));
+            } else if (field.experimentalRoleDependent && field.initial) {
+                if ("bait".equalsIgnoreCase(experimentalRole)) {
+                    oneParticipant.put(field.name, interactionData.get(field.name + BAIT.name));
+                } else if ("prey".equalsIgnoreCase(experimentalRole)) {
+                    oneParticipant.put(field.name, interactionData.get(field.name + PREY.name));
+                }
+            }
+        }
+
         oneParticipant.put(INTERACTION_NUMBER.name, interactionNumber);
         oneParticipant.put(PARTICIPANT_ID.name, participantId);
         oneParticipant.put(PARTICIPANT_NAME.name, participantName);
         oneParticipant.put(EXPERIMENTAL_ROLE.name, experimentalRole);
         oneParticipant.put(PARTICIPANT_ROW_INDEX.name, Objects.toString(rowIndex));
 
-        participantCountMap.put(interactionNumber, participantCountMap.getOrDefault(interactionNumber, 0) + 1);
-
-        for (DataForRawFile field : DataForRawFile.values()) {
-            if (field.isCommon && !field.isFeature) {
-                oneParticipant.put(field.name, interactionData.get(field.name + field.isBait));
-            } else {
-                if ("bait".equalsIgnoreCase(experimentalRole) && field.isBait && !field.isFeature) {
-                    oneParticipant.put(field.name, interactionData.get(field.name + true));
-                } else if ("prey".equalsIgnoreCase(experimentalRole) && !field.isBait && !field.isFeature) {
-                    oneParticipant.put(field.name, interactionData.get(field.name + false));
-                }
-            }
-        }
-
         participants.add(oneParticipant);
-    }
-
-    /**
-     * Writes interaction data to a delimited file (CSV or TSV).
-     *
-     * @param data       List of participant maps to write.
-     * @param filePath   Output file path.
-     * @param delimiter  Field delimiter (e.g., ',' for CSV or '\t' for TSV).
-     * @param header     Array of column headers to include.
-     */
-    public void writeToFile(List<Map<String, String>> data, String filePath, char delimiter, String[] header) {
-        try (CSVWriter writer = new CSVWriter(
-                new OutputStreamWriter(new FileOutputStream(filePath), StandardCharsets.UTF_8),
-                delimiter,
-                CSVWriter.DEFAULT_QUOTE_CHARACTER,
-                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
-                CSVWriter.DEFAULT_LINE_END)) {
-
-            writer.writeNext(header);
-
-            for (Map<String, String> row : data) {
-                String[] line = Arrays.stream(header)
-                        .map(h -> row.getOrDefault(h, ""))
-                        .toArray(String[]::new);
-                writer.writeNext(line);
-            }
-
-        } catch (IOException e) {
-            LOGGER.warning("Error writing to file: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Writes interaction data to an Excel workbook (XLS or XLSX).
-     *
-     * @param data       List of participant maps to write.
-     * @param filePath   Output file path (should end in .xls or .xlsx).
-     * @param header     Array of column headers to include.
-     * @param workbook   An Apache POI Workbook instance to write into.
-     */
-    public void writeToExcel(List<Map<String, String>> data, String filePath, String[] header, Workbook workbook) {
-        Sheet sheet = workbook.createSheet("Formatted data");
-
-        Row headerRow = sheet.createRow(0);
-        for (int i = 0; i < header.length; i++) {
-            headerRow.createCell(i).setCellValue(header[i]);
-        }
-
-        for (int i = 0; i < data.size(); i++) {
-            Row row = sheet.createRow(i + 1);
-            Map<String, String> rowData = data.get(i);
-            for (int j = 0; j < header.length; j++) {
-                String value = rowData.getOrDefault(header[j], "");
-                row.createCell(j).setCellValue(value);
-            }
-        }
-
-        try (workbook; FileOutputStream fos = new FileOutputStream(filePath)) {
-            try {
-                workbook.write(fos);
-            } catch (IOException e) {
-                LOGGER.warning("Error writing Excel file: " + e.getMessage());
-                throw new RuntimeException(e);
-            }
-        } catch (IOException e) {
-            LOGGER.warning("Error closing workbook: " + e.getMessage());
-        }
     }
 
     /**
@@ -418,14 +348,14 @@ public class FileFormater {
     }
 
     /**
-     * Counts the number of feature cells defined in {@link DataForRawFile}.
+     * Counts the number of feature cells defined in {@link InputData}.
      *
      * @return The total number of feature cells.
      */
     private int numberOfFeatureCells(){
         int total = 0;
-        for (DataForRawFile data : DataForRawFile.values()) {
-            if (data.isFeature) {
+        for (InputData data : InputData.values()) {
+            if (!data.initial) {
                 total++;
             }
         }
@@ -439,59 +369,59 @@ public class FileFormater {
      * @param features The list of feature data to be added to the row.
      */
     private void addOneFeature(Map<String, String> participant, List<Feature> features) {
-        List<DataForRawFile> featureFields = Arrays.stream(DataForRawFile.values())
-                .filter(DataForRawFile::isFeature)
+        List<InputData> featureFields = Arrays.stream(InputData.values())
+                .filter(field -> !field.initial)
                 .collect(Collectors.toList());
 
         if (features.isEmpty()) {
-            for (DataForRawFile featureField : featureFields) {
+            for (InputData featureField : featureFields) {
                 participant.put(featureField.name(), "");
             }
         } else {
             for (int i = 0; i < features.size(); i++) {
                 String adding = "_" + i;
                 Feature feature = features.get(i);
-                participant.put(DataForRawFile.FEATURE_SHORT_NAME.name + adding, feature.getShortName());
-                participant.put(DataForRawFile.FEATURE_TYPE.name + adding, feature.getType());
-                participant.put(DataForRawFile.FEATURE_START_LOCATION.name + adding, feature.getStartLocation());
-                participant.put(DataForRawFile.FEATURE_END_LOCATION.name + adding, feature.getEndLocation());
-                participant.put(DataForRawFile.FEATURE_RANGE_TYPE.name + adding, feature.getRangeType());
+                participant.put(FEATURE_SHORT_NAME.name + adding, feature.getShortName());
+                participant.put(FEATURE_TYPE.name + adding, feature.getType());
+                participant.put(FEATURE_START_LOCATION.name + adding, feature.getStartLocation());
+                participant.put(FEATURE_END_LOCATION.name + adding, feature.getEndLocation());
+                participant.put(FEATURE_RANGE_TYPE.name + adding, feature.getRangeType());
 
-                participant.put(DataForRawFile.FEATURE_XREF.name + adding, feature.getListAsString(feature.getXref()));
-                participant.put(DataForRawFile.FEATURE_XREF_DB.name + adding, feature.getListAsString(feature.getXrefDb()));
-                participant.put(DataForRawFile.FEATURE_XREF_QUALIFIER.name + adding, feature.getListAsString(feature.getXrefQualifier()));
+                participant.put(FEATURE_XREF.name + adding, feature.getListAsString(feature.getXref()));
+                participant.put(FEATURE_XREF_DB.name + adding, feature.getListAsString(feature.getXrefDb()));
+                participant.put(FEATURE_XREF_QUALIFIER.name + adding, feature.getListAsString(feature.getXrefQualifier()));
 
-                participant.put(DataForRawFile.FEATURE_PARAM_TYPE.name + adding, feature.getParameterTypes());
-                participant.put(DataForRawFile.FEATURE_PARAM_VALUE.name + adding, feature.getParameterValues());
-                participant.put(DataForRawFile.FEATURE_PARAM_VALUE.name + adding, getValueFromFile((DataForRawFile.FEATURE_PARAM_VALUE.name + adding), participant));
+                participant.put(FEATURE_PARAM_TYPE.name + adding, feature.getParameterTypes());
+                participant.put(FEATURE_PARAM_VALUE.name + adding, feature.getParameterValues());
+                participant.put(FEATURE_PARAM_VALUE.name + adding, getValueFromFile((FEATURE_PARAM_VALUE.name + adding), participant));
 
-                participant.put(DataForRawFile.FEATURE_PARAM_UNIT.name + adding, feature.getParameterUnits());
-                participant.put(DataForRawFile.FEATURE_PARAM_BASE.name + adding, feature.getParameterBases());
-                participant.put(DataForRawFile.FEATURE_PARAM_EXPONENT.name + adding, feature.getParameterExponents());
+                participant.put(FEATURE_PARAM_UNIT.name + adding, feature.getParameterUnits());
+                participant.put(FEATURE_PARAM_BASE.name + adding, feature.getParameterBases());
+                participant.put(FEATURE_PARAM_EXPONENT.name + adding, feature.getParameterExponents());
 
-                participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, feature.getParameterUncertainties());
-                participant.put(DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding, getValueFromFile((DataForRawFile.FEATURE_PARAM_UNCERTAINTY.name + adding), participant));
+                participant.put(FEATURE_PARAM_UNCERTAINTY.name + adding, feature.getParameterUncertainties());
+                participant.put(FEATURE_PARAM_UNCERTAINTY.name + adding, getValueFromFile((FEATURE_PARAM_UNCERTAINTY.name + adding), participant));
 
-                participant.put(DataForRawFile.FEATURE_ROLE.name + adding, feature.getRole());
+                participant.put(FEATURE_ROLE.name + adding, feature.getRole());
 
-                participant.put(DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding,
+                participant.put(FEATURE_ORIGINAL_SEQUENCE.name + adding,
                         "Original Sequence".equalsIgnoreCase(feature.getOriginalSequence()) ? "" : feature.getOriginalSequence());
 
-                participant.put(DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding,
+                participant.put(FEATURE_NEW_SEQUENCE.name + adding,
                         "New Sequence".equalsIgnoreCase(feature.getNewSequence()) ? "" : feature.getNewSequence());
 
                 if (feature.isFetchFromFile()){
-                    participant.put(DataForRawFile.FEATURE_TYPE.name + adding, getValueFromFile((DataForRawFile.FEATURE_TYPE.name + adding), participant));
-                    participant.put(DataForRawFile.FEATURE_START_LOCATION.name + adding, getValueFromFile((DataForRawFile.FEATURE_START_LOCATION.name + adding), participant));
-                    participant.put(DataForRawFile.FEATURE_END_LOCATION.name + adding, getValueFromFile((DataForRawFile.FEATURE_END_LOCATION.name + adding), participant));
-                    participant.put(DataForRawFile.FEATURE_RANGE_TYPE.name + adding, getValueFromFile((DataForRawFile.FEATURE_RANGE_TYPE.name + adding), participant));
-                    participant.put(DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding, getValueFromFile((DataForRawFile.FEATURE_ORIGINAL_SEQUENCE.name + adding), participant));
-                    participant.put(DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding, getValueFromFile((DataForRawFile.FEATURE_NEW_SEQUENCE.name + adding), participant));
-                    participant.put(DataForRawFile.FEATURE_ROLE.name + adding, getValueFromFile((DataForRawFile.FEATURE_ROLE.name + adding), participant));
+                    participant.put(FEATURE_TYPE.name + adding, getValueFromFile((FEATURE_TYPE.name + adding), participant));
+                    participant.put(FEATURE_START_LOCATION.name + adding, getValueFromFile((FEATURE_START_LOCATION.name + adding), participant));
+                    participant.put(FEATURE_END_LOCATION.name + adding, getValueFromFile((FEATURE_END_LOCATION.name + adding), participant));
+                    participant.put(FEATURE_RANGE_TYPE.name + adding, getValueFromFile((FEATURE_RANGE_TYPE.name + adding), participant));
+                    participant.put(FEATURE_ORIGINAL_SEQUENCE.name + adding, getValueFromFile((FEATURE_ORIGINAL_SEQUENCE.name + adding), participant));
+                    participant.put(FEATURE_NEW_SEQUENCE.name + adding, getValueFromFile((FEATURE_NEW_SEQUENCE.name + adding), participant));
+                    participant.put(FEATURE_ROLE.name + adding, getValueFromFile((FEATURE_ROLE.name + adding), participant));
 
-                    participant.put(DataForRawFile.FEATURE_XREF.name + adding, getValueFromFile((DataForRawFile.FEATURE_XREF.name + adding), participant));
-                    participant.put(DataForRawFile.FEATURE_XREF_DB.name + adding, getValueFromFile((DataForRawFile.FEATURE_XREF_DB.name + adding), participant));
-                    participant.put(DataForRawFile.FEATURE_XREF_QUALIFIER.name + adding, getValueFromFile((DataForRawFile.FEATURE_XREF_QUALIFIER.name + adding), participant));
+                    participant.put(FEATURE_XREF.name + adding, getValueFromFile((FEATURE_XREF.name + adding), participant));
+                    participant.put(FEATURE_XREF_DB.name + adding, getValueFromFile((FEATURE_XREF_DB.name + adding), participant));
+                    participant.put(FEATURE_XREF_QUALIFIER.name + adding, getValueFromFile((FEATURE_XREF_QUALIFIER.name + adding), participant));
                 }
             }
         }
@@ -516,8 +446,8 @@ public class FileFormater {
     private ArrayList<String> getFeaturesHeader(){
         ArrayList<String> header = new ArrayList<>();
         for (int i = 0; i < getNumberOfFeaturesColumns(); i++) {
-            for (DataForRawFile field : DataForRawFile.values()) {
-                if (field.isFeature){
+            for (InputData field : InputData.values()) {
+                if (!field.initial){
                     header.add(field.name + "_" + i);
                 }
             }

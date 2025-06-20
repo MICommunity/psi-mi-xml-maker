@@ -5,14 +5,13 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData;
 
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.PARTICIPANT_ROW_INDEX;
 
 public class FileUtils {
 
@@ -94,7 +93,7 @@ public class FileUtils {
             if (colName.isEmpty()) return "";
             int colIndex = getColumnIndex(colName);
             return colIndex == -1 ? colName : getDataFromRow(colIndex,
-                    Integer.parseInt(participant.get(PARTICIPANT_ROW_INDEX.name)));
+                    Integer.parseInt(participant.get(InputData.PARTICIPANT_ROW_INDEX.name)));
         }
 
         return Arrays.stream(columnArray)
@@ -106,7 +105,7 @@ public class FileUtils {
                         return colName;
                     }
                     return getDataFromRow(colIndex,
-                            Integer.parseInt(participant.get(PARTICIPANT_ROW_INDEX.name)));
+                            Integer.parseInt(participant.get(InputData.PARTICIPANT_ROW_INDEX.name)));
                 })
                 .collect(Collectors.joining(";")) + ";";
     }

@@ -1,6 +1,7 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileWriter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.FileFormaterGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.SavingOptionsGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.jami.gui.InteractionsCreatorGui;
@@ -50,7 +51,8 @@ public class XmlMakerGui {
     public XmlMakerGui() {
         this.loadingSpinner = new LoadingSpinner();
         this.fileReader = new FileReader();
-        this.uniprotMapperGui = new UniprotMapperGui(fileReader, loadingSpinner);
+        FileWriter fileWriter = new FileWriter(fileReader);
+        this.uniprotMapperGui = new UniprotMapperGui(fileReader, loadingSpinner, fileWriter);
         this.fileFormaterGui = new FileFormaterGui(fileReader);
         this.savingOptionsGui = new SavingOptionsGui(fileReader);
         this.interactionsCreatorGui = new InteractionsCreatorGui(fileReader,
