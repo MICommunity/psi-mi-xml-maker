@@ -68,7 +68,7 @@ public class FeatureCreatorGui {
      * @param isBait true if configuring bait features, false for prey features
      * @return the fully configured main panel
      */
-    public JPanel getFeatureMainPanel(boolean isBait) {
+    public JPanel getFeatureMainPanel(ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui, boolean isBait) {
         this.bait = isBait;
         FileReader fileReader = participantAndInteractionCreatorGui.getFileReader();
         this.fileColumns = fileReader.getColumns(fileReader.getSheetSelectedUpdate());

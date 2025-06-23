@@ -360,6 +360,7 @@ public class ParticipantAndInteractionCreatorGui {
      * @return A panel with bait information.
      */
     public JPanel createBaitPanel() {
+        baitFeatureCreator = new FeatureCreatorGui(this);
         JPanel baitPanel = new JPanel();
         baitPanel.setLayout(new GridLayout(4, 1));
         baitPanel.setPreferredSize(participantPanelDimension);
@@ -382,7 +383,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         JButton createFeatureButton = new JButton("Create feature(s)");
         createFeatureButton.addActionListener(e -> {
-            JPanel featureOptionPanel = baitFeatureCreator.getFeatureMainPanel(true);
+            JPanel featureOptionPanel = baitFeatureCreator.getFeatureMainPanel(this, true);
             JOptionPane.showConfirmDialog(null,
                     featureOptionPanel,
                     "Feature(s) creation",
@@ -401,6 +402,7 @@ public class ParticipantAndInteractionCreatorGui {
      * @return A panel with prey information.
      */
     public JPanel createPreyPanel() {
+        preyFeatureCreator = new FeatureCreatorGui(this);
         JPanel preyPanel = new JPanel();
         preyPanel.setLayout(new GridLayout(4, 1));
         preyPanel.setPreferredSize(participantPanelDimension);
@@ -420,7 +422,7 @@ public class ParticipantAndInteractionCreatorGui {
 
         JButton createFeatureButton = new JButton("Create feature(s)");
         createFeatureButton.addActionListener(e -> {
-            JPanel featureOptionPanel = preyFeatureCreator.getFeatureMainPanel(false);
+            JPanel featureOptionPanel = preyFeatureCreator.getFeatureMainPanel(this,false);
             JOptionPane.showConfirmDialog(null,
                     featureOptionPanel,
                     "Feature(s) creation",

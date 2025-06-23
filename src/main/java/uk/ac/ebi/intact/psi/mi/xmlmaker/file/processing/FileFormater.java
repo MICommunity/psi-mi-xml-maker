@@ -411,6 +411,7 @@ public class FileFormater {
                         "New Sequence".equalsIgnoreCase(feature.getNewSequence()) ? "" : feature.getNewSequence());
 
                 if (feature.isFetchFromFile()){
+                    participant.put(FEATURE_SHORT_NAME.name + adding, getValueFromFile((FEATURE_SHORT_NAME.name + adding), participant));
                     participant.put(FEATURE_TYPE.name + adding, getValueFromFile((FEATURE_TYPE.name + adding), participant));
                     participant.put(FEATURE_START_LOCATION.name + adding, getValueFromFile((FEATURE_START_LOCATION.name + adding), participant));
                     participant.put(FEATURE_END_LOCATION.name + adding, getValueFromFile((FEATURE_END_LOCATION.name + adding), participant));
