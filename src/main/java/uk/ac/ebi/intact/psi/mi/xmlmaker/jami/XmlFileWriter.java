@@ -30,7 +30,7 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 /**
  * XmlFileWriter is a Spring component responsible for creating PSI-MI XML files
- * based on interaction data. It utilizes the JAMI library for creating XML files
+ * based on interaction data. It uses the JAMI library for creating XML files
  * and provides functionality to write interaction data to XML files.
  * Dependencies:
  * - XmlInteractionsCreator for creating and handling interaction objects.

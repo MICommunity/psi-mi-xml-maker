@@ -6,6 +6,7 @@ import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.CacheUtils;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -62,7 +63,7 @@ public class ParametersGui {
         for (String value : getValueColumn()) {
             valueCombobox.addItem(value);
         }
-        valueCombobox.addActionListener(e-> parameter.setValueColumn(valueCombobox.getSelectedItem().toString()));
+        valueCombobox.addActionListener(e-> parameter.setValueColumn(getValueFromCombobox(valueCombobox)));
         parametersPanel.add(valueCombobox);
 
         parametersPanel.add(getUnitComboBox(parameter));
@@ -114,7 +115,7 @@ public class ParametersGui {
         for (String unit : parametersUnitCache) {
             unitCombobox.addItem(unit);
         }
-        unitCombobox.addActionListener(e-> parameter.setUnit(unitCombobox.getSelectedItem().toString()));
+        unitCombobox.addActionListener(e-> parameter.setUnit(getValueFromCombobox(unitCombobox)));
         return unitCombobox;
     }
 
@@ -131,7 +132,7 @@ public class ParametersGui {
         for (String type : parametersTypeCache) {
             parametersTypeComboBox.addItem(type);
         }
-        parametersTypeComboBox.addActionListener(e-> parameter.setType(parametersTypeComboBox.getSelectedItem().toString()));
+        parametersTypeComboBox.addActionListener(e-> parameter.setType(getValueFromCombobox(parametersTypeComboBox)));
         return parametersTypeComboBox;
     }
 

@@ -346,7 +346,7 @@ public class FileWriter {
 
     /**
      * Retrieves a single UniProt ID based on a given identifier, database, and organism.
-     * The method prioritises reviewed (Swiss-Prot) entries over unreviewed (TrEMBL) entries.
+     * The method gives priority reviewed (Swiss-Prot) entries over unreviewed (TrEMBL) entries.
      *
      * <p>Selection logic:
      * <ul>

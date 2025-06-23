@@ -241,7 +241,7 @@ public class ParticipantAndInteractionCreatorGui {
     }
 
     /**
-     * Adds a change listener to the number of experimental preparations spinner, which updates the
+     * Adds a change listener to the number of the experimental preparations spinner, which updates the
      * bait experimental preparations when the value changes.
      */
     private void addSpinnerListener(JSpinner spinner, JPanel panelToUpdate, List<JComboBox<String>> listToUpdate) {

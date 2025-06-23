@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.*;
 
 public class VariableExperimentalConditionGui {
     private final List<String> experimentalConditionUnitCache = new ArrayList<>();
@@ -97,7 +98,7 @@ public class VariableExperimentalConditionGui {
         for (String unit: experimentalConditionUnitCache){
             unitComboBox.addItem(unit);
         }
-        unitComboBox.addActionListener(e-> variableExperimentalCondition.setUnit(unitComboBox.getSelectedItem().toString()));
+        unitComboBox.addActionListener(e-> variableExperimentalCondition.setUnit(getValueFromCombobox(unitComboBox)));
         return unitComboBox;
     }
 
@@ -105,7 +106,7 @@ public class VariableExperimentalConditionGui {
         JComboBox<String> descriptionComboBox = new JComboBox<>();
         setComboBoxDimension(descriptionComboBox, "Description");
         descriptionComboBox.setEditable(true);
-        descriptionComboBox.addActionListener(e-> variableExperimentalCondition.setDescription(descriptionComboBox.getSelectedItem().toString()));
+        descriptionComboBox.addActionListener(e-> variableExperimentalCondition.setDescription(getValueFromCombobox(descriptionComboBox)));
         return descriptionComboBox;
     }
 
@@ -116,7 +117,7 @@ public class VariableExperimentalConditionGui {
         for (String valueColumn: fileReader.getColumns(fileReader.getSheetSelectedUpdate())){
             valueColumnComboBox.addItem(valueColumn);
         }
-        valueColumnComboBox.addActionListener(e -> variableExperimentalCondition.setValueColumn(valueColumnComboBox.getSelectedItem().toString()));
+        valueColumnComboBox.addActionListener(e -> variableExperimentalCondition.setValueColumn(getValueFromCombobox(valueColumnComboBox)));
         return valueColumnComboBox;
     }
 }

@@ -26,7 +26,7 @@ public class GuiUtils {
      *
      * @param text any text component, such as a {@link JTextField}
      *        or {@link JTextArea}
-     * @param changeListener a listener to receieve {@link ChangeEvent}s
+     * @param changeListener a listener to receive {@link ChangeEvent}s
      *        when the text is changed; the source object for the events
      *        will be the text component
      * @throws NullPointerException if either parameter is null

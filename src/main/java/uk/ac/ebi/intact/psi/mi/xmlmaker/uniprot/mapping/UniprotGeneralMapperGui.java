@@ -8,7 +8,7 @@ import java.util.Objects;
 
 /**
  * This class provides a graphical user interface (GUI) for selecting Uniprot ID
- * and participant type in a mapping process. It utilizes Swing components to
+ * and participant type in a mapping process. It uses Swing components to
  * display choices for Uniprot IDs and participant types.
  */
 @Getter

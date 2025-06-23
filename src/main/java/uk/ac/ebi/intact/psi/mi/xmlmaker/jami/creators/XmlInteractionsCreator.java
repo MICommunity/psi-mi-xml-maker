@@ -214,7 +214,7 @@ public class XmlInteractionsCreator {
      * Sets the expressed-in organism for the participant, if available.
      *
      * @param participantEvidence              The participant to update.
-     * @param participantExpressedInOrganism  Organism string to use.
+     * @param participantExpressedInOrganism  The Organism string to use.
      */
     private void setParticipantExpressedInOrganism(ParticipantEvidence participantEvidence, String participantExpressedInOrganism) {
         if (!participantExpressedInOrganism.trim().isEmpty()) {

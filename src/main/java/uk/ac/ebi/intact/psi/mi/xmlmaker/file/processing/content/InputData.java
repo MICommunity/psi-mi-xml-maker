@@ -3,11 +3,8 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content;
 import lombok.Getter;
 import lombok.Setter;
 
-import org.apache.poi.ss.usermodel.Cell;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * The {@code InputData} enum is representing all the columns added to the formatted file.
@@ -21,7 +18,7 @@ public enum InputData {
     HOST_ORGANISM("Host organism", false, true),
 
     //Interaction
-    INTERACTION_NUMBER("Interaction number", cell -> String.valueOf(cell.getNumericCellValue()), false, true),
+    INTERACTION_NUMBER("Interaction number", false, true),
     INTERACTION_TYPE("Interaction type", false, true),
     INTERACTION_DETECTION_METHOD("Interaction detection method", false, true),
     INTERACTION_FIGURE_LEGEND("Interaction figure legend", false, true),
@@ -79,19 +76,13 @@ public enum InputData {
 
     public final String name;
     public final boolean experimentalRoleDependent;
-    public final Function<Cell, String> extractString;
     public final boolean initial;
     @Getter @Setter
     private int index;
 
     InputData(String name, boolean experimentalRoleDependent, boolean initial) {
-        this(name, Cell::getStringCellValue, experimentalRoleDependent, initial);
-    }
-
-    InputData(String name, Function<Cell, String> extractString, boolean experimentalRoleDependent, boolean initial) {
         this.name = name;
         this.experimentalRoleDependent = experimentalRoleDependent;
-        this.extractString = extractString;
         this.initial = initial;
     }
 

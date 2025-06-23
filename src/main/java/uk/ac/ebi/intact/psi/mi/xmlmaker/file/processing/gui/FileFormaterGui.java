@@ -172,7 +172,6 @@ public class FileFormaterGui {
         } catch (Exception e) {
             showErrorDialog("Error during file formatting, please check that the mandatory columns are correctly selected.");
             LOGGER.warning("Error during file formatting: " + e);
-            e.printStackTrace();
         }
     }
 

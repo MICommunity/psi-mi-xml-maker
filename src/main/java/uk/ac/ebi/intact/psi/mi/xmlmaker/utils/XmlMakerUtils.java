@@ -320,4 +320,11 @@ public class XmlMakerUtils {
         }
         return column.name;
     }
+
+    public static String getValueFromCombobox(JComboBox<String> comboBox) {
+        String comboboxToolTip =  comboBox.getToolTipText();
+        return comboBox.getSelectedItem() != null
+                && !comboBox.getSelectedItem().equals(comboboxToolTip)
+                ? comboBox.getSelectedItem().toString() : "";
+    }
 }

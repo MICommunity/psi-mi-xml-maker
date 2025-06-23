@@ -299,7 +299,7 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.setComboBoxDimensi
      * Creates a checkbox for adding parameters to a feature.
      *
      * @param currentFeature the feature being configured
-     * @param parametersGui the parameters GUI component
+     * @param parametersGui the parameter GUI component
      * @return the configured checkbox
      */
     private JCheckBox createParametersCheckbox(Feature currentFeature, ParametersGui parametersGui) {

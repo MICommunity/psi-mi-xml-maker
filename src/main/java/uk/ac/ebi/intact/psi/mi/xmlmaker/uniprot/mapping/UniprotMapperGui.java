@@ -206,7 +206,6 @@ public class UniprotMapperGui extends JPanel {
             showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
-            ex.printStackTrace();
         }
     }
 
@@ -226,7 +225,6 @@ public class UniprotMapperGui extends JPanel {
             showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
-            ex.printStackTrace();
         }
     }
 
@@ -252,16 +250,4 @@ public class UniprotMapperGui extends JPanel {
         JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         LOGGER.warning(ex.getMessage());
     }
-
-    /**
-     * Checks if the selected sheet or column is invalid.
-     *
-     * @param sheetSelected The name of the selected sheet.
-     * @param idColumn The name of the selected ID column.
-     * @return Returns true if the sheet or column is invalid, otherwise false.
-     */
-    private boolean isInvalidSelection(String sheetSelected, String idColumn) {
-        return sheetSelected == null || sheetSelected.equals("Select sheet") || idColumn == null || idColumn.equals("Select column to process");
-    }
-
 }

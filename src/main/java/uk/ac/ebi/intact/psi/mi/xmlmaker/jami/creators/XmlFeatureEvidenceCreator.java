@@ -315,7 +315,7 @@ public class XmlFeatureEvidenceCreator {
      * Constructs a basic {@link XmlFeatureEvidence} object given a feature type and optional short label.
      *
      * @param featureType The descriptive name of the feature type (e.g., "phosphorylation site").
-     * @param featureShortLabel A short label for the feature (may be {@code null}).
+     * @param featureShortLabel A short label for the feature (maybe {@code null}).
      * @return An initialized {@link XmlFeatureEvidence} object, or {@code null} if MI identifier could not be resolved.
      */
     private static XmlFeatureEvidence getFeatureEvidence(String featureType, String featureShortLabel) {

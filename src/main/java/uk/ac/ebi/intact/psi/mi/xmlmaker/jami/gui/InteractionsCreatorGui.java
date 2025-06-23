@@ -225,7 +225,7 @@ public class InteractionsCreatorGui extends JPanel {
     }
 
     /**
-     * Configures the overall appearance of the table, including header and resizing behaviour.
+     * Configures the overall appearance of the table, including header and resizing behavior.
      */
     private void configureTableAppearance() {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -404,7 +404,7 @@ public class InteractionsCreatorGui extends JPanel {
     }
 
     /**
-     * Adds a change listener to the number of feature spinner.
+     * Adds a change listener to the number of the feature spinner.
      * When the spinner value changes, this method performs the following actions:
      * <ul>
      *     <li>Invokes the `createInteractionDataTable` method to create or refresh the interaction data table.</li>

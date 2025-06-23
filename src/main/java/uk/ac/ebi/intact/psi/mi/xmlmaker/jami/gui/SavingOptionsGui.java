@@ -24,7 +24,7 @@ import static java.awt.Toolkit.*;
  * - FileReader for reading publication-related data.
  * Usage:
  * Create an instance of this class with the required dependencies and integrate
- * the panel returned by `createPsiMiXmlMakerPanel` into a JFrame or other container.
+ * the panel returned by `createPsiMiXmlMakerPanel` into a JFrame or the other container.
  */
 public class SavingOptionsGui {
     @Getter

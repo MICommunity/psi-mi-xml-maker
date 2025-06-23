@@ -25,7 +25,7 @@ public class XmlParameterCreator {
      * @param parameterExponent   Semicolon-separated exponents (optional).
      * @param parameterBase       Semicolon-separated bases (optional).
      * @return A list of constructed {@link XmlParameter} instances.
-     * @throws IllegalArgumentException if required values are missing or mismatched.
+     * @throws IllegalArgumentException if required, values are missing or mismatched.
      */
     public static List<XmlParameter> createParameter(
             String parameterType,

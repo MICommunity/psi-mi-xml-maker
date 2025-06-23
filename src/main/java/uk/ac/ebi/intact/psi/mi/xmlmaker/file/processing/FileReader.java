@@ -70,7 +70,7 @@ public class FileReader {
     // FILE READING
 
     /**
-     * Opens the specified file and reads its contents based on file type.
+     * Opens the specified file and reads its contents based on the file type.
      *
      * @param filePath The path to the file to be read.
      */
