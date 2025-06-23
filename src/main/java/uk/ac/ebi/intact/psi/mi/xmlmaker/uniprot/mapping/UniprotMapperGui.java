@@ -165,22 +165,14 @@ public class UniprotMapperGui extends JPanel {
                 @Override
                 protected Void doInBackground() {
                     String sheetSelected = (String) sheets.getSelectedItem();
-                    String idColumnSelectedItem = (String) idColumn.getSelectedItem();
+                    int idColumnIndex = idColumn.getSelectedIndex() - 1;
                     int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
                     int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
 
                     if (sheets.isEnabled()) {
-                        if (isInvalidSelection(sheetSelected, idColumnSelectedItem)) {
-                            SwingUtilities.invokeLater(() -> showErrorDialog("Please select valid sheet and ID column"));
-                            return null;
-                        }
-                        processSheet(sheetSelected, idColumnSelectedItem, idDbColumnIndex, organismColumnIndex);
+                        processSheet(sheetSelected, idColumnIndex, idDbColumnIndex, organismColumnIndex);
                     } else {
-                        if (idColumnSelectedItem == null || idColumnSelectedItem.equals("Select column to process")) {
-                            SwingUtilities.invokeLater(() -> showErrorDialog("Please select valid sheet and ID column"));
-                            return null;
-                        }
-                        processFileWithoutSheet(idColumnSelectedItem, idDbColumnIndex, organismColumnIndex);
+                        processFileWithoutSheet(idColumnIndex, idDbColumnIndex, organismColumnIndex);
                     }
                     return null;
                 }
@@ -201,17 +193,20 @@ public class UniprotMapperGui extends JPanel {
      * Processes the selected sheet using the provided parameters for ID column, organism, and ID database.
      *
      * @param sheetSelected The name of the selected sheet.
-     * @param idColumn The name of the selected ID column.
+     * @param idColumnIndex Index of id column
+     * @param idDbColumnIndex Index of id database column
+     * @param organismColumnIndex Index of organism column
      */
-    private void processSheet(String sheetSelected, String idColumn, int idDbColumnIndex, int organismColumnIndex) {
+    private void processSheet(String sheetSelected, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex) {
         try {
-            fileWriter.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
+            fileWriter.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumnIndex, idDbColumnIndex, organismColumnIndex);
             if (!fileWriter.getUniprotIdNotFound().isEmpty()) {
                 showInfoDialog("Inactive Uniprot IDs: " + fileWriter.getUniprotIdNotFound());
             }
             showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
+            ex.printStackTrace();
         }
     }
 
@@ -221,7 +216,7 @@ public class UniprotMapperGui extends JPanel {
      *
      * @param idColumn The name of the selected ID column.
      */
-    private void processFileWithoutSheet(String idColumn, int idDbColumn, int organismColumn) {
+    private void processFileWithoutSheet(int idColumn, int idDbColumn, int organismColumn) {
         try {
             fileWriter.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
             List<String> uniprotIdNotFound = fileWriter.getUniprotIdNotFound();
@@ -231,6 +226,7 @@ public class UniprotMapperGui extends JPanel {
             showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
+            ex.printStackTrace();
         }
     }
 
