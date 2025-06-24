@@ -122,9 +122,9 @@ public class FileWriter {
         Iterator<List<String>> iterator = fileReader.readFileWithSeparator();
         String tmpFilePath = fileReader.getCurrentFilePath();
 
-        if (idColumnIndex == -1) {
-            showErrorDialog("ID column not found: " + idColumnIndex);
-            LOGGER.severe("ID column not found: " + idColumnIndex);
+        if (idColumnIndex < 0) {
+            showErrorDialog("ID column not found");
+            LOGGER.severe("ID column not found");
             return;
         }
 
@@ -176,6 +176,12 @@ public class FileWriter {
     public void checkAndInsertUniprotResultsWorkbook(String sheetSelected, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex) {
         Workbook workbook = fileReader.getWorkbook();
         String currentFilePath = fileReader.getCurrentFilePath();
+
+        if (idColumnIndex < 0) {
+            showErrorDialog("ID column not found");
+            LOGGER.severe("ID column not found");
+            return;
+        }
 
         FileOutputStream fileOut = null;
         try {
@@ -289,8 +295,6 @@ public class FileWriter {
      * @param lastCellIndex      Index at which to start writing new UniProt-related cells.
      */
     private void processWorkbookRow(Row row, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex, int lastCellIndex) {
-        System.out.println(idColumnIndex + " " + idDbColumnIndex + " " + organismColumnIndex);
-
         if (row == null || row.getLastCellNum() <= idColumnIndex) {
             LOGGER.warning("Skipping null or incomplete row: " + row);
             return;
