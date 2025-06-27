@@ -210,11 +210,7 @@ public class FileFormater {
                 addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey", rowIndex);
             }
         }
-
-        try {
-            iterator.remove();
-        } catch (UnsupportedOperationException ignored) {
-        }
+        iterator.remove();
     }
 
     /**
@@ -285,13 +281,15 @@ public class FileFormater {
         participantCountMap.put(interactionNumber, participantCountMap.getOrDefault(interactionNumber, 0) + 1);
 
         for (InputData field : InputData.values()) {
-            if (!field.experimentalRoleDependent && field.initial) {
-                oneParticipant.put(field.name, interactionData.get(field.name));
-            } else if (field.experimentalRoleDependent && field.initial) {
-                if ("bait".equalsIgnoreCase(experimentalRole)) {
-                    oneParticipant.put(field.name, interactionData.get(field.name + BAIT.name));
-                } else if ("prey".equalsIgnoreCase(experimentalRole)) {
-                    oneParticipant.put(field.name, interactionData.get(field.name + PREY.name));
+            if (field.initial) {
+                if (field.experimentalRoleDependent) {
+                    if ("bait".equalsIgnoreCase(experimentalRole)) {
+                        oneParticipant.put(field.name, interactionData.get(field.name + BAIT.name));
+                    } else if ("prey".equalsIgnoreCase(experimentalRole)) {
+                        oneParticipant.put(field.name, interactionData.get(field.name + PREY.name));
+                    }
+                } else {
+                    oneParticipant.put(field.name, interactionData.get(field.name));
                 }
             }
         }
@@ -353,13 +351,7 @@ public class FileFormater {
      * @return The total number of feature cells.
      */
     private int numberOfFeatureCells(){
-        int total = 0;
-        for (InputData data : InputData.values()) {
-            if (!data.initial) {
-                total++;
-            }
-        }
-        return total;
+        return (int) Arrays.stream(InputData.values()).filter(data -> !data.initial).count();
     }
 
     /**

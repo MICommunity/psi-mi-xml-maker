@@ -3,18 +3,21 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators;
 import psidev.psi.mi.jami.model.CvTerm;
 import psidev.psi.mi.jami.model.ParameterValue;
 import psidev.psi.mi.jami.xml.model.extension.xml300.XmlParameter;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 /**
  * Utility class for creating {@link XmlParameter} instances from input strings.
  */
 public class XmlParameterCreator {
 
+    private static final Logger LOGGER = Logger.getLogger(XmlParameterCreator.class.getName());
     /**
      * Creates a list of {@link XmlParameter} objects from the provided parameter details.
      *
@@ -78,7 +81,8 @@ public class XmlParameterCreator {
                 }
                 parameters.add(xmlParameter);
             } catch (Exception e) {
-                throw new IllegalArgumentException("Failed to create parameter at index " + i, e);
+                LOGGER.warning("Failed to create parameter :" + e.getMessage());
+                GuiUtils.showErrorDialog("Failed to created parameter: " + e.getMessage());
             }
         }
 
@@ -119,8 +123,7 @@ public class XmlParameterCreator {
      *
      * @param values Array of string values.
      * @param index  Index to parse from.
-     * @return A {@link Short}, or null if input is missing or empty.
-     * @throws IllegalArgumentException if the value is not a valid short.
+     * @return A {@link Short}, or null if input is missing, empty, or not a valid short.
      */
     private static Short parseShort(String[] values, int index) {
         if (values == null || index >= values.length || values[index] == null || values[index].trim().isEmpty()) {
@@ -129,7 +132,8 @@ public class XmlParameterCreator {
         try {
             return Short.parseShort(values[index].trim());
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid short value: " + values[index], e);
+            LOGGER.warning("Failed to parse to short: " + e.getMessage());
+            return null;
         }
     }
 

@@ -27,11 +27,9 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.getDataKey;
  * It processes participants, interactions, and related data, and generates XML objects for interaction modeling.
  */
 public class XmlInteractionsCreator {
-    // Constants
     private static final Logger LOGGER = Logger.getLogger(XmlInteractionsCreator.class.getName());
     private static final int DEFAULT_MAX_INTERACTIONS_PER_FILE = 1_000;
 
-    // Configurable properties with default values
     @Setter
     private static int MAX_INTERACTIONS_PER_FILE = DEFAULT_MAX_INTERACTIONS_PER_FILE;
 
@@ -47,12 +45,10 @@ public class XmlInteractionsCreator {
     @Getter @Setter
     private String sheetSelected;
 
-    // State variables
     private boolean isFileFinished;
     private final List<XmlInteractionEvidence> xmlModelledInteractions = new ArrayList<>();
     private final List<Map<String, String>> dataList = new ArrayList<>();
 
-    // Dependencies
     private final FileReader fileReader;
     private final XmlFileWriter xmlFileWriter;
     private final XmlMakerUtils utils = new XmlMakerUtils();
@@ -112,13 +108,10 @@ public class XmlInteractionsCreator {
             }
         }
 
-        // Fetch CV terms using the updated key logic
         Map<InputData, CvTerm> terms = fetchCvTermsFromData(data);
 
-        // Use getDataKey for experimental preparations
         List<CvTerm> experimentalPreparations = getExperimentalPreparations(data.get(getDataKey(EXPERIMENTAL_PREPARATION, data)));
 
-        // Use getDataKey for other fields
         CvTerm participantIdDb = terms.get(PARTICIPANT_ID_DB);
         CvTerm experimentalRole = terms.get(EXPERIMENTAL_ROLE);
         CvTerm xref = terms.get(PARTICIPANT_XREF);

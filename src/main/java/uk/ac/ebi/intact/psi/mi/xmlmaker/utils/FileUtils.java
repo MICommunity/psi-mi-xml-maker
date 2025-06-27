@@ -88,13 +88,6 @@ public class FileUtils {
         String[] columnArray = columns.split(";");
         if (columnArray.length == 0) return "";
 
-        if (columnArray.length == 1) {
-            String colName = columnArray[0].trim();
-            if (colName.isEmpty()) return "";
-            int colIndex = getColumnIndex(colName);
-            return colIndex == -1 ? colName : getDataFromRow(colIndex,
-                    Integer.parseInt(participant.get(InputData.PARTICIPANT_ROW_INDEX.name)));
-        }
 
         return Arrays.stream(columnArray)
                 .map(String::trim)

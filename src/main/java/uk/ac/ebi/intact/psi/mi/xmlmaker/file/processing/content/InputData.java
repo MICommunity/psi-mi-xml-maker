@@ -1,14 +1,15 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The {@code InputData} enum is representing all the columns added to the formatted file.
  */
+@RequiredArgsConstructor
 public enum InputData {
     //Experiment
     EXPERIMENTAL_PREPARATION("Experimental Preparation", true, true),
@@ -77,32 +78,18 @@ public enum InputData {
     public final String name;
     public final boolean experimentalRoleDependent;
     public final boolean initial;
-    @Getter @Setter
-    private int index;
-
-    InputData(String name, boolean experimentalRoleDependent, boolean initial) {
-        this.name = name;
-        this.experimentalRoleDependent = experimentalRoleDependent;
-        this.initial = initial;
-    }
 
     public static List<String> getNotInitialData() {
-        final List<String> notInitialData = new ArrayList<>();
-        for (InputData dataType : InputData.values()) {
-            if (!dataType.initial) {
-                notInitialData.add(dataType.name);
-            }
-        }
-        return notInitialData;
+        return Arrays.stream(InputData.values())
+                .filter(dataType -> !dataType.initial)
+                .map(dataType -> dataType.name)
+                .collect(Collectors.toList());
     }
 
     public static List<String> getInitialData() {
-        final List<String> initialData = new ArrayList<>();
-        for (InputData dataType : InputData.values()) {
-            if (dataType.initial) {
-                initialData.add(dataType.name);
-            }
-        }
-        return initialData;
+        return Arrays.stream(InputData.values())
+                .filter(dataType -> dataType.initial)
+                .map(dataType -> dataType.name)
+                .collect(Collectors.toList());
     }
 }

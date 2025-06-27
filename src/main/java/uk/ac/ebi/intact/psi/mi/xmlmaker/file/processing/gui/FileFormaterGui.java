@@ -38,7 +38,8 @@ public class FileFormaterGui {
     private final JComboBox<String> baitNameColumn = new JComboBox<>();
     private final JComboBox<String> preyNameColumn = new JComboBox<>();
 
-    private final int WIDTH = getDefaultToolkit().getScreenSize().width - 100;
+    private final int HEIGHT = 100;
+    private final int WIDTH = getDefaultToolkit().getScreenSize().width - HEIGHT;
 
     final ParticipantAndInteractionCreatorGui participantAndInteractionCreatorGui;
 
@@ -186,7 +187,7 @@ public class FileFormaterGui {
     public JPanel createSheetPanel() {
         JPanel sheetsPanel = new JPanel();
         sheetsPanel.setLayout(new GridLayout(1, 5));
-        sheetsPanel.setPreferredSize(new Dimension(WIDTH, 100));
+        sheetsPanel.setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
         sheetsPanel.setBorder(BorderFactory.createTitledBorder(" 2.1 Select in the file"));
 
@@ -220,7 +221,7 @@ public class FileFormaterGui {
         JButton fileFormaterButton = getFileFormaterButton(fileFormaterCheckBox);
 
         JPanel processPanel = new JPanel();
-        processPanel.setPreferredSize(new Dimension(WIDTH, 100));
+        processPanel.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         processPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;

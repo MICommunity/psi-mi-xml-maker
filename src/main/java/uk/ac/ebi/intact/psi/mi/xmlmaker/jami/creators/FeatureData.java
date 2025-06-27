@@ -1,22 +1,27 @@
 package uk.ac.ebi.intact.psi.mi.xmlmaker.jami.creators;
 
-public class FeatureData {
-    String featureShortName;
-    String featureType;
-    String featureStart;
-    String featureEnd;
-    String featureRangeType;
-    String featureXref;
-    String featureXrefDb;
-    String featureXrefQualifier;
-    String featureRole;
-    String featureOriginalSequence;
-    String featureNewSequence;
+import lombok.Getter;
+import lombok.Setter;
 
-    String parameterType;
-    String parameterValue;
-    String parameterUncertainty;
-    String parameterUnit;
-    String parameterExponent;
-    String parameterBase;
+@Getter
+@Setter
+public class FeatureData {
+    private String featureShortName;
+    private String featureType;
+    private String featureStart;
+    private String featureEnd;
+    private String featureRangeType;
+    private String featureXref;
+    private String featureXrefDb;
+    private String featureXrefQualifier;
+    private String featureRole;
+    private String featureOriginalSequence;
+    private String featureNewSequence;
+
+    private String parameterType;
+    private String parameterValue;
+    private String parameterUncertainty;
+    private String parameterUnit;
+    private String parameterExponent;
+    private String parameterBase;
 }

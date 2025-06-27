@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-//import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.DataTypeAndColumn.*;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.*;
 
 /**
@@ -39,12 +38,12 @@ public class XmlFeatureEvidenceCreator {
         String featureIndexString = "_" + featureIndex;
 
         FeatureData featureData = extractFeatureData(data, featureIndexString);
-        if (featureData.featureShortName == null || featureData.featureShortName.isEmpty()) {
+        if (featureData.getFeatureShortName() == null || featureData.getFeatureShortName().isEmpty()) {
             return null;
         }
 
 
-        XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureData.featureType, featureData.featureShortName);
+        XmlFeatureEvidence featureEvidence = getFeatureEvidence(featureData.getFeatureType(), featureData.getFeatureShortName());
 
         processFeatureProperties(featureEvidence, featureData);
         setFeatureRangeAndSequence(featureEvidence, featureData);
@@ -62,24 +61,27 @@ public class XmlFeatureEvidenceCreator {
      */
     private static FeatureData extractFeatureData(Map<String, String> data, String featureIndexString) {
         FeatureData featureData = new FeatureData();
-        featureData.featureShortName = data.get(FEATURE_SHORT_NAME.name + featureIndexString);
-        featureData.featureType = data.get(FEATURE_TYPE.name + featureIndexString);
-        featureData.featureStart = data.get(FEATURE_START_LOCATION.name + featureIndexString);
-        featureData.featureEnd = data.get(FEATURE_END_LOCATION.name + featureIndexString);
-        featureData.featureRangeType = data.get(FEATURE_RANGE_TYPE.name + featureIndexString);
-        featureData.featureXref = data.get(FEATURE_XREF.name + featureIndexString);
-        featureData.featureXrefDb = data.get(FEATURE_XREF_DB.name + featureIndexString);
-        featureData.featureXrefQualifier = data.get(FEATURE_XREF_QUALIFIER.name + featureIndexString);
-        featureData.featureRole = data.get(FEATURE_ROLE.name + featureIndexString);
-        featureData.featureOriginalSequence = data.get(FEATURE_ORIGINAL_SEQUENCE.name + featureIndexString);
-        featureData.featureNewSequence = data.get(FEATURE_NEW_SEQUENCE.name + featureIndexString);
+        featureData.setFeatureShortName(data.get(FEATURE_SHORT_NAME.name + featureIndexString));
+        featureData.setFeatureType(data.get(FEATURE_TYPE.name + featureIndexString));
+        featureData.setFeatureRole(data.get(FEATURE_ROLE.name + featureIndexString));
 
-        featureData.parameterType = data.get(FEATURE_PARAM_TYPE.name + featureIndexString);
-        featureData.parameterValue = data.get(FEATURE_PARAM_VALUE.name + featureIndexString);
-        featureData.parameterUncertainty = data.get(FEATURE_PARAM_UNCERTAINTY.name + featureIndexString);
-        featureData.parameterUnit = data.get(FEATURE_PARAM_UNIT.name + featureIndexString);
-        featureData.parameterExponent = data.get(FEATURE_PARAM_EXPONENT.name + featureIndexString);
-        featureData.parameterBase = data.get(FEATURE_PARAM_BASE.name + featureIndexString);
+        featureData.setFeatureStart(data.get(FEATURE_START_LOCATION.name + featureIndexString));
+        featureData.setFeatureEnd(data.get(FEATURE_END_LOCATION.name + featureIndexString));
+        featureData.setFeatureRangeType(data.get(FEATURE_RANGE_TYPE.name + featureIndexString));
+
+        featureData.setFeatureXref(data.get(FEATURE_XREF.name + featureIndexString));
+        featureData.setFeatureXrefDb(data.get(FEATURE_XREF_DB.name + featureIndexString));
+        featureData.setFeatureXrefQualifier(data.get(FEATURE_XREF_QUALIFIER.name + featureIndexString));
+
+        featureData.setFeatureOriginalSequence(data.get(FEATURE_ORIGINAL_SEQUENCE.name + featureIndexString));
+        featureData.setFeatureNewSequence(data.get(FEATURE_NEW_SEQUENCE.name + featureIndexString));
+
+        featureData.setParameterType(data.get(FEATURE_PARAM_TYPE.name + featureIndexString));
+        featureData.setParameterValue(data.get(FEATURE_PARAM_VALUE.name + featureIndexString));
+        featureData.setParameterUncertainty(data.get(FEATURE_PARAM_UNCERTAINTY.name + featureIndexString));
+        featureData.setParameterUnit(data.get(FEATURE_PARAM_UNIT.name + featureIndexString));
+        featureData.setParameterExponent(data.get(FEATURE_PARAM_EXPONENT.name + featureIndexString));
+        featureData.setParameterBase(data.get(FEATURE_PARAM_BASE.name + featureIndexString));
 
         return featureData;
     }
@@ -91,15 +93,15 @@ public class XmlFeatureEvidenceCreator {
      * @param featureData The data containing the properties to process
      */
     private static void processFeatureProperties(XmlFeatureEvidence featureEvidence, FeatureData featureData) {
-        if (featureData.featureRole != null && !featureData.featureRole.isEmpty()) {
-            CvTerm featureRoleCv = XmlMakerUtils.fetchTerm(featureData.featureRole);
+        if (featureData.getFeatureRole() != null && !featureData.getFeatureRole().isEmpty()) {
+            CvTerm featureRoleCv = XmlMakerUtils.fetchTerm(featureData.getFeatureRole());
             if (featureRoleCv != null) {
                 featureEvidence.setRole(featureRoleCv);
             }
         }
 
-        if (featureData.parameterType != null && !featureData.parameterType.isEmpty()) {
-            featureData.parameterType = removeTrailingSemicolon(featureData.parameterType);
+        if (featureData.getParameterType() != null && !featureData.getParameterType().isEmpty()) {
+            featureData.setParameterType(featureData.getParameterType());
             addParametersToFeature(featureEvidence, featureData);
         }
     }
@@ -112,12 +114,12 @@ public class XmlFeatureEvidenceCreator {
      */
     private static void addParametersToFeature(XmlFeatureEvidence featureEvidence, FeatureData featureData) {
         List<XmlParameter> featureParameters = XmlParameterCreator.createParameter(
-                featureData.parameterType,
-                featureData.parameterValue,
-                featureData.parameterUncertainty,
-                featureData.parameterUnit,
-                featureData.parameterExponent,
-                featureData.parameterBase
+                featureData.getParameterType(),
+                featureData.getParameterValue(),
+                featureData.getParameterUncertainty(),
+                featureData.getParameterUnit(),
+                featureData.getParameterExponent(),
+                featureData.getParameterBase()
         );
 
         for (XmlParameter interactionParameter : featureParameters) {
@@ -134,13 +136,13 @@ public class XmlFeatureEvidenceCreator {
      * @param featureData The data containing range and sequence information
      */
     private static void setFeatureRangeAndSequence(XmlFeatureEvidence featureEvidence, FeatureData featureData) {
-        Position positionStart = getRangePosition(featureData.featureStart, featureData.featureRangeType);
-        Position positionEnd = getRangePosition(featureData.featureEnd, featureData.featureRangeType);
+        Position positionStart = getRangePosition(featureData.getFeatureStart(), featureData.getFeatureRangeType());
+        Position positionEnd = getRangePosition(featureData.getFeatureEnd(), featureData.getFeatureRangeType());
         XmlRange featureRange = getFeatureRange(positionStart, positionEnd);
 
         ResultingSequence resultingSequence = new XmlResultingSequence(
-                featureData.featureOriginalSequence,
-                featureData.featureNewSequence
+                featureData.getFeatureOriginalSequence(),
+                featureData.getFeatureNewSequence()
         );
         featureRange.setResultingSequence(resultingSequence);
 
@@ -205,9 +207,9 @@ public class XmlFeatureEvidenceCreator {
      */
     private static void setFeatureXrefs(XmlFeatureEvidence featureEvidence, FeatureData featureData) {
         FeatureXrefContainer featureXrefContainer = getFeatureXrefContainer(
-                featureData.featureXref,
-                featureData.featureXrefDb,
-                featureData.featureXrefQualifier
+                featureData.getFeatureXref(),
+                featureData.getFeatureXrefDb(),
+                featureData.getFeatureXrefQualifier()
         );
         featureEvidence.setJAXBXref(featureXrefContainer);
     }
@@ -296,19 +298,6 @@ public class XmlFeatureEvidenceCreator {
         return Arrays.stream(featureXref.split(";"))
                 .map(String::trim)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Removes trailing semicolon from a string if present.
-     *
-     * @param input The string to process
-     * @return The string without trailing semicolon
-     */
-    private static String removeTrailingSemicolon(String input) {
-        if (input.trim().endsWith(";")) {
-            return input.substring(0, input.lastIndexOf(";"));
-        }
-        return input;
     }
 
     /**

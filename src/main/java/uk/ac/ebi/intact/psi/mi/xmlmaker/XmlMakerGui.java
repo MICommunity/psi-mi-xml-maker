@@ -35,8 +35,10 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
  */
 public class XmlMakerGui {
 
-    private static final int FRAME_WIDTH = getDefaultToolkit().getScreenSize().width - 50;
-    private static final int FRAME_HEIGHT = getDefaultToolkit().getScreenSize().height - 50;
+    private static final int FRAME_MARGIN = 50;
+    private static final int FRAME_WIDTH = getDefaultToolkit().getScreenSize().width - FRAME_MARGIN;
+    private static final int FRAME_HEIGHT = getDefaultToolkit().getScreenSize().height - FRAME_MARGIN;
+    private static final int PANEL_HEIGHT = 350;
     private static final Logger LOGGER = Logger.getLogger(XmlMakerGui.class.getName());
     private final FileReader fileReader;
     private final UniprotMapperGui uniprotMapperGui;
@@ -439,8 +441,8 @@ public class XmlMakerGui {
     private JPanel createFileFormaterPanel(){
         JPanel fileFormaterPanel = fileFormaterGui.getFileFormaterPanel();
         fileFormaterPanel.setAutoscrolls(true);
-        fileFormaterPanel.setSize(new Dimension(FRAME_WIDTH, 350));
-        fileFormaterPanel.setMaximumSize(new Dimension(FRAME_WIDTH, 350));
+        fileFormaterPanel.setSize(new Dimension(FRAME_WIDTH, PANEL_HEIGHT));
+        fileFormaterPanel.setMaximumSize(new Dimension(FRAME_WIDTH, PANEL_HEIGHT));
         fileFormaterPanel.setBorder(new TitledBorder("2. Format raw file"));
         return fileFormaterPanel;
     }
