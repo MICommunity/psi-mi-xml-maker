@@ -46,7 +46,6 @@ public class XmlMakerUtils {
         }
     }
 
-    //Connection
     /**
      * Creates an HTTP connection for a given URL.
      * @param urlString url to connect
@@ -70,7 +69,6 @@ public class XmlMakerUtils {
         return URLEncoder.encode(input, StandardCharsets.UTF_8);
     }
 
-    //Fetchers
     /**
      * Fetches the Taxonomy ID for a given organism name using the OLS API.
      * @param organismName organism to fetch
@@ -244,7 +242,6 @@ public class XmlMakerUtils {
         return null;
     }
 
-    //Others
     /**
      * Calculates the Levenshtein Distance between two strings. The Levenshtein
      * Distance is a measure of the number of single-character edits (insertions,
