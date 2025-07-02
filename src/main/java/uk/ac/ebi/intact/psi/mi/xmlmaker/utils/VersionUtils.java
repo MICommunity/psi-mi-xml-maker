@@ -19,8 +19,7 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 public class VersionUtils {
 
     private static final Logger LOGGER = Logger.getLogger(VersionUtils.class.getName());
-//    private static final String VERSION_URL = "https://raw.githubusercontent.com/MICommunity/psi-mi-xml-maker/refs/heads/main/src/main/resources/xmlMaker.properties"; //todo: change for release
-    private static final String VERSION_URL = "https://raw.githubusercontent.com/MICommunity/psi-mi-xml-maker/refs/heads/1.1/src/main/resources/xmlMaker.properties";
+    private static final String VERSION_URL = "https://raw.githubusercontent.com/MICommunity/psi-mi-xml-maker/refs/heads/main/src/main/resources/xmlMaker.properties";
     private static final String GITHUB_URL = "https://github.com/MICommunity/psi-mi-xml-maker/releases/download/";
 
     private static String latestVersion = "UNKNOWN";
