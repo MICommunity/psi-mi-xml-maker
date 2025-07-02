@@ -12,6 +12,7 @@ The PSI-MI XML Maker is a tool designed to create XML files based on the [PSI-MI
 These XML files can later be used in the editor for further processing.
 
 ### How to download?
+From the release section of GitHub:
 - **MacOS** : download the .dmg file
 - **Windows** : download the .jar file
 - **Linux** : download the .tar file
