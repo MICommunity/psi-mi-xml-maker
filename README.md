@@ -3,6 +3,8 @@
 ⚠️ It is necessary to download Java 11 **JDK** -> https://adoptium.net/en-GB/temurin/archive/?version=11 
 - Use the installer so it is downloaded directly in the right folder
 
+- Access to the demo: https://drive.google.com/drive/folders/1VftTaAUfWdJF_dyFLEH9b-23i-454qDY?usp=sharing
+
 ## Introduction
 
 ### What is the PSI-MI XML Maker?
