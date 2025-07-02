@@ -227,6 +227,7 @@ public class XmlFileWriter {
             showErrorDialog("Error during PSI-XML writing, please check that the columns are correctly associated" +
                     "and that the file is correctly formatted. \n" + e.getMessage());
             LOGGER.error("Error during PSI-XML writing", e);
+            e.printStackTrace();
         } finally {
             closeWriter(xmlInteractionWriter);
             if (!skippedParticipants.isEmpty()) {

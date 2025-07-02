@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.*;
@@ -476,56 +477,66 @@ public class XmlInteractionsCreator {
     }
 
     /**
-     * Creates and sets the details of an interaction based on the provided parameters, including interaction type,
-     * detection method, participant identification method, and host organism. This method also links the interaction
-     * to an experiment and a publication if relevant details are provided.
-     *
-     * @param interaction                     The interaction object to be populated with details.
-     * @param interactionDetectionMethod      The method used to detect the interaction, used to create a CvTerm for detection method.
-     * @param participantIdentificationMethod The method used to identify the participant, used to create a CvTerm for identification method.
-     * @param hostOrganism                    The host organism associated with the interaction, used to fetch the organism's tax ID.
-     * @param interactionType                 The type of the interaction, used to create a CvTerm for interaction type.
+     * Creates and configures an experiment with the provided details
      */
-    private void processInteractionCreation(XmlInteractionEvidence interaction, String interactionDetectionMethod,
-                                            String participantIdentificationMethod,
-                                            String hostOrganism, String interactionType,
-                                            String variableParameterDesc,
-                                            Map<String, Set<String>> variableParameterDescAndValues,
-                                            String variableParameterUnits) {
-        if (interactionType != null) {
-            String interactionTypeMiId = XmlMakerUtils.fetchMiId(interactionType);
-            CvTerm interactionTypeCv = new XmlCvTerm(interactionType, interactionTypeMiId);
-            interaction.setInteractionType(interactionTypeCv);
+    private XmlExperiment createExperiment(String interactionDetectionMethod,
+                                           String participantIdentificationMethod,
+                                           String hostOrganism,
+                                           String publicationId,
+                                           String variableParameterDesc,
+                                           Map<String, Set<String>> variableParameterDescAndValues,
+                                           String variableParameterUnits) {
+        XmlExperiment experiment = new XmlExperiment();
+
+        Organism organism = createOrganism(hostOrganism);
+        if (organism != null) {
+            experiment.setHostOrganism(organism);
         }
+
+        experiment.setPublication(new BibRef(publicationId));
 
         if (interactionDetectionMethod != null) {
-            Organism organism = createOrganism(hostOrganism);
-
             CvTerm detectionMethod = XmlMakerUtils.fetchTerm(interactionDetectionMethod);
-            Publication publication = new BibRef(fileReader.getPublicationId());
-            XmlExperiment experiment;
-
-            if (organism == null || hostOrganism.isBlank()) {
-                experiment = new XmlExperiment(publication, detectionMethod);
+            if (detectionMethod != null) {
+                experiment.setInteractionDetectionMethod(detectionMethod);
             } else {
-                experiment = new XmlExperiment(publication, detectionMethod, organism);
-                for (VariableParameter parameter : getVariableParameters(variableParameterDesc, variableParameterDescAndValues, variableParameterUnits)) {
-                    experiment.addVariableParameter(parameter);
-                }
+                LOGGER.warning("Could not find CV term for detection method: " + interactionDetectionMethod);
             }
-            if (participantIdentificationMethod != null) {
-                experiment.setParticipantIdentificationMethod(XmlMakerUtils.fetchTerm(participantIdentificationMethod));
-            }
-
-            interaction.setExperiment(experiment);
         }
-        xmlModelledInteractions.add(interaction);
-        launchWriting();
+
+        if (participantIdentificationMethod != null) {
+            CvTerm identificationMethod = XmlMakerUtils.fetchTerm(participantIdentificationMethod);
+            if (identificationMethod != null) {
+                experiment.setParticipantIdentificationMethod(identificationMethod);
+            }
+        }
+
+        if (variableParameterDesc != null && variableParameterDescAndValues != null) {
+            for (VariableParameter parameter : getVariableParameters(
+                    variableParameterDesc,
+                    variableParameterDescAndValues,
+                    variableParameterUnits)) {
+                experiment.addVariableParameter(parameter);
+            }
+        }
+
+        return experiment;
     }
 
-    private List<VariableParameter> getVariableParameters(String description, Map<String, Set<String>> descAndValue, String units){
-        List<VariableParameter> variableParameters = new ArrayList<>();
+    /**
+     * Creates VariableParameters from description, values, and units.
+     * Splits description and units by semicolon to create parameter pairs.
+     *
+     * @param description Semicolon-separated parameter descriptions
+     * @param descAndValue Map of descriptions to their possible values (can be null)
+     * @param units Semicolon-separated units matching descriptions (can be null)
+     * @return List of VariableParameters, empty if inputs are null or no values found
+     */
+    private List<VariableParameter> getVariableParameters(String description,
+                                                          Map<String, Set<String>> descAndValue,
+                                                          String units) {
 
+        List<VariableParameter> variableParameters = new ArrayList<>();
 
         if (descAndValue == null || units == null) {
             return variableParameters;
@@ -534,19 +545,23 @@ public class XmlInteractionsCreator {
         String[] descriptions = description.split(";");
         String[] unitsArray = units.split(";");
 
-        for (int  i = 0; i < descriptions.length; i++) {
+        IntStream.range(0, descriptions.length).forEach(i -> {
             String desc = descriptions[i];
             String unit = unitsArray[i];
             VariableParameter variableParameter = new XmlVariableParameter();
             variableParameter.setDescription(desc);
             variableParameter.setUnit(fetchTerm(unit));
-            for (String value : descAndValue.get(desc)) {
-                value = value.trim();
-                VariableParameterValue variableParameterValue = new XmlVariableParameterValue(value, variableParameter);
-                variableParameter.getVariableValues().add(variableParameterValue);
+            Set<String> values = descAndValue.get(desc);
+            if (values == null) {
+                return;
             }
+            values.stream()
+                    .map(String::trim)
+                    .map(value -> new XmlVariableParameterValue(value, variableParameter))
+                    .forEach(variableParameterValue -> variableParameter.getVariableValues()
+                            .add(variableParameterValue));
             variableParameters.add(variableParameter);
-        }
+        });
 
         return variableParameters;
     }
@@ -590,7 +605,9 @@ public class XmlInteractionsCreator {
     }
 
     /**
-     * Creates interactions by processing grouped participant data and linking them to experiments and publications.
+     * Creates interactions from participant data and triggers XML writing.
+     * If data is empty and file processing is complete, writes immediately.
+     * Otherwise processes each participant to create interactions.
      */
     public void createInteractions() {
         if (dataList.isEmpty() && isFileFinished) {
@@ -598,47 +615,41 @@ public class XmlInteractionsCreator {
             return;
         }
 
-        XmlInteractionEvidence interaction = new XmlInteractionEvidence();
-
-        String interactionDetectionMethod = null;
-        String participantIdentificationMethod = null;
-        String hostOrganism = null;
-        String interactionType = null;
-        String interactionFigureLegend = null;
-        String experimentalVariableConditionDescs = null;
-        String experimentalVariableConditionUnits = null;
-
-        Map<String, List<String>> variableParameterDescAndValues = new HashMap<>();
+        XmlExperiment experiment = createExperimentForBatch(dataList);
 
         for (Map<String, String> participant : dataList) {
+            XmlInteractionEvidence interaction = new XmlInteractionEvidence();
             XmlParticipantEvidence newParticipant = createParticipant(participant);
             interaction.addParticipant(newParticipant);
+            experiment.addInteractionEvidence(interaction);
+            processInteractionSpecificProperties(interaction, participant);
+            xmlModelledInteractions.add(interaction);
+        }
 
-            interactionDetectionMethod = participant.get(INTERACTION_DETECTION_METHOD.name);
-            participantIdentificationMethod = participant.get(PARTICIPANT_IDENTIFICATION_METHOD.name);
-            hostOrganism = participant.get(HOST_ORGANISM.name);
-            interactionType = participant.get(INTERACTION_TYPE.name);
-            interactionFigureLegend = participant.get(INTERACTION_FIGURE_LEGEND.name);
+        launchWriting();
+    }
 
-            String parameterType = participant.get(INTERACTION_PARAM_TYPE.name);
-            String parameterValue = participant.get(INTERACTION_PARAM_VALUE.name);
-            String parameterUncertainty = participant.get(INTERACTION_PARAM_UNCERTAINTY.name);
-            String parameterUnit = participant.get(INTERACTION_PARAM_UNIT.name);
-            String parameterExponent = participant.get(INTERACTION_PARAM_EXPONENT.name);
-            String parameterBase = participant.get(INTERACTION_PARAM_BASE.name);
+    /**
+     * Creates an experiment configuration from the first participant in batch,
+     * collecting variable parameters from all participants.
+     *
+     * @param dataList List of participant data maps
+     * @return Configured experiment with aggregated variable parameters
+     */
+    private XmlExperiment createExperimentForBatch(List<Map<String, String>> dataList) {
+        Map<String, String> firstParticipant = dataList.get(0);
 
-            experimentalVariableConditionDescs = participant.get(EXPERIMENTAL_VARIABLE_CONDITION_DESCRIPTION.name);
+        String interactionDetectionMethod = firstParticipant.get(INTERACTION_DETECTION_METHOD.name);
+        String participantIdentificationMethod = firstParticipant.get(PARTICIPANT_IDENTIFICATION_METHOD.name);
+        String hostOrganism = firstParticipant.get(HOST_ORGANISM.name);
+        String variableParameterDesc = firstParticipant.get(EXPERIMENTAL_VARIABLE_CONDITION_DESCRIPTION.name);
+        String variableParameterUnits = firstParticipant.get(EXPERIMENTAL_VARIABLE_CONDITION_UNIT.name);
+
+        Map<String, Set<String>> variableParameterDescAndValues = new HashMap<>();
+
+        for (Map<String, String> participant : dataList) {
+            String experimentalVariableConditionDescs = participant.get(EXPERIMENTAL_VARIABLE_CONDITION_DESCRIPTION.name);
             String experimentalVariableConditionValues = participant.get(EXPERIMENTAL_VARIABLE_CONDITION_VALUE.name);
-            experimentalVariableConditionUnits = participant.get(EXPERIMENTAL_VARIABLE_CONDITION_UNIT.name);
-
-            if (parameterType != null && !parameterType.isEmpty()) {
-                List<XmlParameter> interactionParameters = XmlParameterCreator.createParameter(parameterType, parameterValue, parameterUncertainty, parameterUnit, parameterExponent, parameterBase);
-                for (XmlParameter interactionParameter : interactionParameters) {
-                    if (!interaction.getParameters().contains(interactionParameter)) {
-                        interaction.getParameters().add(interactionParameter);
-                    }
-                }
-            }
 
             if (experimentalVariableConditionDescs != null && experimentalVariableConditionValues != null) {
                 String[] descs = experimentalVariableConditionDescs.split(";");
@@ -650,7 +661,7 @@ public class XmlInteractionsCreator {
                         String value = values[i].trim();
 
                         if (!variableParameterDescAndValues.containsKey(desc)) {
-                            variableParameterDescAndValues.put(desc, new ArrayList<>());
+                            variableParameterDescAndValues.put(desc, new HashSet<>());
                         }
                         variableParameterDescAndValues.get(desc).add(value);
                     }
@@ -658,31 +669,79 @@ public class XmlInteractionsCreator {
             }
         }
 
-        if (interactionFigureLegend != null) {
-            CvTerm annotationType = XmlMakerUtils.fetchTerm("figure legend");
-            Annotation annotation = null;
-            if (annotationType != null) {
-                annotation = new XmlAnnotation(annotationType, interactionFigureLegend);
-            }
-            interaction.getAnnotations().add(annotation);
-        }
-
-        Map<String, Set<String>> combinedVariableParameters = new HashMap<>();
-        for (Map.Entry<String, List<String>> entry : variableParameterDescAndValues.entrySet()) {
-            Set<String> combinedValues = new HashSet<>(entry.getValue());
-            combinedVariableParameters.put(entry.getKey(), combinedValues);
-        }
-
-        processInteractionCreation(interaction,
+        return createExperiment(
                 interactionDetectionMethod,
                 participantIdentificationMethod,
                 hostOrganism,
-                interactionType,
-                experimentalVariableConditionDescs,
-                combinedVariableParameters,
-                experimentalVariableConditionUnits
+                fileReader.getPublicationId(),
+                variableParameterDesc,
+                variableParameterDescAndValues,
+                variableParameterUnits
         );
     }
+
+    /**
+     * Processes interaction-specific properties from participant data:
+     * - Sets interaction type
+     * - Adds figure legend annotations
+     * - Configures parameters
+     * - Links variable parameter values
+     *
+     * @param interaction Interaction to configure
+     * @param participant Source data for properties
+     */
+    private void processInteractionSpecificProperties(XmlInteractionEvidence interaction, Map<String, String> participant) {
+        String interactionType = participant.get(INTERACTION_TYPE.name);
+        if (interactionType != null) {
+            String interactionTypeMiId = XmlMakerUtils.fetchMiId(interactionType);
+            CvTerm interactionTypeCv = new XmlCvTerm(interactionType, interactionTypeMiId);
+            interaction.setInteractionType(interactionTypeCv);
+        }
+
+        String interactionFigureLegend = participant.get(INTERACTION_FIGURE_LEGEND.name);
+        if (interactionFigureLegend != null) {
+            CvTerm annotationType = XmlMakerUtils.fetchTerm("figure legend");
+            if (annotationType != null) {
+                Annotation annotation = new XmlAnnotation(annotationType, interactionFigureLegend);
+                interaction.getAnnotations().add(annotation);
+            }
+        }
+
+        String parameterType = participant.get(INTERACTION_PARAM_TYPE.name);
+        String parameterValue = participant.get(INTERACTION_PARAM_VALUE.name);
+        String parameterUncertainty = participant.get(INTERACTION_PARAM_UNCERTAINTY.name);
+        String parameterUnit = participant.get(INTERACTION_PARAM_UNIT.name);
+        String parameterExponent = participant.get(INTERACTION_PARAM_EXPONENT.name);
+        String parameterBase = participant.get(INTERACTION_PARAM_BASE.name);
+
+        if (parameterType != null && !parameterType.isEmpty()) {
+            List<XmlParameter> interactionParameters = XmlParameterCreator.createParameter(
+                    parameterType, parameterValue, parameterUncertainty,
+                    parameterUnit, parameterExponent, parameterBase);
+            for (XmlParameter interactionParameter : interactionParameters) {
+                if (!interaction.getParameters().contains(interactionParameter)) {
+                    interaction.getParameters().add(interactionParameter);
+                }
+            }
+        }
+
+        String variableParamDescs = participant.get(EXPERIMENTAL_VARIABLE_CONDITION_DESCRIPTION.name);
+        String[]variableParamVDescsArray = variableParamDescs.split(";");
+
+        VariableParameterValueSet variableParameterValueSet = new XmlVariableParameterValueSet();
+
+        for (String variableParamDesc : variableParamVDescsArray) {
+            interaction.getExperiment().getVariableParameters().forEach(variableParam -> {
+                if (variableParam.getDescription().equals(variableParamDesc)){
+                    variableParameterValueSet.addAll(variableParam.getVariableValues());
+                }
+            });
+        }
+
+        interaction.getVariableParameterValues().add(variableParameterValueSet);
+
+    }
+
     /**
      * Writes the current batch of interactions to a file if certain conditions are met.
      *
