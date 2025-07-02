@@ -8,7 +8,7 @@ import java.util.Objects;
 
 /**
  * This class provides a graphical user interface (GUI) for selecting Uniprot ID
- * and participant type in a mapping process. It utilizes Swing components to
+ * and participant type in a mapping process. It uses Swing components to
  * display choices for Uniprot IDs and participant types.
  */
 @Getter
@@ -28,13 +28,16 @@ public class UniprotGeneralMapperGui {
      *
      * @param uniprotIdsGroup The {@link ButtonGroup} containing the possible UniProt IDs.
      * @param previousId The previous UniProt ID, used in the title of the panel.
+     * @param previousIdDb The previous id database.
      */
-    public void getUniprotIdChoicePanel(ButtonGroup uniprotIdsGroup, String previousId) {
+    public void getUniprotIdChoicePanel(ButtonGroup uniprotIdsGroup, String previousId, String previousIdDb) {
         JPanel buttonContainer = new JPanel();
         buttonContainer.setPreferredSize(new Dimension(1000, 700));
 
-        JTextField otherIdField = new JTextField("Other id");
-        JTextField otherIdDbField = new JTextField("Other id database");
+        JTextField otherIdField = new JTextField(previousId);
+        otherIdField.setBorder(BorderFactory.createTitledBorder("Other id"));
+        JTextField otherIdDbField = new JTextField(previousIdDb);
+        otherIdDbField.setBorder(BorderFactory.createTitledBorder("Other id database"));
         buttonContainer.add(otherIdField);
         buttonContainer.add(otherIdDbField);
         JComboBox<String> otherParticipantTypeComboBox = createParticipantTypeComboBox();
@@ -83,6 +86,14 @@ public class UniprotGeneralMapperGui {
         }
     }
 
+    /**
+     * Creates and returns a JComboBox populated with participant type options.
+     * <p>
+     * The combo box includes the following items: "Participant type", "Gene",
+     * "Molecule", "Nucleic Acid", and "Protein".
+     *
+     * @return a {@code JComboBox<String>} containing participant type selections
+     */
     private JComboBox<String> createParticipantTypeComboBox() {
         JComboBox<String> comboBox = new JComboBox<>();
         String[] buttons = {"Participant type", "Gene", "Molecule", "Nucleic Acid", "Protein"};

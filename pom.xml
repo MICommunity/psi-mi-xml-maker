@@ -4,7 +4,7 @@
 
   <groupId>uk.ac.ebi.intact.psi.mi.xmlmaker</groupId>
   <artifactId>PSI-MI-XML-maker</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
   <packaging>jar</packaging>
 
   <name>PSI-MI-XML-maker</name>
@@ -141,13 +141,6 @@
       <artifactId>log4j-api</artifactId>
       <version>2.20.0</version>
     </dependency>
-
-<!--    <dependency>-->
-<!--      <groupId>uk.ac.ebi.intact.jami</groupId>-->
-<!--      <artifactId>intact-jami</artifactId>-->
-<!--      <version>3.1.0</version>-->
-<!--    </dependency>-->
-
   </dependencies>
 
 

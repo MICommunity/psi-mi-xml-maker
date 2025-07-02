@@ -2,11 +2,15 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.uniprot.mapping;
 
 import lombok.Getter;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.LoadingSpinner;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils;
-import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.ExcelFileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileReader;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.FileWriter;
+
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 import java.util.logging.Logger;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 
 /**
  * The UniprotMapperGui class provides a graphical user interface (GUI) for interacting with an Excel file
@@ -20,17 +24,24 @@ public class UniprotMapperGui extends JPanel {
     private final JComboBox<String> idColumn = new JComboBox<>();
     private final JComboBox<String> organismColumn = new JComboBox<>();
     private final JComboBox<String> idDbColumn = new JComboBox<>();
-    private final ExcelFileReader excelFileReader;
-    private static final Logger LOGGER = Logger.getLogger(UniprotMapperGui.class.getName());
+
+    private final FileReader fileReader;
+    private final FileWriter fileWriter;
+
     private final LoadingSpinner loadingSpinner;
+    private boolean isUpdatingSheets = false;
+
+    private static final Logger LOGGER = Logger.getLogger(UniprotMapperGui.class.getName());
 
     /**
      * Constructs a new instance of the UniprotMapperGui class.
-     * @param excelFileReader The ExcelFileReader instance to interact with the Excel file.
+     * @param fileReader The FileReader instance to interact with the Excel file.
+     * @param loadingSpinner The loading spinner for display
      */
-    public UniprotMapperGui(ExcelFileReader excelFileReader, LoadingSpinner loadingSpinner) {
-        this.excelFileReader = excelFileReader;
+    public UniprotMapperGui(FileReader fileReader, LoadingSpinner loadingSpinner, FileWriter fileWriter) {
+        this.fileReader = fileReader;
         this.loadingSpinner = loadingSpinner;
+        this.fileWriter = fileWriter;
     }
 
     /**
@@ -42,13 +53,17 @@ public class UniprotMapperGui extends JPanel {
     public JPanel uniprotPanel() {
         JPanel uniprotPanel = new JPanel();
         uniprotPanel.setLayout(new GridLayout(1, 1));
-        uniprotPanel.setMaximumSize(new Dimension(2000, 200));
+        uniprotPanel.setMaximumSize(new Dimension(Toolkit.getDefaultToolkit().getScreenSize().width - 50, 200));
         setupComboBoxDefaults();
 
-        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(sheets, "Select sheet"));
-        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(idColumn, "Select ID column"));
-        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(idDbColumn, "Select ID database column"));
-        uniprotPanel.add(XmlMakerUtils.setComboBoxDimension(organismColumn, "Select Organism column"));
+        uniprotPanel.add(setComboBoxDimension(sheets, "Select sheet"));
+        sheets.setToolTipText("Select sheet");
+        uniprotPanel.add(setComboBoxDimension(idColumn, "Select ID column"));
+        idColumn.setToolTipText("Select ID column");
+        uniprotPanel.add(setComboBoxDimension(idDbColumn, "Select ID database column"));
+        idDbColumn.setToolTipText("Select ID database column");
+        uniprotPanel.add(setComboBoxDimension(organismColumn, "Select Organism column"));
+        organismColumn.setToolTipText("Select Organism column");
 
         sheets.addActionListener(e -> {
             if (!isUpdatingSheets) {
@@ -77,8 +92,6 @@ public class UniprotMapperGui extends JPanel {
         organismColumn.setEnabled(true);
     }
 
-    private boolean isUpdatingSheets = false;
-
     /**
      * Sets up the sheet selection for the UI, updating the available options in a combo box
      * based on the sheets present in an Excel file. This method disables events while
@@ -92,7 +105,7 @@ public class UniprotMapperGui extends JPanel {
         isUpdatingSheets = true; // Suppress events
         setupComboBoxDefaults();
 
-        if (excelFileReader.sheets.isEmpty()) {
+        if (fileReader.sheets.isEmpty()) {
             sheets.addItem("Select sheet");
             sheets.setEnabled(false);
             sheets.setSelectedIndex(0);
@@ -101,7 +114,7 @@ public class UniprotMapperGui extends JPanel {
             sheets.removeAllItems();
             sheets.setEnabled(true);
             sheets.addItem("Select sheet");
-            for (String sheetName : excelFileReader.sheets) {
+            for (String sheetName : fileReader.sheets) {
                 sheets.addItem(sheetName);
             }
         }
@@ -129,7 +142,7 @@ public class UniprotMapperGui extends JPanel {
         if (sheets.isEnabled()) {
             selectedSheet = (String) sheets.getSelectedItem();
         }
-        for (String columnName : excelFileReader.getColumns(selectedSheet)) {
+        for (String columnName : fileReader.getColumns(selectedSheet)) {
             idColumn.addItem(columnName);
             organismColumn.addItem(columnName);
             idDbColumn.addItem(columnName);
@@ -152,22 +165,14 @@ public class UniprotMapperGui extends JPanel {
                 @Override
                 protected Void doInBackground() {
                     String sheetSelected = (String) sheets.getSelectedItem();
-                    String idColumnSelectedItem = (String) idColumn.getSelectedItem();
+                    int idColumnIndex = idColumn.getSelectedIndex() - 1;
                     int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
                     int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
 
                     if (sheets.isEnabled()) {
-                        if (isInvalidSelection(sheetSelected, idColumnSelectedItem)) {
-                            SwingUtilities.invokeLater(() -> XmlMakerUtils.showErrorDialog("Please select valid sheet and ID column"));
-                            return null;
-                        }
-                        processSheet(sheetSelected, idColumnSelectedItem, idDbColumnIndex, organismColumnIndex);
+                        processSheet(sheetSelected, idColumnIndex, idDbColumnIndex, organismColumnIndex);
                     } else {
-                        if (idColumnSelectedItem == null || idColumnSelectedItem.equals("Select column to process")) {
-                            SwingUtilities.invokeLater(() -> XmlMakerUtils.showErrorDialog("Please select valid sheet and ID column"));
-                            return null;
-                        }
-                        processFileWithoutSheet(idColumnSelectedItem, idDbColumnIndex, organismColumnIndex);
+                        processFileWithoutSheet(idColumnIndex, idDbColumnIndex, organismColumnIndex);
                     }
                     return null;
                 }
@@ -188,15 +193,17 @@ public class UniprotMapperGui extends JPanel {
      * Processes the selected sheet using the provided parameters for ID column, organism, and ID database.
      *
      * @param sheetSelected The name of the selected sheet.
-     * @param idColumn The name of the selected ID column.
+     * @param idColumnIndex Index of id column
+     * @param idDbColumnIndex Index of id database column
+     * @param organismColumnIndex Index of organism column
      */
-    private void processSheet(String sheetSelected, String idColumn, int idDbColumnIndex, int organismColumnIndex) {
+    private void processSheet(String sheetSelected, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumn, idDbColumnIndex, organismColumnIndex);
-            if (!excelFileReader.getUniprotIdNotFound().isEmpty()) {
-                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
+            fileWriter.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumnIndex, idDbColumnIndex, organismColumnIndex);
+            if (!fileWriter.getUniprotIdNotFound().isEmpty()) {
+                showInfoDialog("Inactive Uniprot IDs: " + fileWriter.getUniprotIdNotFound());
             }
-            XmlMakerUtils.showInfoDialog("UniProt IDs successfully updated");
+            showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
         }
@@ -208,13 +215,14 @@ public class UniprotMapperGui extends JPanel {
      *
      * @param idColumn The name of the selected ID column.
      */
-    private void processFileWithoutSheet(String idColumn, int idDbColumn, int organismColumn) {
+    private void processFileWithoutSheet(int idColumn, int idDbColumn, int organismColumn) {
         try {
-            excelFileReader.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
-            if (!excelFileReader.getUniprotIdNotFound().isEmpty()) {
-                XmlMakerUtils.showInfoDialog("Inactive Uniprot IDs: " + excelFileReader.getUniprotIdNotFound());
+            fileWriter.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
+            List<String> uniprotIdNotFound = fileWriter.getUniprotIdNotFound();
+            if (!uniprotIdNotFound.isEmpty()) {
+                showInfoDialog("Inactive Uniprot IDs: " + uniprotIdNotFound);
             }
-            XmlMakerUtils.showInfoDialog("UniProt IDs successfully updated");
+            showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
             handleProcessingError(ex);
         }
@@ -225,8 +233,8 @@ public class UniprotMapperGui extends JPanel {
      * If any proteins are part of a molecule set, they are shown in a comma-separated list.
      */
     private void showMoleculeSetDialog() {
-        if (!excelFileReader.proteinsPartOfMoleculeSet.isEmpty()) {
-            String participantsList = String.join(", ", excelFileReader.proteinsPartOfMoleculeSet);
+        if (!fileWriter.getProteinsPartOfMoleculeSet().isEmpty()) {
+            String participantsList = String.join(", ", fileWriter.getProteinsPartOfMoleculeSet());
             JOptionPane.showMessageDialog(new JFrame(),"Those participants have been identified as part of a molecule set: " + participantsList,
                     "INFORMATION", JOptionPane.INFORMATION_MESSAGE);
         }
@@ -242,16 +250,4 @@ public class UniprotMapperGui extends JPanel {
         JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         LOGGER.warning(ex.getMessage());
     }
-
-    /**
-     * Checks if the selected sheet or column is invalid.
-     *
-     * @param sheetSelected The name of the selected sheet.
-     * @param idColumn The name of the selected ID column.
-     * @return Returns true if the sheet or column is invalid, otherwise false.
-     */
-    private boolean isInvalidSelection(String sheetSelected, String idColumn) {
-        return sheetSelected == null || sheetSelected.equals("Select sheet") || idColumn == null || idColumn.equals("Select column to process");
-    }
-
 }

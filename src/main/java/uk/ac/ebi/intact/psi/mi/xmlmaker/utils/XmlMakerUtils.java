@@ -4,21 +4,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import psidev.psi.mi.jami.model.CvTerm;
 import psidev.psi.mi.jami.xml.model.extension.xml300.XmlCvTerm;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
 import uk.ac.ebi.pride.utilities.ols.web.service.model.Identifier;
 import uk.ac.ebi.pride.utilities.ols.web.service.model.Term;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.*;
 import java.util.stream.Collectors;
+
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.EXPERIMENTAL_ROLE;
 
 /**
  * Utility class for XML creation and management tasks in the PSI-MI context.
@@ -46,22 +47,32 @@ public class XmlMakerUtils {
     }
 
     /**
-     * Displays an error message in a dialog box.
+     * Creates an HTTP connection for a given URL.
+     * @param urlString url to connect
+     * @throws IOException if error
+     * @return URLConnection
      */
-    public static void showErrorDialog(String message) {
-        LOGGER.severe("Error: " + message);
-        JOptionPane.showMessageDialog(new JFrame(), message, "ERROR", JOptionPane.ERROR_MESSAGE);
+    public static HttpURLConnection createConnection(String urlString) throws IOException {
+        LOGGER.fine("Creating HTTP connection to URL: " + urlString);
+        URL url = new URL(urlString);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        return connection;
     }
 
     /**
-     * Displays an informational message in a dialog box.
+     * Encodes a string for safe use in a URL.
+     * @param input to convert in URL format.
+     * @return string compatible with URL.
      */
-    public static void showInfoDialog(String message) {
-        JOptionPane.showMessageDialog(new JFrame(), message, "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
+    public static String encodeForURL(String input) {
+        return URLEncoder.encode(input, StandardCharsets.UTF_8);
     }
 
     /**
      * Fetches the Taxonomy ID for a given organism name using the OLS API.
+     * @param organismName organism to fetch
+     * @return organism tax id
      */
     public static String fetchTaxIdWithApi(String organismName) {
         String urlString = "https://www.ebi.ac.uk/ols4/api/search?q=" + encodeForURL(organismName) + "&ontology=ncbitaxon";
@@ -88,18 +99,9 @@ public class XmlMakerUtils {
     }
 
     /**
-     * Creates an HTTP connection for a given URL.
-     */
-    public static HttpURLConnection createConnection(String urlString) throws IOException {
-        LOGGER.fine("Creating HTTP connection to URL: " + urlString);
-        URL url = new URL(urlString);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        return connection;
-    }
-
-    /**
      * Fetches the Taxonomy ID for a given organism name by processing the API response.
+     * @param organismName organism to fetch
+     * @return organism tax id
      */
     public static String fetchTaxIdForOrganism(String organismName) {
         String taxId = nameToTaxIdCache.get(organismName);
@@ -137,14 +139,20 @@ public class XmlMakerUtils {
     }
 
     /**
-     * Encodes a string for safe use in a URL.
+     * Retrieves a {@link CvTerm} for the given input using the PSI-MI ontology.
+     * Trims input, removes trailing semicolons, checks cache, and falls back to OLS lookup.
+     * Returns {@code null} for blank or invalid input. Caches and returns a placeholder if not found.
+     *
+     * @param input the term name to look up
+     * @return the corresponding {@link CvTerm}, a placeholder if not found, or {@code null} if input is invalid
      */
-    public static String encodeForURL(String input) {
-        return URLEncoder.encode(input, StandardCharsets.UTF_8);
-    }
-
-    public CvTerm fetchTerm(String input) {
+    public static CvTerm fetchTerm(String input) {
+        if (input == null) return null;
         input = input.trim();
+        if (input.endsWith(";")){
+            input = input.substring(0, input.length() - 1);
+        }
+
         if (input.isBlank() || input.contains("null")) return null;
         CvTerm term = nameToCvTerm.get(input);
         if (term != null) return term;
@@ -165,15 +173,45 @@ public class XmlMakerUtils {
     }
 
     /**
-     * Fetches the MI (Molecular Interaction) ID for a given term using the OLS client.
+     * Fetches the MI (Molecular Interaction) ID for a given term using the OLS client
+     * @param input string to look for in OLS.
+     * @return MI identifier from OLS
      */
-    public String fetchMiId(String input) {
+    public static String fetchMiId(String input) {
         CvTerm cvTerm = fetchTerm(input);
         return cvTerm == null ? null : cvTerm.getMIIdentifier();
     }
 
     /**
+     * Retrieves a list of term names from the OLS (Ontology Lookup Service) for a given MI (Molecular Interaction) ID.
+     * The method uses the provided MI ID to query the OLS and fetch the child terms associated with it.
+     * Only terms that do not have children are added to the result list.
+     *
+     * @param miId The MI identifier (in OBO format) used to retrieve the child terms from OLS.
+     * @return A sorted list of term names that are child terms of the provided MI ID, which do not have further children.
+     */
+    public static List<String> fetchTermsFromOls(String miId){
+        List<String> termsNames = new ArrayList<>();
+
+        Identifier identifier = new Identifier(miId, Identifier.IdentifierType.OBO);
+        List<Term> terms = olsClient.getTermChildren(identifier, "mi", 9999);
+
+        for (Term term : terms) {
+            XmlCvTerm xmlTerm = new XmlCvTerm(term.getLabel(), term.getOboId().getIdentifier());
+            nameToCvTerm.put(term.getName(), xmlTerm);
+            termsNames.add(term.getName());
+        }
+
+        termsNames = termsNames.stream().distinct().collect(Collectors.toList());
+        termsNames.sort(String::compareTo);
+
+        return termsNames;
+    }
+
+    /**
      * Extracts the OBO (Open Biomedical Ontologies) ID from a JSON response.
+     * @param json OLS response
+     * @return OLS MI identifier.
      */
     public static String extractOboId(String json) {
         if (json == null || json.isEmpty()) {
@@ -253,42 +291,37 @@ public class XmlMakerUtils {
     }
 
     /**
-     * Configures combo box dimensions and adds the default item to the combo box.
+     * Checks if the given value is null or matches the specified keyName.
+     * If the value is null or equal to the keyName, an empty string is returned.
+     * Otherwise, the string representation of the value is returned.
      *
-     * @param comboBox    The combo box to be configured.
-     * @param defaultItem The default item to add to the combo box.
-     * @return The configured combo box.
+     * @param value The object whose value is to be checked. Can be any object or null.
+     * @param keyName The key name to compare the string value against.
+     *
+     * @return An empty string if the value is null or equals the keyName, otherwise the string representation of the value.
      */
-    public static JComboBox<String> setComboBoxDimension(JComboBox<String> comboBox, String defaultItem) {
-        comboBox.addItem(defaultItem);
-        comboBox.setPreferredSize(new Dimension(200, 50));
-        comboBox.setMaximumSize(new Dimension(200, 50));
-        return comboBox;
+    public static String isValueNull(Object value, String keyName) {
+        if (value == null) {
+            return "";
+        }
+        String stringValue = value.toString();
+        return stringValue.equals(keyName) ? "" : stringValue;
     }
 
-    /**
-     * Retrieves a list of term names from the OLS (Ontology Lookup Service) for a given MI (Molecular Interaction) ID.
-     * The method uses the provided MI ID to query the OLS and fetch the child terms associated with it.
-     * Only terms that do not have children are added to the result list.
-     *
-     * @param miId The MI identifier (in OBO format) used to retrieve the child terms from OLS.
-     * @return A sorted list of term names that are child terms of the provided MI ID, which do not have further children.
-     */
-    public static List<String> getTermsFromOls(String miId){
-        List<String> termsNames = new ArrayList<>();
-
-        Identifier identifier = new Identifier(miId, Identifier.IdentifierType.OBO);
-        List<Term> terms = olsClient.getTermChildren(identifier, "mi", 9999);
-
-        for (Term term : terms) {
-            XmlCvTerm xmlTerm = new XmlCvTerm(term.getLabel(), term.getOboId().getIdentifier());
-                nameToCvTerm.put(term.getName(), xmlTerm);
-                termsNames.add(term.getName());
+    public static String getDataKey(InputData column, Map<String, String> data) {
+        if (column.experimentalRoleDependent) {
+            String experimentalRole = data.get(EXPERIMENTAL_ROLE.name);
+            if (experimentalRole != null && !experimentalRole.trim().isEmpty()) {
+                return column.name + experimentalRole;
+            }
         }
+        return column.name;
+    }
 
-        termsNames = termsNames.stream().distinct().collect(Collectors.toList());
-        termsNames.sort(String::compareTo);
-
-        return termsNames;
+    public static String getValueFromCombobox(JComboBox<String> comboBox) {
+        String comboboxToolTip =  comboBox.getToolTipText();
+        return comboBox.getSelectedItem() != null
+                && !comboBox.getSelectedItem().equals(comboboxToolTip)
+                ? comboBox.getSelectedItem().toString() : "";
     }
 }
