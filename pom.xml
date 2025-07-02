@@ -4,7 +4,7 @@
 
   <groupId>uk.ac.ebi.intact.psi.mi.xmlmaker</groupId>
   <artifactId>PSI-MI-XML-maker</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1</version>
   <packaging>jar</packaging>
 
   <name>PSI-MI-XML-maker</name>
