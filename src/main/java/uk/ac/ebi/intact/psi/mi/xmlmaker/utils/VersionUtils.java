@@ -61,7 +61,7 @@ public class VersionUtils {
     public static void checkForUpdates() {
         String currentVersion = getCurrentVersion();
         try {
-            latestVersion = getString();
+            latestVersion = getLatestReleasedVersion();
             if (latestVersion == null) {
                 LOGGER.warning("Could not find latest version");
                 return;
@@ -69,7 +69,7 @@ public class VersionUtils {
 
             initialiseUrls(latestVersion);
 
-            if (!latestVersion.equals(currentVersion)) {
+            if (isCurrentVersionOlderThanLatestRelease(currentVersion, latestVersion)) {
                 showInfoDialog("Update available! You're on version: " + currentVersion + ", latest version: " + latestVersion);
                 LOGGER.warning("Current version: " + currentVersion + ", latest version: " + latestVersion);
                 downloadDependingOnOs();
@@ -77,6 +77,26 @@ public class VersionUtils {
         } catch (Exception e) {
             LOGGER.warning("Error checking for updates: " + e.getMessage());
         }
+    }
+
+    protected static boolean isCurrentVersionOlderThanLatestRelease(String currentVersion, String releasedVersion) {
+        String[] currentVersionParts = currentVersion.replaceAll("-SNAPSHOT$", "").split("\\.");
+        String[] releasedVersionParts = releasedVersion.replaceAll("-SNAPSHOT$", "").split("\\.");
+
+        int length = Math.max(currentVersionParts.length, releasedVersionParts.length);
+        for (int i = 0; i < length; i++) {
+            int currentVersionPart = i < currentVersionParts.length ? Integer.parseInt(currentVersionParts[i]) : 0;
+            int releasedVersionPart = i < releasedVersionParts.length ? Integer.parseInt(releasedVersionParts[i]) : 0;
+            if (currentVersionPart < releasedVersionPart) {
+                return true;
+            }
+            if (releasedVersionPart < currentVersionPart) {
+                return false;
+            }
+        }
+        // At this point, both versions have the same number, but the current one may be a snapshot
+        // while the released one not.
+        return currentVersion.endsWith("-SNAPSHOT") && !releasedVersion.endsWith("-SNAPSHOT");
     }
 
     /**
@@ -107,7 +127,7 @@ public class VersionUtils {
      * @return the version string (e.g., "1.1.3") if available, or {@code null} if not found or error occurs.
      * @throws IOException if the URL cannot be read or the content is malformed.
      */
-    private static String getString() throws IOException {
+    private static String getLatestReleasedVersion() throws IOException {
         URL url = new URL(VERSION_URL);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
