@@ -1,6 +1,8 @@
 # PSI-MI XML Maker User Guide
 
-⚠️ It is necessary to download Java 11 **JDK** -> https://adoptium.net/en-GB/temurin/archive/?version=11 
+- ⚠️ It is necessary to download Java 11 **JDK**
+  - https://adoptium.net/en-GB/temurin/releases?version=11
+  - https://www.oracle.com/uk/java/technologies/javase/jdk11-archive-downloads.html
 - Use the installer so it is downloaded directly in the right folder
 
 - Access to the demo: https://drive.google.com/drive/folders/1VftTaAUfWdJF_dyFLEH9b-23i-454qDY?usp=sharing
@@ -103,6 +105,18 @@ Before creating interactions, participants must be defined.
     - Default: `inputFileName_[n].xml` inside a directory named after the input file.
 - Click **Browse...** to change the save location.
 - Click **Create XML File** to generate and save the XML file(s).
+
+## Release
+
+### How to release?
+1. Download the necessary to Java 11 **JDKs** for the supported platforms (macOS x64, macOS aarch64, Windows and Linux x64)
+   - https://adoptium.net/en-GB/temurin/releases?version=11
+   - https://www.oracle.com/uk/java/technologies/javase/jdk11-archive-downloads.html
+2. Extract the JDKs into a `jdks` folder in the root of this project.
+   - Check the names of the folders for each platform match the names specified in the pom.xml file.
+3. Run `mvn package`.
+4. Create a new release in https://github.com/MICommunity/psi-mi-xml-maker/releases.
+   - Upload the generated packages for all the supported platforms to the new release.
 
 ---
 
