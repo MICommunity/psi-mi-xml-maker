@@ -548,6 +548,9 @@ public class XmlInteractionsCreator {
         IntStream.range(0, descriptions.length).forEach(i -> {
             String desc = descriptions[i];
             String unit = unitsArray[i];
+            if (desc == null || desc.isEmpty() || unit == null || unit.isEmpty()) {
+                return;
+            }
             VariableParameter variableParameter = new XmlVariableParameter();
             variableParameter.setDescription(desc);
             variableParameter.setUnit(fetchTerm(unit));
@@ -557,6 +560,7 @@ public class XmlInteractionsCreator {
             }
             values.stream()
                     .map(String::trim)
+                    .filter(value -> !value.isEmpty())
                     .map(value -> new XmlVariableParameterValue(value, variableParameter))
                     .forEach(variableParameterValue -> variableParameter.getVariableValues()
                             .add(variableParameterValue));
@@ -616,15 +620,16 @@ public class XmlInteractionsCreator {
         }
 
         XmlExperiment experiment = createExperimentForBatch(dataList);
+        XmlInteractionEvidence interaction = new XmlInteractionEvidence();
+        experiment.addInteractionEvidence(interaction);
 
         for (Map<String, String> participant : dataList) {
-            XmlInteractionEvidence interaction = new XmlInteractionEvidence();
             XmlParticipantEvidence newParticipant = createParticipant(participant);
             interaction.addParticipant(newParticipant);
-            experiment.addInteractionEvidence(interaction);
             processInteractionSpecificProperties(interaction, participant);
-            xmlModelledInteractions.add(interaction);
         }
+
+        xmlModelledInteractions.add(interaction);
 
         launchWriting();
     }
@@ -659,11 +664,12 @@ public class XmlInteractionsCreator {
                     for (int i = 0; i < descs.length; i++) {
                         String desc = descs[i].trim();
                         String value = values[i].trim();
-
-                        if (!variableParameterDescAndValues.containsKey(desc)) {
-                            variableParameterDescAndValues.put(desc, new HashSet<>());
+                        if (!desc.isEmpty() && !value.isEmpty()) {
+                            if (!variableParameterDescAndValues.containsKey(desc)) {
+                                variableParameterDescAndValues.put(desc, new HashSet<>());
+                            }
+                            variableParameterDescAndValues.get(desc).add(value);
                         }
-                        variableParameterDescAndValues.get(desc).add(value);
                     }
                 }
             }
@@ -731,15 +737,18 @@ public class XmlInteractionsCreator {
         VariableParameterValueSet variableParameterValueSet = new XmlVariableParameterValueSet();
 
         for (String variableParamDesc : variableParamVDescsArray) {
-            interaction.getExperiment().getVariableParameters().forEach(variableParam -> {
-                if (variableParam.getDescription().equals(variableParamDesc)){
-                    variableParameterValueSet.addAll(variableParam.getVariableValues());
-                }
-            });
+            if (variableParamDesc != null && !variableParamDesc.isEmpty()) {
+                interaction.getExperiment().getVariableParameters().forEach(variableParam -> {
+                    if (variableParam.getDescription().equals(variableParamDesc)) {
+                        variableParameterValueSet.addAll(variableParam.getVariableValues());
+                    }
+                });
+            }
         }
 
-        interaction.getVariableParameterValues().add(variableParameterValueSet);
-
+        if (!variableParameterValueSet.isEmpty()) {
+            interaction.getVariableParameterValues().add(variableParameterValueSet);
+        }
     }
 
     /**
