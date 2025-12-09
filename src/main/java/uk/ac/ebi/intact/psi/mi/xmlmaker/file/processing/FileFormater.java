@@ -547,7 +547,7 @@ public class FileFormater {
         if (value == null || value.trim().isEmpty() || "null".equalsIgnoreCase(value.trim())) {
             return "";
         }
-        return value + ";";
+        return value;
     }
 
     /**
@@ -563,7 +563,7 @@ public class FileFormater {
         if (!participant.containsKey(key)) {
             participant.put(key, value);
         } else {
-            participant.merge(key, value, (previous, current) -> safe(previous) + safe(current));
+            participant.merge(key, value, (previous, current) -> safe(previous) + ";" + safe(current));
         }
     }
 }
