@@ -69,4 +69,8 @@ public enum ParticipantOrganism {
         this.name = name;
         this.taxId = taxId;
     }
+
+    public String formattedOrganismName() {
+        return name + " (" + taxId + ")";
+    }
 }

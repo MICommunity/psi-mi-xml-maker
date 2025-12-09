@@ -191,11 +191,11 @@ public class ParticipantAndInteractionCreatorGui {
         baitExpressedInOrganism.setToolTipText("Bait expressed organism ID");
 
         for (ParticipantOrganism participantOrganism : ParticipantOrganism.values()) {
-            preyOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
-            baitOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
-            hostOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
-            preyExpressedInOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
-            baitExpressedInOrganism.addItem(participantOrganism.name + " (" + participantOrganism.taxId + ")");
+            preyOrganism.addItem(participantOrganism.formattedOrganismName());
+            baitOrganism.addItem(participantOrganism.formattedOrganismName());
+            hostOrganism.addItem(participantOrganism.formattedOrganismName());
+            preyExpressedInOrganism.addItem(participantOrganism.formattedOrganismName());
+            baitExpressedInOrganism.addItem(participantOrganism.formattedOrganismName());
         }
     }
 
