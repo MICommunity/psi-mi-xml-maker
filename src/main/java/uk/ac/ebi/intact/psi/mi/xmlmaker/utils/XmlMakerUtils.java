@@ -120,6 +120,8 @@ public class XmlMakerUtils {
         // Chemical Synthesis organism selected. It cannot be found in OLS, but we already know the tax id
         if (ParticipantOrganism.CHEMICAL_SYNTHESIS.formattedOrganismName().equals(organismName)) {
             taxId = Integer.toString(ParticipantOrganism.CHEMICAL_SYNTHESIS.taxId);
+        } else if (ParticipantOrganism.IN_VITRO.formattedOrganismName().equals(organismName)) {
+            taxId = Integer.toString(ParticipantOrganism.IN_VITRO.taxId);
         } else {
             String apiResponse = fetchTaxIdWithApi(organismName);
             String oboId = apiResponse != null ? extractOboId(apiResponse) : null;
