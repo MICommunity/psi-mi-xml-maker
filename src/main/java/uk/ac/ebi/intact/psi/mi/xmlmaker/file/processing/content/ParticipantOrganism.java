@@ -10,6 +10,7 @@ public enum ParticipantOrganism {
     CAENORHABDITIS_ELEGANS("Caenorhabditis elegans", 6239),
     ESCHERICHIA_COLI_K12("Escherichia coli (strain K12)", 83333),
     CHEMICAL_SYNTHESIS("Chemical synthesis", -2),
+    IN_VITRO("In vitro", -1),
     RATTUS_NORVEGICUS("Rattus norvegicus (Rat)", 10116),
     CAMPYLOBACTER_JEJUNI("Campylobacter jejuni subsp. jejuni serotype O:2 (strain NCTC 11168)", 192222),
     SARS_COV_2("SARS-CoV-2", 2697049),
@@ -68,5 +69,9 @@ public enum ParticipantOrganism {
     ParticipantOrganism(String name, int taxId) {
         this.name = name;
         this.taxId = taxId;
+    }
+
+    public String formattedOrganismName() {
+        return name + " (" + taxId + ")";
     }
 }

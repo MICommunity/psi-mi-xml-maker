@@ -100,7 +100,7 @@ public class FileUtils {
                     return getDataFromRow(colIndex,
                             Integer.parseInt(participant.get(InputData.PARTICIPANT_ROW_INDEX.name)));
                 })
-                .collect(Collectors.joining(";")) + ";";
+                .collect(Collectors.joining(";"));
     }
 
     /**

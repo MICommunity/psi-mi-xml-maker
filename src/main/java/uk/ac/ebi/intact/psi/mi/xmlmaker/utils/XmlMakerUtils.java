@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import psidev.psi.mi.jami.model.CvTerm;
 import psidev.psi.mi.jami.xml.model.extension.xml300.XmlCvTerm;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.ParticipantOrganism;
 import uk.ac.ebi.pride.utilities.ols.web.service.client.OLSClient;
 import uk.ac.ebi.pride.utilities.ols.web.service.config.OLSWsConfig;
 import uk.ac.ebi.pride.utilities.ols.web.service.model.Identifier;
@@ -105,32 +106,45 @@ public class XmlMakerUtils {
      */
     public static String fetchTaxIdForOrganism(String organismName) {
         String taxId = nameToTaxIdCache.get(organismName);
-        if (taxId != null) return taxId;
-        if (organismName.matches("\\d+") || organismName.equals("-1") || organismName.equals("-2")) return organismName;
-        // already a taxId or an in-vitro/chemical synthesis
-        if (organismName.toLowerCase().contains("organism") || organismName.isEmpty()) {return null;}
+        if (taxId != null) {
+            return taxId;
+        }
+        // Already an organism taxId or an in-vitro/chemical synthesis id
+        if (organismName.matches("\\d+") || organismName.equals("-1") || organismName.equals("-2")) {
+            return organismName;
+        }
+        // Organism has not been set
+        if (organismName.toLowerCase().contains("organism") || organismName.isEmpty()) {
+            return null;
+        }
+        // Chemical Synthesis organism selected. It cannot be found in OLS, but we already know the tax id
+        if (ParticipantOrganism.CHEMICAL_SYNTHESIS.formattedOrganismName().equals(organismName)) {
+            taxId = Integer.toString(ParticipantOrganism.CHEMICAL_SYNTHESIS.taxId);
+        } else if (ParticipantOrganism.IN_VITRO.formattedOrganismName().equals(organismName)) {
+            taxId = Integer.toString(ParticipantOrganism.IN_VITRO.taxId);
+        } else {
+            String apiResponse = fetchTaxIdWithApi(organismName);
+            String oboId = apiResponse != null ? extractOboId(apiResponse) : null;
+            taxId = oboId != null ? oboId : organismName;
 
-        String apiResponse = fetchTaxIdWithApi(organismName);
-        String oboId = apiResponse != null ? extractOboId(apiResponse) : null;
-        taxId = oboId != null ? oboId : organismName;
-
-        if (oboId == null) {
-            String userInput = JOptionPane.showInputDialog(null,
-                    "No TaxId found for organism: " + organismName + "\nPlease enter a custom TaxId:",
-                    "Custom TaxId Input",
-                    JOptionPane.QUESTION_MESSAGE);
-
-            while (userInput != null && !userInput.matches("\\d+")) {
-                JOptionPane.showMessageDialog(null, "Please enter a valid numeric TaxId.",
-                        "Invalid Input", JOptionPane.ERROR_MESSAGE);
-                userInput = JOptionPane.showInputDialog(null,
-                        "No TaxId found for organism: " + organismName + "\nPlease enter a valid numeric TaxId:",
+            if (oboId == null) {
+                String userInput = JOptionPane.showInputDialog(null,
+                        "No TaxId found for organism: " + organismName + "\nPlease enter a custom TaxId:",
                         "Custom TaxId Input",
                         JOptionPane.QUESTION_MESSAGE);
-            }
 
-            if (userInput != null && !userInput.trim().isEmpty()) {
-                taxId = userInput.trim(); // Update taxId with user input
+                while (userInput != null && !userInput.matches("\\d+")) {
+                    JOptionPane.showMessageDialog(null, "Please enter a valid numeric TaxId.",
+                            "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                    userInput = JOptionPane.showInputDialog(null,
+                            "No TaxId found for organism: " + organismName + "\nPlease enter a valid numeric TaxId:",
+                            "Custom TaxId Input",
+                            JOptionPane.QUESTION_MESSAGE);
+                }
+
+                if (userInput != null && !userInput.trim().isEmpty()) {
+                    taxId = userInput.trim(); // Update taxId with user input
+                }
             }
         }
 
