@@ -93,7 +93,7 @@ public class XmlInteractionsCreator {
         String participantExperimentalRole = data.get(EXPERIMENTAL_ROLE.name);
 
         InputData[] required = {
-//                PARTICIPANT_NAME,
+                PARTICIPANT_NAME,
                 PARTICIPANT_ID,
                 PARTICIPANT_ID_DB,
                 PARTICIPANT_ORGANISM
@@ -104,10 +104,9 @@ public class XmlInteractionsCreator {
             if (data.get(key) == null || data.get(key).trim().isBlank()) {
                 LOGGER.warning(requiredColumn.name + " is required but missing or empty.");
 
-//                if (data.get(PARTICIPANT_NAME.name) != null && !data.get(PARTICIPANT_NAME.name).trim().isBlank()) {
-//                    xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_NAME.name));
-//                } else
-                    if (data.get(PARTICIPANT_ID.name) != null && !data.get(PARTICIPANT_ID.name).trim().isBlank()) {
+                if (data.get(PARTICIPANT_NAME.name) != null && !data.get(PARTICIPANT_NAME.name).trim().isBlank()) {
+                    xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_NAME.name));
+                } else if (data.get(PARTICIPANT_ID.name) != null && !data.get(PARTICIPANT_ID.name).trim().isBlank()) {
                     xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_ID.name));
                 }
                 return null;
@@ -710,11 +709,10 @@ public class XmlInteractionsCreator {
         }
 
         String interactionFigureLegend = participant.get(INTERACTION_FIGURE_LEGEND.name);
-        if (interactionFigureLegend != null) {
+        if (interactionFigureLegend != null && !interactionFigureLegend.trim().isEmpty()) {
             CvTerm annotationType = XmlMakerUtils.fetchTerm("figure legend");
             if (annotationType != null) {
-                Annotation annotation = new XmlAnnotation(annotationType, interactionFigureLegend);
-                interaction.getAnnotations().add(annotation);
+                addInteractionAnnotationIfMissing(interaction, annotationType, interactionFigureLegend);
             }
         }
 
@@ -753,6 +751,19 @@ public class XmlInteractionsCreator {
 
         if (!variableParameterValueSet.isEmpty()) {
             interaction.getVariableParameterValues().add(variableParameterValueSet);
+        }
+    }
+
+    private void addInteractionAnnotationIfMissing(XmlInteractionEvidence interaction, CvTerm annotationType, String value) {
+        boolean alreadyPresent = interaction.getAnnotations().stream()
+                .anyMatch(annotation -> Objects.equals(annotation.getValue(), value)
+                        && annotation.getTopic() != null
+                        && annotation.getTopic().getShortName() != null
+                        && annotationType.getShortName() != null
+                        && annotation.getTopic().getShortName().equalsIgnoreCase(annotationType.getShortName()));
+
+        if (!alreadyPresent) {
+            interaction.getAnnotations().add(new XmlAnnotation(annotationType, value));
         }
     }
 

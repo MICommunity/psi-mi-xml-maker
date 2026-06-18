@@ -36,6 +36,7 @@ import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
  */
 @Getter
 public class ParticipantAndInteractionCreatorGui {
+    public static final String FILE_COLUMN_PREFIX = "File column: ";
 
     //experiment details
     private final JComboBox<String> hostOrganism = new JComboBox<>();
@@ -120,6 +121,7 @@ public class ParticipantAndInteractionCreatorGui {
         setBiologicalRole();
         setDatabases();
         setXrefQualifiers();
+        setEditableBaseFields();
 
         updateExperimentalPreparations((int) numberOfBaitExperimentalPrep.getValue(), baitExperimentalPreparationPanel, baitExperimentalPreparationList);
         numberOfBaitExperimentalPrep.setToolTipText("Number of bait experimental preparations");
@@ -209,33 +211,35 @@ public class ParticipantAndInteractionCreatorGui {
 
         //common
         participantDetails.put(INTERACTION_DETECTION_METHOD.name,
-                isValueNull(interactionDetectionMethodCombobox.getSelectedItem(), INTERACTION_DETECTION_METHOD.name));
+                getConfiguredValue(interactionDetectionMethodCombobox, INTERACTION_DETECTION_METHOD.name, false));
         participantDetails.put(INTERACTION_FIGURE_LEGEND.name, interactionFigureLegend.getText());
         participantDetails.put(PARTICIPANT_IDENTIFICATION_METHOD.name,
-                isValueNull(participantDetectionMethodCombobox.getSelectedItem(), PARTICIPANT_IDENTIFICATION_METHOD.name));
-        participantDetails.put(HOST_ORGANISM.name, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(hostOrganism.getSelectedItem()).toString()), HOST_ORGANISM.name));
+                getConfiguredValue(participantDetectionMethodCombobox, PARTICIPANT_IDENTIFICATION_METHOD.name, false));
+        participantDetails.put(HOST_ORGANISM.name, getConfiguredValue(hostOrganism, HOST_ORGANISM.name, true));
 
         //bait
         participantDetails.put(PARTICIPANT_ID_DB.name + BAIT.name,
-                isValueNull(baitIdDatabase.getSelectedItem(), PARTICIPANT_ID_DB + BAIT.name));
+                getConfiguredValue(baitIdDatabase, PARTICIPANT_ID_DB + BAIT.name, false));
         participantDetails.put(EXPERIMENTAL_PREPARATION.name + BAIT.name,
                 isValueNull(getBaitExperimentalPreparationsAsString(), EXPERIMENTAL_PREPARATION.name + BAIT.name));
         participantDetails.put(PARTICIPANT_BIOLOGICAL_ROLE.name + BAIT.name,
-                isValueNull(baitBiologicalRole.getSelectedItem(), PARTICIPANT_BIOLOGICAL_ROLE.name + BAIT.name));
+                getConfiguredValue(baitBiologicalRole, PARTICIPANT_BIOLOGICAL_ROLE.name + BAIT.name, false));
         participantDetails.put(PARTICIPANT_ORGANISM.name + BAIT.name,
-                isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(baitOrganism.getSelectedItem()).toString()), PARTICIPANT_ORGANISM.name + BAIT.name));
-        participantDetails.put(PARTICIPANT_EXPRESSED_IN_ORGANISM.name + BAIT.name, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(baitExpressedInOrganism.getSelectedItem()).toString()), PARTICIPANT_EXPRESSED_IN_ORGANISM.name + BAIT.name));
+                getConfiguredValue(baitOrganism, PARTICIPANT_ORGANISM.name + BAIT.name, true));
+        participantDetails.put(PARTICIPANT_EXPRESSED_IN_ORGANISM.name + BAIT.name,
+                getConfiguredValue(baitExpressedInOrganism, PARTICIPANT_EXPRESSED_IN_ORGANISM.name + BAIT.name, true));
 
         //prey
         participantDetails.put(PARTICIPANT_ID_DB.name + PREY.name,
-                isValueNull(preyIdDatabase.getSelectedItem(), PARTICIPANT_ID_DB + PREY.name));
+                getConfiguredValue(preyIdDatabase, PARTICIPANT_ID_DB + PREY.name, false));
         participantDetails.put(EXPERIMENTAL_PREPARATION.name + PREY.name,
                 isValueNull(getPreyExperimentalPreparationsAsString(), EXPERIMENTAL_PREPARATION.name + PREY.name));
         participantDetails.put(PARTICIPANT_BIOLOGICAL_ROLE.name + PREY.name,
-                isValueNull(preyBiologicalRole.getSelectedItem(), PARTICIPANT_BIOLOGICAL_ROLE.name + PREY.name));
+                getConfiguredValue(preyBiologicalRole, PARTICIPANT_BIOLOGICAL_ROLE.name + PREY.name, false));
         participantDetails.put(PARTICIPANT_ORGANISM.name + PREY.name,
-                isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(preyOrganism.getSelectedItem()).toString()), PARTICIPANT_ORGANISM.name + PREY.name));
-        participantDetails.put(PARTICIPANT_EXPRESSED_IN_ORGANISM.name + PREY.name, isValueNull(fetchTaxIdForOrganism(Objects.requireNonNull(preyExpressedInOrganism.getSelectedItem()).toString()), PARTICIPANT_EXPRESSED_IN_ORGANISM.name + PREY.name));
+                getConfiguredValue(preyOrganism, PARTICIPANT_ORGANISM.name + PREY.name, true));
+        participantDetails.put(PARTICIPANT_EXPRESSED_IN_ORGANISM.name + PREY.name,
+                getConfiguredValue(preyExpressedInOrganism, PARTICIPANT_EXPRESSED_IN_ORGANISM.name + PREY.name, true));
 
         return participantDetails;
     }
@@ -339,6 +343,60 @@ public class ParticipantAndInteractionCreatorGui {
             preyIdDatabase.addItem(termName);
             dbCache.add(termName);
         }
+    }
+
+    public void setSourceColumns(List<String> columnNames) {
+        updateSourceColumnOptions(interactionDetectionMethodCombobox, columnNames);
+        updateSourceColumnOptions(participantDetectionMethodCombobox, columnNames);
+        updateSourceColumnOptions(hostOrganism, columnNames);
+        updateSourceColumnOptions(baitIdDatabase, columnNames);
+        updateSourceColumnOptions(baitBiologicalRole, columnNames);
+        updateSourceColumnOptions(baitOrganism, columnNames);
+        updateSourceColumnOptions(baitExpressedInOrganism, columnNames);
+        updateSourceColumnOptions(preyIdDatabase, columnNames);
+        updateSourceColumnOptions(preyBiologicalRole, columnNames);
+        updateSourceColumnOptions(preyOrganism, columnNames);
+        updateSourceColumnOptions(preyExpressedInOrganism, columnNames);
+    }
+
+    private void setEditableBaseFields() {
+        interactionDetectionMethodCombobox.setEditable(true);
+        participantDetectionMethodCombobox.setEditable(true);
+        baitIdDatabase.setEditable(true);
+        preyIdDatabase.setEditable(true);
+        baitBiologicalRole.setEditable(true);
+        preyBiologicalRole.setEditable(true);
+    }
+
+    private void updateSourceColumnOptions(JComboBox<String> comboBox, List<String> columnNames) {
+        Object selectedItem = comboBox.getSelectedItem();
+        for (int i = comboBox.getItemCount() - 1; i >= 0; i--) {
+            String item = comboBox.getItemAt(i);
+            if (item != null && item.startsWith(FILE_COLUMN_PREFIX)) {
+                comboBox.removeItemAt(i);
+            }
+        }
+        for (String columnName : columnNames) {
+            comboBox.addItem(FILE_COLUMN_PREFIX + columnName);
+        }
+        if (selectedItem != null) {
+            comboBox.setSelectedItem(selectedItem);
+        }
+    }
+
+    private String getConfiguredValue(JComboBox<String> comboBox, String defaultValue, boolean organismField) {
+        Object selectedItem = comboBox.getSelectedItem();
+        String selectedValue = isValueNull(selectedItem, defaultValue);
+        if (selectedValue == null || selectedValue.isEmpty()) {
+            return selectedValue;
+        }
+        if (selectedValue.startsWith(FILE_COLUMN_PREFIX)) {
+            return selectedValue;
+        }
+        if (organismField) {
+            return isValueNull(fetchTaxIdForOrganism(selectedValue), defaultValue);
+        }
+        return selectedValue;
     }
 
     /**

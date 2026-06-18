@@ -27,11 +27,14 @@ public class FileWriter {
     private final MoleculeSetChecker moleculeSetChecker = new MoleculeSetChecker();
 
     private final Map<String, UniprotResult> alreadyParsed = new HashMap<>();
+    private final Map<String, ArrayList<UniprotResult>> batchParsed = new HashMap<>();
 
     @Getter
     private final List<String> proteinsPartOfMoleculeSet = new ArrayList<>();
     @Getter
     private List<String> uniprotIdNotFound = new ArrayList<>();
+    @Getter
+    private final List<String> uniprotFilterWarnings = new ArrayList<>();
 
     private final Logger LOGGER = Logger.getLogger(FileWriter.class.getName());
 
@@ -114,10 +117,12 @@ public class FileWriter {
      * @param previousIdDbColumnIndex      the column index of the previous ID db.
      * @param organismColumnIndex      the organism column index.
      */
-    public void checkAndInsertUniprotResultsSeparatedFormat(int idColumnIndex, int previousIdDbColumnIndex, int organismColumnIndex) {
+    public void checkAndInsertUniprotResultsSeparatedFormat(int idColumnIndex, int previousIdDbColumnIndex,
+                                                            int organismColumnIndex, int participantNameColumnIndex) {
         List<String> fileData = fileReader.fileData;
         char separator = fileReader.getSeparator();
         String currentFilePath = fileReader.getCurrentFilePath();
+        uniprotFilterWarnings.clear();
 
         Iterator<List<String>> iterator = fileReader.readFileWithSeparator();
         String tmpFilePath = fileReader.getCurrentFilePath();
@@ -129,15 +134,13 @@ public class FileWriter {
         }
 
         int originalColumnCount = fileData.size();
+        preloadSeparatedFormatUniprotResults(iterator, idColumnIndex, previousIdDbColumnIndex, organismColumnIndex);
+        iterator = fileReader.readFileWithSeparator();
+        int participantIdOutputColumnIndex = findColumnIndex(fileData, "Participant ID");
+        int participantIdDbOutputColumnIndex = findColumnIndex(fileData, "Participant ID database");
+        int participantOrganismOutputColumnIndex = findColumnIndex(fileData, "Participant organism");
+        int participantTypeOutputColumnIndex = findColumnIndex(fileData, "Participant type");
 
-        //to avoid duplicate in the header
-        fileData.set(idColumnIndex, "Input Participant ID");
-        fileData.set(previousIdDbColumnIndex, "Input Participant ID database");
-        fileData.set(organismColumnIndex, "Input Organism");
-        fileData.set(fileData.indexOf("Participant name"), "Input Participant Name");
-        fileData.set(fileData.indexOf("Participant type"), "Input Participant Type");
-
-        fileData.addAll(Arrays.asList("Participant ID", "Participant ID database", "Participant organism", "Participant name", "Participant type"));
         try (CSVWriter csvWriter = new CSVWriter(new OutputStreamWriter(new FileOutputStream(tmpFilePath), StandardCharsets.UTF_8),
                 separator, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END)) {
 
@@ -153,10 +156,13 @@ public class FileWriter {
                 while (row.size() < originalColumnCount) {
                     row.add("");
                 }
-                processRow(row, idColumnIndex, previousIdDbColumnIndex, organismColumnIndex, csvWriter);
+                processRow(row, idColumnIndex, previousIdDbColumnIndex, organismColumnIndex,
+                        participantNameColumnIndex, participantIdOutputColumnIndex, participantIdDbOutputColumnIndex,
+                        participantOrganismOutputColumnIndex, participantTypeOutputColumnIndex, csvWriter);
             }
 
             alreadyParsed.clear();
+            batchParsed.clear();
         } catch (IOException e) {
             showErrorDialog("Error writing file: " + e.getMessage());
             LOGGER.log(Level.SEVERE, "Error writing file", e);
@@ -173,9 +179,11 @@ public class FileWriter {
      * @param idDbColumnIndex      column index of the id database.
      * @param organismColumnIndex      the organism column index.
      */
-    public void checkAndInsertUniprotResultsWorkbook(String sheetSelected, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex) {
+    public void checkAndInsertUniprotResultsWorkbook(String sheetSelected, int idColumnIndex, int idDbColumnIndex,
+                                                     int organismColumnIndex, int participantNameColumnIndex) {
         Workbook workbook = fileReader.getWorkbook();
         String currentFilePath = fileReader.getCurrentFilePath();
+        uniprotFilterWarnings.clear();
 
         if (idColumnIndex < 0) {
             showErrorDialog("ID column not found");
@@ -200,27 +208,16 @@ public class FileWriter {
                 return;
             }
 
-            int lastCellIndex = headerRow.getLastCellNum();
-            headerRow.createCell(lastCellIndex).setCellValue("Participant ID");
-            headerRow.createCell(lastCellIndex + 1).setCellValue("Participant ID database");
-            headerRow.createCell(lastCellIndex + 2).setCellValue("Participant organism");
-            headerRow.createCell(lastCellIndex + 3).setCellValue("Participant name");
-            headerRow.createCell(lastCellIndex + 4).setCellValue("Participant type");
-
-            //to avoid duplicates
-            headerRow.getCell(idColumnIndex).setCellValue("Input participant ID");
-            headerRow.getCell(idDbColumnIndex).setCellValue("Input participant ID database");
-            headerRow.getCell(organismColumnIndex).setCellValue("Input participant organism");
-            for (int i = 1; i < lastCellIndex + 1; i++) {
-                if (headerRow.getCell(i).getStringCellValue().equals("Participant name")) {
-                    headerRow.getCell(i).setCellValue("Input Participant name");
-                } else  if (headerRow.getCell(i).getStringCellValue().equals("Participant type")) {
-                    headerRow.getCell(i).setCellValue("Input Participant type");
-                }
-            }
+            preloadWorkbookUniprotResults(sheet, idColumnIndex, idDbColumnIndex, organismColumnIndex);
+            int participantIdOutputColumnIndex = findColumnIndex(headerRow, "Participant ID");
+            int participantIdDbOutputColumnIndex = findColumnIndex(headerRow, "Participant ID database");
+            int participantOrganismOutputColumnIndex = findColumnIndex(headerRow, "Participant organism");
+            int participantTypeOutputColumnIndex = findColumnIndex(headerRow, "Participant type");
 
             while (iterator.hasNext()) {
-                processWorkbookRow(iterator.next(), idColumnIndex, idDbColumnIndex, organismColumnIndex, lastCellIndex);
+                processWorkbookRow(iterator.next(), idColumnIndex, idDbColumnIndex, organismColumnIndex,
+                        participantNameColumnIndex, participantIdOutputColumnIndex, participantIdDbOutputColumnIndex,
+                        participantOrganismOutputColumnIndex, participantTypeOutputColumnIndex);
             }
 
             // Ensure writing happens only after processing
@@ -242,6 +239,7 @@ public class FileWriter {
                 LOGGER.log(Level.SEVERE, "Error closing workbook", e);
             }
             alreadyParsed.clear();
+            batchParsed.clear();
         }
 
         fileReader.selectFileOpener(currentFilePath);
@@ -256,7 +254,10 @@ public class FileWriter {
      * @param organismColumnIndex     Index of the organism column in the row.
      * @param csvWriter               The {@link CSVWriter} used to write the updated row.
      */
-    private void processRow(List<String> row, int idColumnIndex, int previousIdDbColumnIndex, int organismColumnIndex, CSVWriter csvWriter) {
+    private void processRow(List<String> row, int idColumnIndex, int previousIdDbColumnIndex,
+                            int organismColumnIndex, int participantNameColumnIndex, int participantIdOutputColumnIndex,
+                            int participantIdDbOutputColumnIndex, int participantOrganismOutputColumnIndex,
+                            int participantTypeOutputColumnIndex, CSVWriter csvWriter) {
         String previousId = row.get(idColumnIndex).trim();
         String previousDb = (previousIdDbColumnIndex >= 0 && previousIdDbColumnIndex < row.size()) ? row.get(previousIdDbColumnIndex).trim() : "";
         String updatedOrganism = (organismColumnIndex >= 0 && organismColumnIndex < row.size()) ? row.get(organismColumnIndex).trim() : "";
@@ -274,14 +275,15 @@ public class FileWriter {
         String participantName = (result != null && result.getName() != null) ? result.getName() : previousId;
         String participantType = (result != null && result.getParticipantType() != null) ? result.getParticipantType() : "Unknown";
 
-        List<String> data = new ArrayList<>(row);
-        data.add(uniprotResult);
-        data.add(uniprotResultDb);
-        data.add(updatedOrganism);
-        data.add(participantName);
-        data.add(participantType);
+        if (participantNameColumnIndex >= 0 && participantNameColumnIndex < row.size()) {
+            row.set(participantNameColumnIndex, participantName);
+        }
+        setValueIfColumnExists(row, participantIdOutputColumnIndex, uniprotResult);
+        setValueIfColumnExists(row, participantIdDbOutputColumnIndex, uniprotResultDb);
+        setValueIfColumnExists(row, participantOrganismOutputColumnIndex, updatedOrganism);
+        setValueIfColumnExists(row, participantTypeOutputColumnIndex, participantType);
 
-        csvWriter.writeNext(data.toArray(new String[0]));
+        csvWriter.writeNext(row.toArray(new String[0]));
     }
 
     /**
@@ -294,7 +296,10 @@ public class FileWriter {
      * @param organismColumnIndex Index of the organism column.
      * @param lastCellIndex      Index at which to start writing new UniProt-related cells.
      */
-    private void processWorkbookRow(Row row, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex, int lastCellIndex) {
+    private void processWorkbookRow(Row row, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex,
+                                    int participantNameColumnIndex, int participantIdOutputColumnIndex,
+                                    int participantIdDbOutputColumnIndex, int participantOrganismOutputColumnIndex,
+                                    int participantTypeOutputColumnIndex) {
         if (row == null || row.getLastCellNum() <= idColumnIndex) {
             LOGGER.warning("Skipping null or incomplete row: " + row);
             return;
@@ -317,11 +322,13 @@ public class FileWriter {
         String participantName = (result != null) ? result.getName() : previousId;
         String participantType = (result != null) ? result.getParticipantType() : "";
 
-        row.createCell(lastCellIndex).setCellValue(uniprotResult);
-        row.createCell(lastCellIndex + 1).setCellValue(uniprotResultDb);
-        row.createCell(lastCellIndex + 2).setCellValue(updatedOrganism);
-        row.createCell(lastCellIndex + 3).setCellValue(participantName);
-        row.createCell(lastCellIndex + 4).setCellValue(participantType);
+        if (participantNameColumnIndex >= 0) {
+            row.createCell(participantNameColumnIndex).setCellValue(participantName);
+        }
+        setWorkbookCellIfColumnExists(row, participantIdOutputColumnIndex, uniprotResult);
+        setWorkbookCellIfColumnExists(row, participantIdDbOutputColumnIndex, uniprotResultDb);
+        setWorkbookCellIfColumnExists(row, participantOrganismOutputColumnIndex, updatedOrganism);
+        setWorkbookCellIfColumnExists(row, participantTypeOutputColumnIndex, participantType);
     }
 
     /**
@@ -338,11 +345,12 @@ public class FileWriter {
             return null;
         }
 
-        UniprotResult result = alreadyParsed.get(previousId);
+        String lookupKey = buildLookupKey(previousId, previousDb, updatedOrganism);
+        UniprotResult result = alreadyParsed.get(lookupKey);
         if (result == null) {
             result = getOneUniprotId(previousId, previousDb, updatedOrganism);
             if (result != null) {
-                alreadyParsed.put(previousId, result);
+                alreadyParsed.put(lookupKey, result);
             }
         }
         return result;
@@ -371,16 +379,28 @@ public class FileWriter {
     private UniprotResult getOneUniprotId(String previousId, String previousIdDb, String organism) {
         if (previousId != null &&
                 previousId.contains("PRO_") &&
+                previousIdDb != null &&
                 previousIdDb.equalsIgnoreCase("uniprotkb")) {
             UniprotResult uniprotResult = new UniprotResult(previousId, previousId,
                     organism, null, null, previousIdDb,
                     -1, "protein");
-            alreadyParsed.put(previousId, uniprotResult);
+            alreadyParsed.put(buildLookupKey(previousId, previousIdDb, organism), uniprotResult);
             return uniprotResult;
         }
 
         UniprotGeneralMapperGui mapperGui = new UniprotGeneralMapperGui();
-        ArrayList<UniprotResult> uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
+        ArrayList<UniprotResult> uniprotResults = batchParsed.get(buildLookupKey(previousId, previousIdDb, organism));
+        if (uniprotResults == null) {
+            uniprotResults = uniprotGeneralMapper.fetchUniprotResult(previousId, previousIdDb, organism);
+        }
+        if ((uniprotResults == null || uniprotResults.isEmpty())
+                && uniprotGeneralMapper.hasSearchFilters(previousIdDb, organism)) {
+            ArrayList<UniprotResult> fallbackResults = uniprotGeneralMapper.fetchUniprotResultWithoutFilters(previousId, previousIdDb);
+            if (fallbackResults != null && !fallbackResults.isEmpty()) {
+                uniprotResults = fallbackResults;
+                addFilterWarning(previousId, previousIdDb, organism);
+            }
+        }
         uniprotIdNotFound = uniprotGeneralMapper.getUniprotIdNotFound();
 
         UniprotResult oneUniprotId = null;
@@ -452,6 +472,114 @@ public class FileWriter {
             proteinsPartOfMoleculeSet.add(oneUniprotId.getUniprotAc());
         }
         return oneUniprotId;
+    }
+
+    private void preloadSeparatedFormatUniprotResults(Iterator<List<String>> iterator, int idColumnIndex,
+                                                      int previousIdDbColumnIndex, int organismColumnIndex) {
+        if (iterator == null) {
+            return;
+        }
+        Set<String> seenKeys = new HashSet<>();
+        List<UniprotGeneralMapper.UniprotRequest> requests = new ArrayList<>();
+
+        while (iterator.hasNext()) {
+            List<String> row = iterator.next();
+            if (row == null || row.isEmpty() || row.stream().allMatch(String::isEmpty) || idColumnIndex >= row.size()) {
+                continue;
+            }
+
+            String previousId = row.get(idColumnIndex).trim();
+            String previousDb = (previousIdDbColumnIndex >= 0 && previousIdDbColumnIndex < row.size()) ? row.get(previousIdDbColumnIndex).trim() : "";
+            String organism = (organismColumnIndex >= 0 && organismColumnIndex < row.size()) ? row.get(organismColumnIndex).trim() : "";
+            appendRequestIfEligible(requests, seenKeys, previousId, previousDb, organism);
+        }
+
+        batchParsed.clear();
+        batchParsed.putAll(uniprotGeneralMapper.fetchUniprotResultsBatch(requests));
+    }
+
+    private void preloadWorkbookUniprotResults(Sheet sheet, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex) {
+        Set<String> seenKeys = new HashSet<>();
+        List<UniprotGeneralMapper.UniprotRequest> requests = new ArrayList<>();
+
+        int firstRow = sheet.getFirstRowNum() + 1;
+        int lastRow = sheet.getLastRowNum();
+        for (int rowIndex = firstRow; rowIndex <= lastRow; rowIndex++) {
+            Row row = sheet.getRow(rowIndex);
+            if (row == null) {
+                continue;
+            }
+
+            String previousId = FileUtils.getCellValueAsString(row.getCell(idColumnIndex));
+            String previousDb = (idDbColumnIndex != -1) ? FileUtils.getCellValueAsString(row.getCell(idDbColumnIndex)) : "";
+            String organism = (organismColumnIndex != -1) ? FileUtils.getCellValueAsString(row.getCell(organismColumnIndex)).trim() : "";
+            appendRequestIfEligible(requests, seenKeys, previousId, previousDb, organism);
+        }
+
+        batchParsed.clear();
+        batchParsed.putAll(uniprotGeneralMapper.fetchUniprotResultsBatch(requests));
+    }
+
+    private void appendRequestIfEligible(List<UniprotGeneralMapper.UniprotRequest> requests, Set<String> seenKeys,
+                                         String previousId, String previousDb, String organism) {
+        if (previousId == null || previousId.trim().isEmpty()) {
+            return;
+        }
+        if (previousId.contains("PRO_") && previousDb != null && previousDb.equalsIgnoreCase("uniprotkb")) {
+            return;
+        }
+
+        String lookupKey = buildLookupKey(previousId, previousDb, organism);
+        if (seenKeys.add(lookupKey)) {
+            requests.add(new UniprotGeneralMapper.UniprotRequest(previousId, previousDb, organism, lookupKey));
+        }
+    }
+
+    private String buildLookupKey(String previousId, String previousDb, String organism) {
+        return normalize(previousId) + "|" + normalize(previousDb) + "|" + normalize(organism);
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private void addFilterWarning(String previousId, String previousDb, String organism) {
+        String warning = "Fallback UniProt match found for '" + previousId
+                + "' after removing organism/database filters. Check organism '"
+                + Objects.toString(organism, "") + "' and database '" + Objects.toString(previousDb, "") + "'.";
+        if (!uniprotFilterWarnings.contains(warning)) {
+            uniprotFilterWarnings.add(warning);
+        }
+    }
+
+    private int findColumnIndex(List<String> headers, String columnName) {
+        for (int i = 0; i < headers.size(); i++) {
+            if (columnName.equalsIgnoreCase(headers.get(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int findColumnIndex(Row headerRow, String columnName) {
+        for (int i = 0; i < headerRow.getLastCellNum(); i++) {
+            if (columnName.equalsIgnoreCase(FileUtils.getCellValueAsString(headerRow.getCell(i)))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void setValueIfColumnExists(List<String> row, int columnIndex, String value) {
+        if (columnIndex >= 0 && columnIndex < row.size()) {
+            row.set(columnIndex, value);
+        }
+    }
+
+    private void setWorkbookCellIfColumnExists(Row row, int columnIndex, String value) {
+        if (columnIndex >= 0) {
+            row.createCell(columnIndex).setCellValue(value);
+        }
     }
 
 }

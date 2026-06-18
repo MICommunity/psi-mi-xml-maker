@@ -24,6 +24,7 @@ public class UniprotMapperGui extends JPanel {
     private final JComboBox<String> idColumn = new JComboBox<>();
     private final JComboBox<String> organismColumn = new JComboBox<>();
     private final JComboBox<String> idDbColumn = new JComboBox<>();
+    private final JComboBox<String> participantNameColumn = new JComboBox<>();
 
     private final FileReader fileReader;
     private final FileWriter fileWriter;
@@ -52,7 +53,7 @@ public class UniprotMapperGui extends JPanel {
      */
     public JPanel uniprotPanel() {
         JPanel uniprotPanel = new JPanel();
-        uniprotPanel.setLayout(new GridLayout(1, 1));
+        uniprotPanel.setLayout(new GridLayout(1, 0, 5, 0));
         uniprotPanel.setMaximumSize(new Dimension(Toolkit.getDefaultToolkit().getScreenSize().width - 50, 200));
         setupComboBoxDefaults();
 
@@ -64,6 +65,7 @@ public class UniprotMapperGui extends JPanel {
         idDbColumn.setToolTipText("Select ID database column");
         uniprotPanel.add(setComboBoxDimension(organismColumn, "Select Organism column"));
         organismColumn.setToolTipText("Select Organism column");
+        uniprotPanel.add(createParticipantNameSelectorPanel());
 
         sheets.addActionListener(e -> {
             if (!isUpdatingSheets) {
@@ -84,12 +86,19 @@ public class UniprotMapperGui extends JPanel {
      * This method is called in uniprotPanel() to set the default selections.
      */
     private void setupComboBoxDefaults() {
+        idColumn.removeAllItems();
         idColumn.addItem("Select participant ID column");
         idColumn.setEnabled(true);
+        idDbColumn.removeAllItems();
         idDbColumn.addItem("Select ID database column");
         idDbColumn.setEnabled(true);
+        organismColumn.removeAllItems();
         organismColumn.addItem("Select organism column");
         organismColumn.setEnabled(true);
+        participantNameColumn.removeAllItems();
+        participantNameColumn.addItem("Optional participant name output column");
+        participantNameColumn.setEnabled(true);
+        participantNameColumn.setRenderer(createOptionalOutputRenderer());
     }
 
     /**
@@ -138,6 +147,10 @@ public class UniprotMapperGui extends JPanel {
         idDbColumn.addItem("Select ID database column");
         idDbColumn.setEnabled(true);
 
+        participantNameColumn.removeAllItems();
+        participantNameColumn.addItem("Optional participant name output column");
+        participantNameColumn.setEnabled(true);
+
         String selectedSheet = "";
         if (sheets.isEnabled()) {
             selectedSheet = (String) sheets.getSelectedItem();
@@ -146,6 +159,7 @@ public class UniprotMapperGui extends JPanel {
             idColumn.addItem(columnName);
             organismColumn.addItem(columnName);
             idDbColumn.addItem(columnName);
+            participantNameColumn.addItem(columnName);
         }
     }
 
@@ -168,11 +182,12 @@ public class UniprotMapperGui extends JPanel {
                     int idColumnIndex = idColumn.getSelectedIndex() - 1;
                     int idDbColumnIndex = idDbColumn.getSelectedIndex() - 1;
                     int organismColumnIndex = organismColumn.getSelectedIndex() - 1;
+                    int participantNameColumnIndex = participantNameColumn.getSelectedIndex() - 1;
 
                     if (sheets.isEnabled()) {
-                        processSheet(sheetSelected, idColumnIndex, idDbColumnIndex, organismColumnIndex);
+                        processSheet(sheetSelected, idColumnIndex, idDbColumnIndex, organismColumnIndex, participantNameColumnIndex);
                     } else {
-                        processFileWithoutSheet(idColumnIndex, idDbColumnIndex, organismColumnIndex);
+                        processFileWithoutSheet(idColumnIndex, idDbColumnIndex, organismColumnIndex, participantNameColumnIndex);
                     }
                     return null;
                 }
@@ -197,11 +212,16 @@ public class UniprotMapperGui extends JPanel {
      * @param idDbColumnIndex Index of id database column
      * @param organismColumnIndex Index of organism column
      */
-    private void processSheet(String sheetSelected, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex) {
+    private void processSheet(String sheetSelected, int idColumnIndex, int idDbColumnIndex, int organismColumnIndex,
+                              int participantNameColumnIndex) {
         try {
-            fileWriter.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumnIndex, idDbColumnIndex, organismColumnIndex);
+            fileWriter.checkAndInsertUniprotResultsWorkbook(sheetSelected, idColumnIndex, idDbColumnIndex,
+                    organismColumnIndex, participantNameColumnIndex);
             if (!fileWriter.getUniprotIdNotFound().isEmpty()) {
                 showInfoDialog("Inactive Uniprot IDs: " + fileWriter.getUniprotIdNotFound());
+            }
+            if (!fileWriter.getUniprotFilterWarnings().isEmpty()) {
+                showInfoDialog(String.join("\n", fileWriter.getUniprotFilterWarnings()));
             }
             showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
@@ -215,12 +235,15 @@ public class UniprotMapperGui extends JPanel {
      *
      * @param idColumn The name of the selected ID column.
      */
-    private void processFileWithoutSheet(int idColumn, int idDbColumn, int organismColumn) {
+    private void processFileWithoutSheet(int idColumn, int idDbColumn, int organismColumn, int participantNameColumn) {
         try {
-            fileWriter.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn);
+            fileWriter.checkAndInsertUniprotResultsSeparatedFormat(idColumn, idDbColumn, organismColumn, participantNameColumn);
             List<String> uniprotIdNotFound = fileWriter.getUniprotIdNotFound();
             if (!uniprotIdNotFound.isEmpty()) {
                 showInfoDialog("Inactive Uniprot IDs: " + uniprotIdNotFound);
+            }
+            if (!fileWriter.getUniprotFilterWarnings().isEmpty()) {
+                showInfoDialog(String.join("\n", fileWriter.getUniprotFilterWarnings()));
             }
             showInfoDialog("UniProt IDs successfully updated");
         } catch (Exception ex) {
@@ -249,5 +272,41 @@ public class UniprotMapperGui extends JPanel {
     private void handleProcessingError(Exception ex) {
         JOptionPane.showMessageDialog(null, "An error occurred during file processing: " + ex.getMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
         LOGGER.warning(ex.getMessage());
+    }
+
+    private JPanel createParticipantNameSelectorPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
+        participantNameColumn.setPreferredSize(new Dimension(200, 50));
+        participantNameColumn.setMaximumSize(new Dimension(200, 50));
+        participantNameColumn.setToolTipText("Optional output column to overwrite with the UniProt participant name");
+
+        JButton helpButton = new JButton("?");
+        helpButton.setMargin(new Insets(2, 6, 2, 6));
+        helpButton.setFocusable(false);
+        helpButton.setToolTipText("Explain the participant name output");
+        helpButton.addActionListener(e -> showInfoDialog(
+                "Select an existing participant name column only if you want this step to overwrite it with the UniProt name."
+        ));
+
+        panel.add(participantNameColumn);
+        panel.add(Box.createHorizontalStrut(4));
+        panel.add(helpButton);
+        return panel;
+    }
+
+    private ListCellRenderer<? super String> createOptionalOutputRenderer() {
+        DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
+        return (list, value, index, isSelected, cellHasFocus) -> {
+            JLabel label = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            Font baseFont = label.getFont();
+            if ("Optional participant name output column".equals(value)) {
+                label.setFont(baseFont.deriveFont(Font.ITALIC));
+            } else {
+                label.setFont(baseFont.deriveFont(Font.PLAIN));
+            }
+            return label;
+        };
     }
 }

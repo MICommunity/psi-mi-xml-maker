@@ -3,16 +3,22 @@ package uk.ac.ebi.intact.psi.mi.xmlmaker.models;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.*;
+
 @Getter @Setter
 public class UniprotResult {
     private String name;
     private String uniprotAc;
+    private String uniprotId;
     private String organism;
     private String entryType;
     private String uniprotLink;
     private String idDb;
     private int sequenceSize;
     private String participantType;
+    private List<String> secondaryAccessions = new ArrayList<>();
+    private List<String> geneNames = new ArrayList<>();
+    private Map<String, Set<String>> matchingCrossReferences = new HashMap<>();
 
     public UniprotResult(String uniprotAc, String name, String organism, String entryType,
                          String uniprotLink, String idDb, int sequenceSize,  String participantType) {

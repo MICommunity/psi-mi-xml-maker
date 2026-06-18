@@ -149,6 +149,7 @@ public class FileFormaterGui {
             baitNameColumn.addItem(columnName);
             preyNameColumn.addItem(columnName);
         }
+        participantAndInteractionCreatorGui.setSourceColumns(fileReader.getColumns(selectedSheet));
     }
 
     /**

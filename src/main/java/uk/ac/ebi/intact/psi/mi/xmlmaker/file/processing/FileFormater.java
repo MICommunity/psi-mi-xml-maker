@@ -11,9 +11,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData.*;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.GuiUtils.*;
 import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.FileUtils.*;
+import static uk.ac.ebi.intact.psi.mi.xmlmaker.utils.XmlMakerUtils.fetchTaxIdForOrganism;
 
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.content.InputData;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.ParametersGui;
+import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.ParticipantAndInteractionCreatorGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.file.processing.gui.VariableExperimentalConditionGui;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Feature;
 import uk.ac.ebi.intact.psi.mi.xmlmaker.models.Parameter;
@@ -177,6 +179,7 @@ public class FileFormater {
                                Function<T, String> getPrey,
                                Function<T, String> getBaitName,
                                Function<T, String> getPreyName,
+                               Function<T, Map<String, String>> getRowValues,
                                boolean binary) {
 
         int interactionNumber = 0;
@@ -192,6 +195,7 @@ public class FileFormater {
 
             String baitName = getBaitName.apply(row);
             String preyName = getPreyName.apply(row);
+            Map<String, String> rowValues = getRowValues.apply(row);
 
             if (bait.isEmpty() || prey.isEmpty()) {
                 continue;
@@ -199,15 +203,15 @@ public class FileFormater {
 
             if (binary) {
                 interactionNumber++;
-                addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait", rowIndex);
-                addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey", rowIndex);
+                addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait", rowIndex, rowValues);
+                addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey", rowIndex, rowValues);
             } else {
                 if (lastBait == null || !lastBait.equals(bait)) {
                     interactionNumber++;
                     lastBait = bait;
-                    addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait", rowIndex);
+                    addNewParticipant(String.valueOf(interactionNumber), bait, baitName, "bait", rowIndex, rowValues);
                 }
-                addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey", rowIndex);
+                addNewParticipant(String.valueOf(interactionNumber), prey, preyName, "prey", rowIndex, rowValues);
             }
         }
         iterator.remove();
@@ -233,6 +237,7 @@ public class FileFormater {
                 row -> row.get(preyColumnIndex),
                 row -> baitNameColumnIndex == -1 ? "" : row.get(baitNameColumnIndex),
                 row -> preyNameColumnIndex == -1 ? "" : row.get(preyNameColumnIndex),
+                this::extractRowValues,
                 binary
         );
     }
@@ -258,6 +263,7 @@ public class FileFormater {
                 row -> FileUtils.getCellValueAsString(row.getCell(preyColumnIndex)),
                 row -> baitNameColumnIndex == -1 ? "" : FileUtils.getCellValueAsString(row.getCell(baitNameColumnIndex)),
                 row -> preyNameColumnIndex == -1 ? "" : FileUtils.getCellValueAsString(row.getCell(preyNameColumnIndex)),
+                this::extractRowValues,
                 binary
         );
     }
@@ -275,7 +281,8 @@ public class FileFormater {
                                   String participantId,
                                   String participantName,
                                   String experimentalRole,
-                                  int rowIndex) {
+                                  int rowIndex,
+                                  Map<String, String> rowValues) {
         Map<String, String> oneParticipant = new HashMap<>();
 
         participantCountMap.put(interactionNumber, participantCountMap.getOrDefault(interactionNumber, 0) + 1);
@@ -284,12 +291,12 @@ public class FileFormater {
             if (field.initial) {
                 if (field.experimentalRoleDependent) {
                     if ("bait".equalsIgnoreCase(experimentalRole)) {
-                        oneParticipant.put(field.name, interactionData.get(field.name + BAIT.name));
+                        oneParticipant.put(field.name, resolveConfiguredValue(interactionData.get(field.name + BAIT.name), field, rowValues));
                     } else if ("prey".equalsIgnoreCase(experimentalRole)) {
-                        oneParticipant.put(field.name, interactionData.get(field.name + PREY.name));
+                        oneParticipant.put(field.name, resolveConfiguredValue(interactionData.get(field.name + PREY.name), field, rowValues));
                     }
                 } else {
-                    oneParticipant.put(field.name, interactionData.get(field.name));
+                    oneParticipant.put(field.name, resolveConfiguredValue(interactionData.get(field.name), field, rowValues));
                 }
             }
         }
@@ -301,6 +308,58 @@ public class FileFormater {
         oneParticipant.put(PARTICIPANT_ROW_INDEX.name, Objects.toString(rowIndex));
 
         participants.add(oneParticipant);
+    }
+
+    private Map<String, String> extractRowValues(List<String> row) {
+        Map<String, String> rowValues = new HashMap<>();
+        List<String> headers = fileReader.fileData;
+        for (int i = 0; i < Math.min(headers.size(), row.size()); i++) {
+            rowValues.put(headers.get(i), row.get(i));
+        }
+        return rowValues;
+    }
+
+    private Map<String, String> extractRowValues(Row row) {
+        Map<String, String> rowValues = new HashMap<>();
+        List<String> headers = fileReader.fileData;
+        for (int i = 0; i < headers.size(); i++) {
+            rowValues.put(headers.get(i), FileUtils.getCellValueAsString(row.getCell(i)));
+        }
+        return rowValues;
+    }
+
+    private String resolveConfiguredValue(String configuredValue, InputData field, Map<String, String> rowValues) {
+        if (configuredValue == null || configuredValue.isEmpty()) {
+            return configuredValue;
+        }
+
+        if (!configuredValue.startsWith(ParticipantAndInteractionCreatorGui.FILE_COLUMN_PREFIX)) {
+            return configuredValue;
+        }
+
+        String columnName = configuredValue.substring(ParticipantAndInteractionCreatorGui.FILE_COLUMN_PREFIX.length());
+        String rowValue = rowValues.getOrDefault(columnName, "");
+        if (rowValue == null || rowValue.trim().isEmpty()) {
+            return "";
+        }
+
+        if (field == HOST_ORGANISM || field == PARTICIPANT_ORGANISM || field == PARTICIPANT_EXPRESSED_IN_ORGANISM) {
+            return normalizeOrganismValue(rowValue);
+        }
+
+        return rowValue;
+    }
+
+    private String normalizeOrganismValue(String rowValue) {
+        String trimmed = rowValue == null ? "" : rowValue.trim();
+        if (trimmed.isEmpty()) {
+            return trimmed;
+        }
+        if (trimmed.matches("-?\\d+")) {
+            return trimmed;
+        }
+        String taxId = fetchTaxIdForOrganism(trimmed);
+        return taxId == null ? trimmed : taxId;
     }
 
     /**
