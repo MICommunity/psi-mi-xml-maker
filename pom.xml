@@ -12,11 +12,24 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <psi.jami.version>3.6.0-SNAPSHOT</psi.jami.version>
+    <psi.jami.version>3.10.0-SNAPSHOT</psi.jami.version>
     <spring.version>4.3.30.RELEASE</spring.version>
     <ols.client.version>2.14-SNAPSHOT</ols.client.version>
+    <jackson.version>2.15.0</jackson.version>
     <java.version>11</java.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.fasterxml.jackson</groupId>
+        <artifactId>jackson-bom</artifactId>
+        <version>${jackson.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -122,7 +135,16 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.15.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
     </dependency>
 
     <dependency>
@@ -182,8 +204,8 @@
               <icnsFile>${project.basedir}/src/main/resources/psi.icns</icnsFile>
             </macConfig>
             <iconFile>src/main/resources/psi.icns</iconFile>
-            <packagingJdk>jdks/jdk-11.0.26-macOSx64/Contents/Home</packagingJdk>
-            <jdkPath>jdks/jdk-11.0.26-macOSx64/Contents/Home</jdkPath>
+            <packagingJdk>jdks/jdk-11.0.31+11-macos-x64/Contents/Home</packagingJdk>
+            <jdkPath>jdks/jdk-11.0.31+11-macos-x64/Contents/Home</jdkPath>
           </configuration>
         </execution>
 
@@ -199,8 +221,8 @@
               <icnsFile>${project.basedir}/src/main/resources/psi.icns</icnsFile>
             </macConfig>
             <iconFile>src/main/resources/psi.icns</iconFile>
-            <packagingJdk>jdks/jdk-11.0.26-macOSaarch64</packagingJdk>
-            <jdkPath>jdks/jdk-11.0.26-macOSaarch64</jdkPath>
+            <packagingJdk>jdks/jdk-11.0.31+11-macos-aarch64</packagingJdk>
+            <jdkPath>jdks/jdk-11.0.31+11-macos-aarch64</jdkPath>
           </configuration>
         </execution>
 
@@ -215,9 +237,16 @@
             <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
             <platform>windows</platform>
             <createZipball>true</createZipball>
-            <packagingJdk>jdks/jdk-11.0.26-windowsx64</packagingJdk>
-            <jdkPath>jdks/jdk-11.0.26-windowsx64</jdkPath>
+            <packagingJdk>jdks/jdk-11.0.31+11-windows</packagingJdk>
+            <jdkPath>jdks/jdk-11.0.31+11-windows</jdkPath>
+
+            <bundleJre>true</bundleJre>
+            <customizedJre>false</customizedJre>
+            <jrePath>jdks/jdk-11.0.31+11-jre-windows</jrePath>
             <iconFile>src/main/resources/psi.ico</iconFile>
+            <winConfig>
+              <icoFile>${project.basedir}/src/main/resources/psi.ico</icoFile>
+            </winConfig>
           </configuration>
         </execution>
 
@@ -231,8 +260,8 @@
             <mainClass>uk.ac.ebi.intact.psi.mi.xmlmaker.XmlMakerGui</mainClass>
             <platform>linux</platform>
             <createTarball>true</createTarball>
-            <packagingJdk>jdks/jdk-11.0.26_linux-x64</packagingJdk>
-            <jdkPath>jdks/jdk-11.0.26_linux-x64</jdkPath>
+            <packagingJdk>jdks/jdk-11.0.31+11-linux</packagingJdk>
+            <jdkPath>jdks/jdk-11.0.31+11-linux</jdkPath>
             <iconFile>src/main/resources/psi.png</iconFile>
           </configuration>
         </execution>

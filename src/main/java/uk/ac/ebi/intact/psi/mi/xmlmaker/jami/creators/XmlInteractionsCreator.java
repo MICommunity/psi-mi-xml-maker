@@ -92,17 +92,22 @@ public class XmlInteractionsCreator {
     public XmlParticipantEvidence createParticipant(Map<String, String> data) {
         String participantExperimentalRole = data.get(EXPERIMENTAL_ROLE.name);
 
-        InputData[] required = {PARTICIPANT_NAME, PARTICIPANT_ID, PARTICIPANT_ID_DB, PARTICIPANT_ORGANISM};
+        InputData[] required = {
+//                PARTICIPANT_NAME,
+                PARTICIPANT_ID,
+                PARTICIPANT_ID_DB,
+                PARTICIPANT_ORGANISM
+        };
 
         for (InputData requiredColumn : required) {
             String key = getDataKey(requiredColumn, data);
             if (data.get(key) == null || data.get(key).trim().isBlank()) {
                 LOGGER.warning(requiredColumn.name + " is required but missing or empty.");
 
-                if (data.get(PARTICIPANT_NAME.name) != null && !data.get(PARTICIPANT_NAME.name).trim().isBlank()) {
-                    xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_NAME.name));
-                }
-                else if (data.get(PARTICIPANT_ID.name) != null && !data.get(PARTICIPANT_ID.name).trim().isBlank()) {
+//                if (data.get(PARTICIPANT_NAME.name) != null && !data.get(PARTICIPANT_NAME.name).trim().isBlank()) {
+//                    xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_NAME.name));
+//                } else
+                    if (data.get(PARTICIPANT_ID.name) != null && !data.get(PARTICIPANT_ID.name).trim().isBlank()) {
                     xmlFileWriter.skippedParticipants.add(data.get(PARTICIPANT_ID.name));
                 }
                 return null;
